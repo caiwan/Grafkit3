@@ -25,3 +25,6 @@
 [submodule "thirdparties/vk-bootstrap"]
 	path = thirdparties/vk-bootstrap
 	url = https://github.com/charles-lunarg/vk-bootstrap.git
+[submodule "thirdparties/Vulkan"]
+	path = thirdparties/Vulkan
+	url = git@github.com:SaschaWillems/Vulkan.git
