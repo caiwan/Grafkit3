@@ -14,6 +14,11 @@ option(GK_BUILD_TESTS "Build all tests" ON)
 option(GK_BUILD_EDITOR "Build Editor" ON)
 option(GK_BUILD_PLAYER "Build Player" ON)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
+
+include (PyEnv)
+create_python_venv("venv" PYTHON_VENV_EXECUTABLE)
+
 # --- Cache options
 if(NOT DEFINED CMAKE_C_COMPILER_LAUNCHER AND NOT DEFINED
                                              CMAKE_CXX_COMPILER_LAUNCHER)
@@ -63,8 +68,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_DEBUG_POSTFIX
     "d"
     CACHE STRING "")
-
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 
 add_subdirectory(thirdparties)
 add_subdirectory(src)

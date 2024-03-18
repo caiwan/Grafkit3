@@ -28,3 +28,6 @@
 [submodule "thirdparties/Vulkan"]
 	path = thirdparties/Vulkan
 	url = git@github.com:SaschaWillems/Vulkan.git
+[submodule "thirdparties/VulkanMemoryAllocator"]
+	path = thirdparties/VulkanMemoryAllocator
+	url = git@github.com:GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git

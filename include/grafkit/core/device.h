@@ -5,7 +5,7 @@
 #include <optional>
 #include <vector>
 //
-#include <vma/vk_mem_alloc.h>
+#include <vk_mem_alloc.h>
 //
 #include <grafkit/common.h>
 #include <grafkit/core/instance.h>

@@ -35,9 +35,9 @@ namespace Grafkit::Core {
 		GraphicsPipelineBuilder(Device const& device, VkRenderPass renderPass);
 		~GraphicsPipelineBuilder() = default;
 
-		GraphicsPipelineBuilder& AddVertexShader(unsigned char* const& code, size_t len);
+		GraphicsPipelineBuilder& AddVertexShader(const uint8_t* code, size_t len);
 		GraphicsPipelineBuilder& AddVertexShader(const std::vector<char>& code);
-		GraphicsPipelineBuilder& AddFragmentShader(unsigned char* const& code, size_t len);
+		GraphicsPipelineBuilder& AddFragmentShader(const uint8_t* code, size_t len);
 		GraphicsPipelineBuilder& AddFragmentShader(const std::vector<char>& code);
 
 		GraphicsPipelineBuilder& SetVertexInputDescription(const VertexDescription desc);
@@ -79,7 +79,7 @@ namespace Grafkit::Core {
 		std::vector<VkDynamicState> m_dynamicStates;
 		VkPipelineColorBlendAttachmentState m_colorBlendAttachment {};
 
-		VkShaderModule CreateShaderModule(unsigned char* const& code, size_t len) const;
+		VkShaderModule CreateShaderModule(const uint8_t* code, size_t len) const;
 		VkShaderModule CreateShaderModule(const std::vector<char>& code) const;
 
 		void AddShaderStage(VkShaderModule shaderModule, VkShaderStageFlagBits stage);

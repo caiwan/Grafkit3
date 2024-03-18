@@ -44,7 +44,7 @@ target_include_directories(
 target_link_libraries(
   ${PROJECT_NAME} 
   # PRIVATE GPUOpen::VulkanMemoryAllocator
-  PUBLIC Vulkan::Vulkan glfw glm::glm
+  PUBLIC Vulkan::Vulkan glfw glm::glm GPUOpen::VulkanMemoryAllocator
 )
 
 set_project_warnings(${PROJECT_NAME})

@@ -31,7 +31,8 @@ foreach(GLSL ${GLSL_SOURCE_FILES})
   add_custom_command(
     OUTPUT ${SPIRV_H}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADER_INCLUDE_DIR}
-    COMMAND xxd -n "${FILE_NAME}" -i ${SPIRV} > ${SPIRV_H}
+    COMMAND ${PYTHON_VENV_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/hexdump.py -n ${FILE_NAME} -i ${SPIRV} > ${SPIRV_H}
+    # COMMAND xxd -n "${FILE_NAME}" -i ${SPIRV} > ${SPIRV_H}
     DEPENDS ${SPIRV})
   list(APPEND SPIRV_BINARY_FILES ${SPIRV})
   list(APPEND SPIRV_HEADER_FILES ${SPIRV_H})
@@ -45,7 +46,6 @@ target_link_libraries(${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME} PRIVATE ${GENERATED_INCLUDE_DIR})
 target_link_libraries(
   ${PROJECT_NAME}
-  # Vulkan::Vulkan glfw glm
   Grafkit::Grafkit)
 
 # Install?

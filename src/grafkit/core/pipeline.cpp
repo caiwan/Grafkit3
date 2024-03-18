@@ -44,7 +44,6 @@ GraphicsPipelineBuilder::GraphicsPipelineBuilder(Device const& m_device, VkRende
 	SetDynamicState({ VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR });
 }
 
-// TOOD: Only one shader per stage -> SetVertexShader, SetFragmentShader
 GraphicsPipelineBuilder& GraphicsPipelineBuilder::AddVertexShader(const uint8_t* code, size_t len)
 {
 	VkShaderModule vertexShaderModule = CreateShaderModule(code, len);
@@ -59,7 +58,7 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::AddVertexShader(const std::vec
 	return *this;
 }
 
-GraphicsPipelineBuilder& GraphicsPipelineBuilder::AddFragmentShader(unsigned char* const& code, size_t len)
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::AddFragmentShader(const uint8_t* code, size_t len)
 {
 	VkShaderModule fragmentShaderModule = CreateShaderModule(code, len);
 	AddShaderStage(fragmentShaderModule, VK_SHADER_STAGE_FRAGMENT_BIT);
@@ -210,7 +209,7 @@ PipelinePtr GraphicsPipelineBuilder::Build()
 	return pipeline;
 }
 
-VkShaderModule GraphicsPipelineBuilder::CreateShaderModule(unsigned char* const& code, size_t len) const
+VkShaderModule GraphicsPipelineBuilder::CreateShaderModule(const uint8_t* code, size_t len) const
 {
 	VkShaderModuleCreateInfo createInfo {};
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
