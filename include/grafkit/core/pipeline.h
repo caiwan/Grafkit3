@@ -6,12 +6,11 @@
 #include <grafkit/common.h>
 #include <grafkit/core/device.h>
 
-namespace Grafkit::Core
-{
-	class GKAPI Pipeline
-	{
+namespace Grafkit::Core {
+	class GKAPI Pipeline {
 	public:
-		Pipeline(Device const& device, std::tuple<VkPipeline, VkPipelineLayout> pipeline, VkPipelineBindPoint pipelineBindPoint);
+		Pipeline(Device const& device, std::tuple<VkPipeline, VkPipelineLayout, VkDescriptorSetLayout> pipeline,
+			VkPipelineBindPoint pipelineBindPoint);
 		virtual ~Pipeline();
 
 		void Bind(VkCommandBuffer commandBuffer);
@@ -25,12 +24,12 @@ namespace Grafkit::Core
 		VkPipelineBindPoint const pipelineBindPoint;
 		VkPipeline pipeline;
 		VkPipelineLayout pipelineLayout;
+		VkDescriptorSetLayout descriptorSetLayout;
 	};
 
 	// -----------------------------------------------------------------------------
 
-	class GraphicsPipelineBuilder
-	{
+	class GraphicsPipelineBuilder {
 	public:
 		GraphicsPipelineBuilder(Device const& device, VkRenderPass renderPass);
 		~GraphicsPipelineBuilder() = default;
@@ -40,11 +39,20 @@ namespace Grafkit::Core
 		GraphicsPipelineBuilder& AddFragmentShader(unsigned char* const& code, size_t len);
 		GraphicsPipelineBuilder& AddFragmentShader(const std::vector<char>& code);
 
-		GraphicsPipelineBuilder& SetVertexInputState();
-		GraphicsPipelineBuilder& SetInputAssembly(VkPrimitiveTopology topology, VkBool32 primitiveRestartEnable = VK_FALSE);
-		GraphicsPipelineBuilder& SetViewportState();
-		GraphicsPipelineBuilder& SetRasterizer(VkPolygonMode polygonMode, VkCullModeFlags cullMode, VkFrontFace frontFace);
-		GraphicsPipelineBuilder& SetMultisampling(VkSampleCountFlagBits rasterizationSamples, VkBool32 sampleShadingEnable = VK_FALSE);
+		GraphicsPipelineBuilder& SetVertexInputDescription(const VertexDescription desc);
+
+		GraphicsPipelineBuilder& AddLayoutBinding(
+			std::uint32_t binding, VkDescriptorType descriptorType, VkShaderStageFlags shaderStageFlags);
+
+		// GraphicsPipelineBuilder& AddVertexUniformBufferDescription(const uint32_t binding);
+		// GraphicsPipelineBuilder& AddFragmentUniformBufferDescription(const uint32_t binding);
+
+		GraphicsPipelineBuilder& SetInputAssembly(
+			const VkPrimitiveTopology topology, const VkBool32 primitiveRestartEnable = VK_FALSE);
+		GraphicsPipelineBuilder& SetRasterizer(
+			const VkPolygonMode polygonMode, const VkCullModeFlags cullMode, const VkFrontFace frontFace);
+		GraphicsPipelineBuilder& SetMultisampling(
+			const VkSampleCountFlagBits rasterizationSamples, const VkBool32 sampleShadingEnable = VK_FALSE);
 		GraphicsPipelineBuilder& SetColorBlending(const VkPipelineColorBlendAttachmentState& colorBlendAttachment);
 		GraphicsPipelineBuilder& SetDynamicState(const std::vector<VkDynamicState>& dynamicStates);
 
@@ -55,13 +63,20 @@ namespace Grafkit::Core
 		VkRenderPass renderPass;
 
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
-		VkPipelineVertexInputStateCreateInfo vertexInputInfo {};
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly {};
+
+		std::vector<VkVertexInputBindingDescription> vertBindingDescriptions;
+		std::vector<VkVertexInputAttributeDescription> vertInputAttrDescriptions;
+
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+
+		std::vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutBindings;
+
 		VkPipelineViewportStateCreateInfo viewportState {};
 		VkPipelineRasterizationStateCreateInfo rasterizer {};
 		VkPipelineMultisampleStateCreateInfo multisampling {};
-		VkPipelineColorBlendStateCreateInfo colorBlending {};
-		VkPipelineDynamicStateCreateInfo dynamicState {};
+		std::vector<VkDynamicState> dynamicStates;
+		VkPipelineColorBlendAttachmentState colorBlendAttachment {};
 
 		VkShaderModule CreateShaderModule(unsigned char* const& code, size_t len) const;
 		VkShaderModule CreateShaderModule(const std::vector<char>& code) const;
