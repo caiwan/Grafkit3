@@ -8,21 +8,29 @@ Application::Application()
 {
 }
 
+Application::Application(const int width, const int height, const std::string windowTitle)
+	: window(width, height, windowTitle.c_str())
+	, renderContext(window)
+{
+}
+
 void Grafkit::Application::Run()
 {
 	Init();
-	while (window.IsClosing() == false)
-	{
+	while (window.IsClosing() == false) {
 		window.PollEvents();
-		Update();
-		auto commandBuffer = renderContext.BeginCommandBuffer();
-		Compute(commandBuffer);
-		renderContext.BeginFrame(commandBuffer);
-		Render(commandBuffer);
-		renderContext.DrawFrame(commandBuffer);
+
+		if (!window.IsClosing()) {
+			Update();
+			auto commandBuffer = renderContext.BeginCommandBuffer();
+			Compute(commandBuffer);
+			renderContext.BeginFrame(commandBuffer);
+			Render(commandBuffer);
+			renderContext.EndFrame(commandBuffer);
+		}
 	}
+	renderContext.Flush();
 	Shutdown();
-	// renderContext.Flush();
 }
 
 Application::~Application() { }

@@ -6,14 +6,13 @@
 #include <vector>
 //
 #include <grafkit/application.h>
+#include <grafkit/core/pipeline.h>
 #include <grafkit/core/window.h>
 #include <grafkit/render.h>
-#include <grafkit/core/pipeline.h>
+#include <grafkit/render/mesh.h>
 
-namespace PlayerApplication
-{
-	class HelloApplication : public Grafkit::Application
-	{
+namespace PlayerApplication {
+	class HelloApplication : public Grafkit::Application {
 	public:
 		HelloApplication();
 		virtual ~HelloApplication();
@@ -27,6 +26,7 @@ namespace PlayerApplication
 
 	private:
 		Grafkit::Core::PipelinePtr graphicsPipeline;
+		Grafkit::MeshPtr mesh;
 	};
 } // namespace PlayerApplication
 
