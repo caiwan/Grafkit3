@@ -8,13 +8,11 @@
 
 typedef struct GLFWwindow GLFWwindow;
 
-namespace Grafkit
-{
+namespace Grafkit {
 	class RenderContext;
 }
 
-namespace Grafkit::Core
-{
+namespace Grafkit::Core {
 	class Device;
 	class Instance;
 
@@ -22,27 +20,24 @@ namespace Grafkit::Core
 	constexpr int DEFAULT_HEIGHT = 600;
 	constexpr std::string_view DEFAULT_TITLE("Grafkit Application");
 
-	struct WindowBufferSize
-	{
+	struct WindowBufferSize {
 		int width;
 		int height;
 	};
 
-	class GKAPI Window
-	{
+	class GKAPI Window {
 		friend class RenderContext;
 		friend class Core::Device;
 		friend class Core::Instance;
 
 	public:
 		Window();
-		explicit Window(
-			const int width,
+		explicit Window(const int width,
 			const int height,
 			const char* title,
 			bool fullscreen = false,
-			bool vsync = false,
-			bool resizable = false);
+			bool vsync = true,
+			bool resizable = true);
 
 		virtual ~Window();
 
