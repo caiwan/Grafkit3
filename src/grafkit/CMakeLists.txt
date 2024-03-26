@@ -18,12 +18,15 @@ file(GLOB_RECURSE GRAFKIT_HEADER_FILES ${CMAKE_SOURCE_DIR}/include/grafkit/*.h
      ${CMAKE_SOURCE_DIR}/include/grafkit/*.hpp
      ${CMAKE_SOURCE_DIR}/include/grafkit/*.hxx)
 
+set(CMAKE_INCLUDE_CURRENT_DIR on)
+
 # TODO: Setup Git SHA if needed
 # https://stackoverflow.com/questions/1435953/how-can-i-pass-git-sha1-to-compiler-as-definition-using-cmake
 # configure_file("config.h.in"
 # "${CMAKE_BINARY_DIR}/configured_files/internal_use_only/include/grafkit/internal/config.h"
 # ESCAPE_QUOTES) list(APPEND GRAFKIT_HEADER_FILES
 # "${CMAKE_BINARY_DIR}/configured_files/internal_use_only/include/grafkit/internal/config.h")
+
 
 add_library(${PROJECT_NAME} STATIC ${GRAFKIT_SOURCE_FILES}
                                    ${GRAFKIT_HEADER_FILES})
@@ -42,7 +45,7 @@ target_include_directories(
     $<INSTALL_INTERFACE:include>)
 
 target_link_libraries(
-  ${PROJECT_NAME} 
+  ${PROJECT_NAME}
   # PRIVATE GPUOpen::VulkanMemoryAllocator
   PUBLIC Vulkan::Vulkan glfw glm::glm GPUOpen::VulkanMemoryAllocator
 )
