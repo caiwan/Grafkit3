@@ -9,7 +9,8 @@
 namespace Grafkit::Core {
 	class GKAPI Pipeline {
 	public:
-		Pipeline(Device const& device, std::tuple<VkPipeline, VkPipelineLayout, VkDescriptorSetLayout> pipeline,
+		Pipeline(Device const& device,
+			std::tuple<VkPipeline, VkPipelineLayout, VkDescriptorSetLayout> pipeline,
 			VkPipelineBindPoint pipelineBindPoint);
 		virtual ~Pipeline();
 
@@ -29,7 +30,7 @@ namespace Grafkit::Core {
 
 	// -----------------------------------------------------------------------------
 
-	class GraphicsPipelineBuilder {
+	class GKAPI GraphicsPipelineBuilder {
 	public:
 		GraphicsPipelineBuilder(Device const& device, VkRenderPass renderPass);
 		~GraphicsPipelineBuilder() = default;

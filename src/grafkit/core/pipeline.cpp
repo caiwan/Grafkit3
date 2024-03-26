@@ -2,7 +2,8 @@
 
 using namespace Grafkit::Core;
 
-Pipeline::Pipeline(Device const& device, std::tuple<VkPipeline, VkPipelineLayout, VkDescriptorSetLayout> pipeline,
+Pipeline::Pipeline(Device const& device,
+	std::tuple<VkPipeline, VkPipelineLayout, VkDescriptorSetLayout> pipeline,
 	VkPipelineBindPoint pipelineBindPoint)
 	: device(device)
 	, pipelineBindPoint(pipelineBindPoint)
@@ -29,7 +30,8 @@ GraphicsPipelineBuilder::GraphicsPipelineBuilder(Device const& device, VkRenderP
 {
 	// Setup defaults
 	SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_FALSE);
-	SetRasterizer(VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT,
+	SetRasterizer(VK_POLYGON_MODE_FILL,
+		VK_CULL_MODE_BACK_BIT,
 		VK_FRONT_FACE_CLOCKWISE); // TOOD: Clarify default polygon winding order
 	SetMultisampling(VK_SAMPLE_COUNT_1_BIT, VK_FALSE);
 
@@ -198,7 +200,8 @@ PipelinePtr GraphicsPipelineBuilder::Build()
 	}
 
 	PipelinePtr pipeline = std::make_shared<Pipeline>(device,
-		std::make_tuple(graphicsPipeline, pipelineLayout, descriptorSetLayout), VK_PIPELINE_BIND_POINT_GRAPHICS);
+		std::make_tuple(graphicsPipeline, pipelineLayout, descriptorSetLayout),
+		VK_PIPELINE_BIND_POINT_GRAPHICS);
 
 	for (auto shaderStage : shaderStages) {
 		vkDestroyShaderModule(device.GetVkDevice(), shaderStage.module, nullptr);
