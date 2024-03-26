@@ -54,30 +54,30 @@ namespace Grafkit::Core {
 			const VkPolygonMode polygonMode, const VkCullModeFlags cullMode, const VkFrontFace frontFace);
 		GraphicsPipelineBuilder& SetMultisampling(
 			const VkSampleCountFlagBits rasterizationSamples, const VkBool32 sampleShadingEnable = VK_FALSE);
-		GraphicsPipelineBuilder& SetColorBlending(const VkPipelineColorBlendAttachmentState& colorBlendAttachment);
-		GraphicsPipelineBuilder& SetDynamicState(const std::vector<VkDynamicState>& dynamicStates);
+		GraphicsPipelineBuilder& SetColorBlending(const VkPipelineColorBlendAttachmentState& m_colorBlendAttachment);
+		GraphicsPipelineBuilder& SetDynamicState(const std::vector<VkDynamicState>& m_dynamicStates);
 
 		PipelinePtr Build();
 
 	private:
-		Device const& device;
-		VkRenderPass renderPass;
+		Device const& m_device;
+		VkRenderPass m_renderPass;
 
-		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
-		VkPipelineInputAssemblyStateCreateInfo inputAssembly {};
+		std::vector<VkPipelineShaderStageCreateInfo> m_shaderStages;
+		VkPipelineInputAssemblyStateCreateInfo m_inputAssembly {};
 
-		std::vector<VkVertexInputBindingDescription> vertBindingDescriptions;
-		std::vector<VkVertexInputAttributeDescription> vertInputAttrDescriptions;
+		std::vector<VkVertexInputBindingDescription> m_vertexBindingDescriptions;
+		std::vector<VkVertexInputAttributeDescription> m_vertexInputAttrDescriptions;
 
-		std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+		std::vector<VkDescriptorSetLayout> m_descriptorSetLayouts;
 
-		std::vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutBindings;
+		std::vector<VkDescriptorSetLayoutBinding> m_descriptorSetLayoutBindings;
 
-		VkPipelineViewportStateCreateInfo viewportState {};
-		VkPipelineRasterizationStateCreateInfo rasterizer {};
-		VkPipelineMultisampleStateCreateInfo multisampling {};
-		std::vector<VkDynamicState> dynamicStates;
-		VkPipelineColorBlendAttachmentState colorBlendAttachment {};
+		VkPipelineViewportStateCreateInfo m_viewportState {};
+		VkPipelineRasterizationStateCreateInfo m_rasterizer {};
+		VkPipelineMultisampleStateCreateInfo m_multisampling {};
+		std::vector<VkDynamicState> m_dynamicStates;
+		VkPipelineColorBlendAttachmentState m_colorBlendAttachment {};
 
 		VkShaderModule CreateShaderModule(unsigned char* const& code, size_t len) const;
 		VkShaderModule CreateShaderModule(const std::vector<char>& code) const;
