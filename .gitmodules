@@ -22,3 +22,6 @@
 [submodule "thirdparties/glm"]
 	path = thirdparties/glm
 	url = git@github.com:g-truc/glm.git
+[submodule "thirdparties/vk-bootstrap"]
+	path = thirdparties/vk-bootstrap
+	url = https://github.com/charles-lunarg/vk-bootstrap.git
