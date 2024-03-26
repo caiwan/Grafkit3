@@ -17,12 +17,12 @@
 using namespace Grafkit::Core;
 
 Device::Device(const Core::Instance& instance)
-	: instance(instance)
-	, physicalDevice(PickPhysicalDevice(instance.GetVkInstance()))
+	: m_instance(instance)
+	, m_physicalDevice(PickPhysicalDevice(instance.GetVkInstance()))
 	, device(CreateLogicalDevice(instance.GetVkInstance()))
-	, graphicsQueue(CreateGraphicsQueue())
-	, presentQueue(CreatePresentQueue())
-	, commandPool(CreateCommandPool())
+	, m_graphicsQueue(CreateGraphicsQueue())
+	, m_presentQueue(CreatePresentQueue())
+	, m_commandPool(CreateCommandPool())
 {
 	InitializeAllocator();
 }
@@ -31,8 +31,8 @@ Device::~Device()
 {
 	WaitIdle();
 
-	vmaDestroyAllocator(allocator);
-	vkDestroyCommandPool(device, commandPool, nullptr);
+	vmaDestroyAllocator(m_allocator);
+	vkDestroyCommandPool(device, m_commandPool, nullptr);
 	vkDestroyDevice(device, nullptr);
 }
 
@@ -44,7 +44,7 @@ VkCommandBuffer Device::BeginSingleTimeCommands() const
 	VkCommandBufferAllocateInfo allocInfo = {};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandPool = commandPool;
+	allocInfo.commandPool = m_commandPool;
 	allocInfo.commandBufferCount = 1;
 
 	vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
@@ -67,10 +67,10 @@ void Device::EndSingleTimeCommands(const VkCommandBuffer& commandBuffer) const
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &commandBuffer;
 
-	vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-	vkQueueWaitIdle(graphicsQueue);
+	vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+	vkQueueWaitIdle(m_graphicsQueue);
 
-	vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
+	vkFreeCommandBuffers(device, m_commandPool, 1, &commandBuffer);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------------
@@ -83,25 +83,21 @@ VkPhysicalDevice Device::PickPhysicalDevice(const VkInstance& instance) const
 	uint32_t deviceCount = 0;
 	vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 
-	if (deviceCount == 0)
-	{
+	if (deviceCount == 0) {
 		throw std::runtime_error("failed to find GPUs with Vulkan support!");
 	}
 
 	std::vector<VkPhysicalDevice> devices(deviceCount);
 	vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
 
-	for (const auto& device : devices)
-	{
-		if (IsDeviceSuitable(device))
-		{
+	for (const auto& device : devices) {
+		if (IsDeviceSuitable(device)) {
 			physicalDevice = device;
 			break;
 		}
 	}
 
-	if (physicalDevice == VK_NULL_HANDLE)
-	{
+	if (physicalDevice == VK_NULL_HANDLE) {
 		throw std::runtime_error("failed to find a suitable GPU!");
 	}
 
@@ -116,8 +112,7 @@ VkDevice Device::CreateLogicalDevice(const VkInstance& instance) const
 	std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
 	float queuePriority = 1.0f;
-	for (uint32_t queueFamily : uniqueQueueFamilies)
-	{
+	for (uint32_t queueFamily : uniqueQueueFamilies) {
 		VkDeviceQueueCreateInfo queueCreateInfo {};
 		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 		queueCreateInfo.queueFamilyIndex = queueFamily;
@@ -139,18 +134,15 @@ VkDevice Device::CreateLogicalDevice(const VkInstance& instance) const
 	createInfo.enabledExtensionCount = static_cast<uint32_t>(Instance::deviceExtensions.size());
 	createInfo.ppEnabledExtensionNames = Instance::deviceExtensions.data();
 
-	if (Instance::enableValidationLayers)
-	{
+	if (Instance::enableValidationLayers) {
 		createInfo.enabledLayerCount = static_cast<uint32_t>(Instance::validationLayers.size());
 		createInfo.ppEnabledLayerNames = Instance::validationLayers.data();
-	}
-	else
-	{
+	} else {
 		createInfo.enabledLayerCount = 0;
 	}
 
 	VkDevice createdPhysicalDevice;
-	vkCreateDevice(physicalDevice, &createInfo, nullptr, &createdPhysicalDevice);
+	vkCreateDevice(m_physicalDevice, &createInfo, nullptr, &createdPhysicalDevice);
 	return createdPhysicalDevice;
 }
 
@@ -172,19 +164,19 @@ VkQueue Device::CreatePresentQueue() const
 
 VkCommandPool Device::CreateCommandPool() const
 {
-	QueueFamilyIndices queueFamilyIndices = FindQueueFamilies();
+	QueueFamilyIndices indices = FindQueueFamilies();
 
 	VkCommandPoolCreateInfo poolInfo {};
 	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+	poolInfo.queueFamilyIndex = indices.graphicsFamily.value();
 
 	VkCommandPool createdCommandPool;
-	vkCreateCommandPool(device, &poolInfo, nullptr, &createdCommandPool);
+	if (vkCreateCommandPool(device, &poolInfo, nullptr, &createdCommandPool) != VK_SUCCESS) {
+		throw std::runtime_error("failed to create command pool!");
+	}
 	return createdCommandPool;
 }
-
-
 
 bool Device::IsDeviceSuitable(const VkPhysicalDevice& device) const
 {
@@ -193,8 +185,7 @@ bool Device::IsDeviceSuitable(const VkPhysicalDevice& device) const
 	bool extensionsSupported = CheckDeviceExtensionSupport(device);
 
 	bool swapChainAdequate = false;
-	if (extensionsSupported)
-	{
+	if (extensionsSupported) {
 		SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(device);
 		swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
 	}
@@ -213,23 +204,19 @@ QueueFamilyIndices Device::FindQueueFamilies(const VkPhysicalDevice& device) con
 	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
 	int i = 0;
-	for (const auto& queueFamily : queueFamilies)
-	{
-		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-		{
+	for (const auto& queueFamily : queueFamilies) {
+		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
 			indices.graphicsFamily = i;
 		}
 
 		VkBool32 presentSupport = false;
-		vkGetPhysicalDeviceSurfaceSupportKHR(device, i, instance.GetVkSurface(), &presentSupport);
+		vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_instance.GetVkSurface(), &presentSupport);
 
-		if (presentSupport)
-		{
+		if (presentSupport) {
 			indices.presentFamily = i;
 		}
 
-		if (indices.isComplete())
-		{
+		if (indices.isComplete()) {
 			break;
 		}
 
@@ -243,24 +230,23 @@ SwapChainSupportDetails Device::QuerySwapChainSupport(const VkPhysicalDevice& de
 {
 	SwapChainSupportDetails details;
 
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, instance.GetVkSurface(), &details.capabilities);
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, m_instance.GetVkSurface(), &details.capabilities);
 
 	uint32_t formatCount;
-	vkGetPhysicalDeviceSurfaceFormatsKHR(device, instance.GetVkSurface(), &formatCount, nullptr);
+	vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_instance.GetVkSurface(), &formatCount, nullptr);
 
-	if (formatCount != 0)
-	{
+	if (formatCount != 0) {
 		details.formats.resize(formatCount);
-		vkGetPhysicalDeviceSurfaceFormatsKHR(device, instance.GetVkSurface(), &formatCount, details.formats.data());
+		vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_instance.GetVkSurface(), &formatCount, details.formats.data());
 	}
 
 	uint32_t presentModeCount;
-	vkGetPhysicalDeviceSurfacePresentModesKHR(device, instance.GetVkSurface(), &presentModeCount, nullptr);
+	vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_instance.GetVkSurface(), &presentModeCount, nullptr);
 
-	if (presentModeCount != 0)
-	{
+	if (presentModeCount != 0) {
 		details.presentModes.resize(presentModeCount);
-		vkGetPhysicalDeviceSurfacePresentModesKHR(device, instance.GetVkSurface(), &presentModeCount, details.presentModes.data());
+		vkGetPhysicalDeviceSurfacePresentModesKHR(
+			device, m_instance.GetVkSurface(), &presentModeCount, details.presentModes.data());
 	}
 
 	return details;
@@ -276,8 +262,7 @@ bool Device::CheckDeviceExtensionSupport(const VkPhysicalDevice& device) const
 
 	std::set<std::string> requiredExtensions(Instance::deviceExtensions.begin(), Instance::deviceExtensions.end());
 
-	for (const auto& extension : availableExtensions)
-	{
+	for (const auto& extension : availableExtensions) {
 		requiredExtensions.erase(extension.extensionName);
 	}
 
@@ -287,8 +272,8 @@ bool Device::CheckDeviceExtensionSupport(const VkPhysicalDevice& device) const
 void Device::InitializeAllocator()
 {
 	VmaAllocatorCreateInfo allocatorInfo = {};
-	allocatorInfo.physicalDevice = physicalDevice;
+	allocatorInfo.m_physicalDevice = m_physicalDevice;
 	allocatorInfo.device = device;
-	allocatorInfo.instance = instance.GetVkInstance();
-	vmaCreateAllocator(&allocatorInfo, &allocator);
+	allocatorInfo.m_instance = m_instance.GetVkInstance();
+	vmaCreateAllocator(&allocatorInfo, &m_allocator);
 }
