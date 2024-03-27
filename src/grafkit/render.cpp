@@ -10,6 +10,7 @@
 #include <stdexcept>
 //
 #include <grafkit/core/device.h>
+#include <grafkit/core/initializers.h>
 #include <grafkit/core/instance.h>
 #include <grafkit/core/swap_chain.h>
 #include <grafkit/render.h>
@@ -21,7 +22,7 @@ constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 RenderContext::RenderContext(const Core::Window& window)
 	: window(window)
 	, instance(std::make_unique<Core::Instance>(window))
-	, device(std::make_unique<Core::Device>(*instance))
+	, device(std::make_unique<Core::Device>(*m_instance))
 	, swapChain(std::make_unique<Core::SwapChain>(window, *instance, *device))
 {
 	InitializeRenderPass();
@@ -31,13 +32,15 @@ RenderContext::RenderContext(const Core::Window& window)
 
 RenderContext::~RenderContext()
 {
-	device->WaitIdle();
-	vkFreeCommandBuffers(device->GetVkDevice(), device->GetVkCommandPool(), 1, &commandBuffer);
+	Flush();
+
+	vkFreeCommandBuffers(
+		device->GetVkDevice(), device->GetVkCommandPool(), commandBuffers.size(), commandBuffers.data());
 	vkDestroyRenderPass(device->GetVkDevice(), renderPass, nullptr);
-	for (auto framebuffer : frameBuffers)
-	{
+	for (auto framebuffer : frameBuffers) {
 		vkDestroyFramebuffer(device->GetVkDevice(), framebuffer, nullptr);
 	}
+
 	swapChain.reset();
 	device.reset();
 	instance.reset();
@@ -45,35 +48,35 @@ RenderContext::~RenderContext()
 
 VkCommandBuffer RenderContext::BeginCommandBuffer()
 {
-	swapChain->AcquireNextFrame();
-	vkResetCommandBuffer(commandBuffer, /*VkCommandBufferResetFlagBits*/ 0);
+	currentFrameIndex = swapChain->GetCurrentFrameIndex();
+	nextFrameIndex = swapChain->AcquireNextFrame();
 
-	return commandBuffer;
+	vkResetCommandBuffer(commandBuffers[currentFrameIndex], 0);
+	return commandBuffers[currentFrameIndex];
 }
 
 void RenderContext::BeginFrame(VkCommandBuffer& commandBuffer)
 {
-	VkCommandBufferBeginInfo beginInfo {};
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	VkCommandBufferBeginInfo beginInfo = Core::Initializers::CommandBufferBeginInfo();
 
-	if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
-	{
+	if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
 		throw std::runtime_error("failed to begin recording command buffer!");
 	}
 
-	const auto imageIndex = swapChain->GetCurrentImageIndex();
 	const auto swapChainExtent = swapChain->GetExtent();
 
-	VkRenderPassBeginInfo renderPassInfo {};
-	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	VkClearValue clearValues[2];
+	clearValues[0].color = { { 0.0f, 0.0f, 0.2f, 1.0f } };
+	clearValues[1].depthStencil = { 1.0f, 0 };
+
+	VkRenderPassBeginInfo renderPassInfo = Core::Initializers::RenderPassBeginInfo();
+	renderPassInfo.pNext = nullptr;
 	renderPassInfo.renderPass = renderPass;
-	renderPassInfo.framebuffer = frameBuffers[imageIndex];
 	renderPassInfo.renderArea.offset = { 0, 0 };
 	renderPassInfo.renderArea.extent = swapChainExtent;
-
-	VkClearValue clearColor = { { { 0.0f, 0.0f, 0.0f, 1.0f } } };
-	renderPassInfo.clearValueCount = 1;
-	renderPassInfo.pClearValues = &clearColor;
+	renderPassInfo.framebuffer = frameBuffers[nextFrameIndex];
+	renderPassInfo.clearValueCount = 2;
+	renderPassInfo.pClearValues = clearValues;
 
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -92,17 +95,22 @@ void RenderContext::BeginFrame(VkCommandBuffer& commandBuffer)
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 }
 
-void RenderContext::DrawFrame(VkCommandBuffer& commandBuffer)
+void RenderContext::EndFrame(VkCommandBuffer& commandBuffer)
 {
 	vkCmdEndRenderPass(commandBuffer);
 
-	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
-	{
+	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
 		throw std::runtime_error("failed to record command buffer!");
 	}
 
 	swapChain->SubmitCommandBuffer(commandBuffer);
 	swapChain->Present();
+}
+
+void RenderContext::Flush()
+{
+	swapChain->WaitForFences();
+	device->WaitIdle();
 }
 
 Core::GraphicsPipelineBuilder RenderContext::CreateGraphicsPipelineBuilder() const
@@ -115,14 +123,11 @@ Core::GraphicsPipelineBuilder RenderContext::CreateGraphicsPipelineBuilder() con
 void RenderContext::InitializeCommandBuffers()
 {
 
-	VkCommandBufferAllocateInfo allocInfo {};
-	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	allocInfo.commandPool = device->GetVkCommandPool();
-	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandBufferCount = 1;
+	VkCommandBufferAllocateInfo allocInfo = Core::Initializers::CommandBufferAllocateInfo(
+		device->GetVkCommandPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY, static_cast<uint32_t>(swapChain->GetImageCount()));
 
-	if (vkAllocateCommandBuffers(device->GetVkDevice(), &allocInfo, &commandBuffer) != VK_SUCCESS)
-	{
+	commandBuffers.resize(swapChain->GetImageCount());
+	if (vkAllocateCommandBuffers(device->GetVkDevice(), &allocInfo, commandBuffers.data()) != VK_SUCCESS) {
 		throw std::runtime_error("failed to allocate command buffers!");
 	}
 }
@@ -136,8 +141,7 @@ void RenderContext::InitializeFrameBuffers()
 	// frameBuffers.resize(frameBuffers.size());
 	const size_t frameBufferCount = swapChain->GetImageCount();
 
-	for (size_t i = 0; i < frameBufferCount; i++)
-	{
+	for (size_t i = 0; i < frameBufferCount; i++) {
 		frameBuffers.emplace_back(VkFramebuffer());
 		VkImageView attachments[] = { swapChain->GetImageViews()[i] };
 
@@ -150,8 +154,7 @@ void RenderContext::InitializeFrameBuffers()
 		framebufferInfo.height = swapChainExtent.height;
 		framebufferInfo.layers = 1;
 
-		if (vkCreateFramebuffer(device->GetVkDevice(), &framebufferInfo, nullptr, &frameBuffers.back()) != VK_SUCCESS)
-		{
+		if (vkCreateFramebuffer(device->GetVkDevice(), &framebufferInfo, nullptr, &frameBuffers.back()) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create framebuffer!");
 		}
 	}
@@ -196,8 +199,7 @@ void RenderContext::InitializeRenderPass()
 	renderPassInfo.dependencyCount = 1;
 	renderPassInfo.pDependencies = &dependency;
 
-	if (vkCreateRenderPass(device->GetVkDevice(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
-	{
+	if (vkCreateRenderPass(device->GetVkDevice(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create render pass!");
 	}
 }

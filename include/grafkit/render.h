@@ -6,39 +6,43 @@
 #include <vector>
 //
 #include <grafkit/common.h>
-#include <grafkit/core/window.h>
+#include <grafkit/core/device.h>
 #include <grafkit/core/pipeline.h>
+#include <grafkit/core/window.h>
 
-namespace Grafkit
-{
-	class GKAPI RenderContext
-	{
+namespace Grafkit {
+	class GKAPI RenderContext {
 	public:
 		explicit RenderContext(const Core::Window& window);
 		virtual ~RenderContext();
 
+		[[nodiscard]] inline Core::Device& GetDevice() const { return *m_device; }
+
 		[[nodiscard]] VkCommandBuffer BeginCommandBuffer();
 		void BeginFrame(VkCommandBuffer& commandBuffer);
-		void DrawFrame(VkCommandBuffer& commandBuffer);
+		void EndFrame(VkCommandBuffer& commandBuffer);
+
+		void Flush();
 
 		Grafkit::Core::GraphicsPipelineBuilder CreateGraphicsPipelineBuilder() const;
 
 	private:
 		const Core::Window& window;
 
-		Core::InstancePtr instance;
-		Core::DevicePtr device;
+		Core::InstancePtr m_instance;
+		Core::DevicePtr m_device;
 		Core::SwapChainPtr swapChain;
 
 		std::vector<VkFramebuffer> frameBuffers;
 		VkRenderPass renderPass;
-		VkCommandBuffer commandBuffer;
+		std::vector<VkCommandBuffer> commandBuffers;
 
-		size_t currentFrameIndex = 0;
+		uint32_t currentFrameIndex = 0;
+		uint32_t nextFrameIndex = 0;
 
 		void InitializeCommandBuffers();
 		void InitializeFrameBuffers();
 		void InitializeRenderPass();
 	};
-}
+} // namespace Grafkit
 #endif // __RENDER_CONTEXT_H__
