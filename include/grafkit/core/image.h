@@ -35,7 +35,7 @@ namespace Grafkit::Core
 			return m_layout;
 		}
 
-		// MARLK: Factory methods
+		// MARK: Factory methods
 		static ImagePtr CreateImage(const DeviceRef &device,
 			const VkExtent3D size,
 			const VkFormat format,

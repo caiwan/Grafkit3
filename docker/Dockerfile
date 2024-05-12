@@ -1,5 +1,5 @@
-ARG BASE_IMAGE=ubuntu:20.04
-FROM ${BASE_IMAGE} as builder
+ARG BASE_IMAGE=debian:bookworm-slim
+FROM ${BASE_IMAGE} AS builder
 
 USER root
 
@@ -7,7 +7,7 @@ USER root
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt update \
-    && apt upgrade \
+    && apt upgrade -y \
     && apt install -y \
         software-properties-common \
         ca-certificates \
@@ -21,6 +21,7 @@ RUN apt update \
         clang \
         pkg-config \
         python3 \
+        python3-venv \
         python3-distutils \
         python3-jsonschema \
         python-is-python3 \
@@ -46,9 +47,7 @@ RUN apt install -y \
         libwayland-dev \
         libxrandr-dev \
         libxcb-randr0-dev \
-        libxcb-ewmh-dev \
-        wayland-protocols \
-        vulkan-utils
+        libxcb-ewmh-dev
 
 RUN apt install -y \
         qtbase5-dev \
@@ -56,23 +55,19 @@ RUN apt install -y \
         qt5-qmake \
         qtbase5-dev-tools
 
-RUN sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF \
-    && echo "deb https://download.mono-project.com/repo/ubuntu stable-focal main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list \
-    && apt update \
-    && apt install -y mono-devel
-
 RUN curl -L -o /tmp/cmake.tar.gz https://github.com/Kitware/CMake/releases/download/v3.28.2/cmake-3.28.2-linux-x86_64.tar.gz  \
     && tar -xvzf /tmp/cmake.tar.gz -C /usr/local --strip-components=1
 
-RUN export VULKAN_VERSION=1.3.275.0 \
-    && export VULKAN_SDK_VERSION=1.3.275.0 \
-    && export VULKAN_SDK_URL=https://sdk.lunarg.com/sdk/download/${VULKAN_VERSION}/linux/vulkansdk-linux-x86_64-${VULKAN_SDK_VERSION}.tar.xz \
-    && export VULKAN_SDK_DIR=/opt/vulkan/${VULKAN_SDK_VERSION} \
-    && mkdir -p ${VULKAN_SDK_DIR} \
-    && curl -L -o /tmp/vulkan-sdk.tar.gz ${VULKAN_SDK_URL} \
-    && tar -xvf /tmp/vulkan-sdk.tar.gz -C /tmp \
-    && /tmp/${VULKAN_SDK_VERSION}/vulkansdk --skip-deps -j 5 \
-    && cp /tmp/${VULKAN_SDK_VERSION}/setup-env.sh /etc/profile.d/vulkan.sh
+ENV VULKAN_SDK_VERSION=1.3.275.0
+ENV VULKAN_SDK_URL=https://sdk.lunarg.com/sdk/download/${VULKAN_SDK_VERSION}/linux/vulkansdk-linux-x86_64-${VULKAN_SDK_VERSION}.tar.xz
+ENV VULKAN_SDK_DIR=/opt/vulkan/${VULKAN_SDK_VERSION}
+RUN mkdir -p ${VULKAN_SDK_DIR} \
+    && curl -L -o /tmp/vulkan-sdk.tar.gz ${VULKAN_SDK_URL}
+
+RUN tar -xvf /tmp/vulkan-sdk.tar.gz -C /var/tmp
+RUN /var/tmp/${VULKAN_SDK_VERSION}/vulkansdk --skip-deps --maxjobs
+RUN cp -r /var/tmp/${VULKAN_SDK_VERSION}/x86_64/ ${VULKAN_SDK_DIR} \
+    && cp /var/tmp/${VULKAN_SDK_VERSION}/setup-env.sh ${VULKAN_SDK_DIR}
 
 RUN apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
@@ -82,10 +77,10 @@ RUN apt-get clean \
 ENV NVIDIA_VISIBLE_DEVICES=all
 ENV NVIDIA_DRIVER_CAPABILITIES=graphics,utility,compute
 
-
 ENTRYPOINT [ "bash" "-c" ]
 
-FROM builder as dev
+# MARK: Develpper image
+FROM builder AS dev
 
 RUN apt update && \
     apt install -y \
@@ -116,3 +111,8 @@ RUN sed -i 's|/home/developer:/bin/bash|/home/developer:$(which zsh)|' /etc/pass
 USER developer
 WORKDIR /home/developer
 CMD [ "sleep infinity" ]
+
+# MARK: App image
+FROM builder AS app
+
+# TOOD: Build app here

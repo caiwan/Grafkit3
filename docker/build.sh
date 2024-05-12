@@ -7,7 +7,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 TARGET="app"
 IMAGE="caiwan/grafkit-vk"
 TAG="latest"
-BASE_IMAGE="ubuntu:20.04"
+BASE_IMAGE="debian:bookworm-slim"
 
 case $1 in
     app)
@@ -24,13 +24,11 @@ case $1 in
         ;;
 esac
 
-mkdir -p ${SCRIPT_DIR}/context
-
 DOCKER_BUILDKIT=1 docker build \
 --target $TARGET \
 --build-arg BASE_IMAGE=$BASE_IMAGE \
 -t "$IMAGE:$TAG" \
--f ${SCRIPT_DIR}/Dockerfile ${SCRIPT_DIR}/context
+-f ${SCRIPT_DIR}/Dockerfile ${SCRIPT_DIR}/../
 
 # TODO remove only if needed eg. clean build
 # rm -rf ./docker/context

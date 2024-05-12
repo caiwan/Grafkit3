@@ -88,7 +88,7 @@ VkDescriptorSet DescriptorPool::AllocateDescriptorSet(const VkDescriptorSetLayou
 [[nodiscard]] std::vector<VkDescriptorSet> DescriptorPool::AllocateDescriptorSets(const VkDescriptorSetLayout &layout,
 	const uint32_t count)
 {
-	Log::Instance().Debug("Allocating %d descriptor sets", count);
+	Log::Instance().Trace("Allocating %d descriptor sets", count);
 	std::vector<VkDescriptorSet> descriptorSets;
 	for (uint32_t i = 0; i < count; i++)
 	{
