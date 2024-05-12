@@ -7,7 +7,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 TARGET="app"
 IMAGE="caiwan/grafkit-vk"
 TAG="latest"
-BASE_IMAGE="ubuntu:20.04"
+BASE_IMAGE="debian:bookworm-slim"
 
 case $1 in
     app)
