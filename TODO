@@ -1,0 +1,4 @@
+Restructure:
+	☐ Add vkDeviceWaitIdle(device); at the end of Shutdown() -> RenderContext
+	☐ 
+

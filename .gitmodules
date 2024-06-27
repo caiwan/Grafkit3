@@ -4,9 +4,6 @@
 [submodule "thirdparties/spdlog"]
 	path = thirdparties/spdlog
 	url = git@github.com:gabime/spdlog.git
-[submodule "thirdparties/bullet3"]
-	path = thirdparties/bullet3
-	url = git@github.com:bulletphysics/bullet3.git
 [submodule "thirdparties/assimp"]
 	path = thirdparties/assimp
 	url = git@github.com:assimp/assimp.git
@@ -22,3 +19,6 @@
 [submodule "thirdparties/glm"]
 	path = thirdparties/glm
 	url = git@github.com:g-truc/glm.git
+[submodule "thirdparties/VulkanMemoryAllocator"]
+	path = thirdparties/VulkanMemoryAllocator
+	url = git@github.com:GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git

@@ -1,0 +1,11 @@
+function(string_camel_case_to_lower_snake_case str var)
+  string(REGEX REPLACE "(.)([A-Z][a-z]+)" "\\1_\\2" value "${str}")
+  string(REGEX REPLACE "([a-z0-9])([A-Z])" "\\1_\\2" value "${value}")
+  string(TOLOWER "${value}" value)
+  set(${var} "${value}" PARENT_SCOPE)
+endfunction(string_camel_case_to_lower_snake_case )
+
+function(string_camel_case_to_upper_snake_case str var)
+  string_camel_case_to_lower_snake_case(${str} ${var})
+  string(TOUPPER ${str} ${var})
+endfunction(string_camel_case_to_upper_snake_case var str)

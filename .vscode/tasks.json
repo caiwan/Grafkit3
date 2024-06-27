@@ -1,0 +1,27 @@
+{
+  "tasks": [
+    {
+      // https://github.com/microsoft/vscode-cmake-tools/blob/main/docs/tasks.md
+      "type": "cmake",
+      "label": "CMake: build player",
+      "command": "build",
+      "targets": [
+        "player"
+      ],
+      "group": "build",
+      "problemMatcher": [],
+      "detail": "CMake template build task"
+    },
+    {
+      "type": "cmake",
+      "label": "CMake: build all",
+      "command": "build",
+      "targets": [
+        "all"
+      ],
+      "group": "build",
+      "problemMatcher": [],
+      "detail": "CMake template build task"
+    },
+  ]
+}
