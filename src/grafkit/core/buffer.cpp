@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include <grafkit/core/buffer.h>
 #include <grafkit/core/device.h>
 #include <grafkit/core/initializers.h>

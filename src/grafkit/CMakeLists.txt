@@ -34,8 +34,8 @@ set_source_files_properties(
    PROPERTIES COMPILE_FLAGS -w)
 
 add_library(${PROJECT_NAME} STATIC
-  ${GRAFKIT_SOURCE_FILES}
   ${GRAFKIT_HEADER_FILES}
+  ${GRAFKIT_SOURCE_FILES}
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE GRAFKIT_LIBRARY_TYPE STATIC)
@@ -56,11 +56,14 @@ target_link_libraries(${PROJECT_NAME}
     glm::glm
 )
 
-target_precompile_headers(${PROJECT_NAME} PRIVATE
-  "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/stdafx.h>"
-)
+# target_precompile_headers(${PROJECT_NAME} PRIVATE
+#   "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/stdafx.h>"
+# )
 
 set_project_warnings(${PROJECT_NAME})
+set_project_clang_format(${PROJECT_NAME})
+set_project_clang_tidy(${PROJECT_NAME})
+
 set_property(TARGET ${PROJECT_NAME} PROPERTY COMPILE_WARNING_AS_ERROR ON)
 
 include(GNUInstallDirs)

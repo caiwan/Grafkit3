@@ -5,14 +5,13 @@
       "name": "(lldb) Launch Player",
       "type": "lldb-dap",
       "request": "launch",
-
       "args": [],
       "cwd": "${fileDirname}",
       "windows": {
         "program": "${workspaceRoot}/build/src/player/player.exe",
       },
       "linux": {
-        "program": "${workspaceRoot}/build/src/player/player.exe",
+        "program": "${workspaceRoot}/build/src/player/player",
       },
       "preLaunchTask": "CMake: build all"
     }

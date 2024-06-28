@@ -26,6 +26,7 @@
 #endif // __clang__
 
 #include <cstdint>
+#include <cstring>
 #include <map>
 #include <memory>
 #include <tuple>

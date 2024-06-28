@@ -25,9 +25,9 @@ set(SHADER_INCLUDE_DIR ${GENERATED_INCLUDE_DIR}/shaders)
 set(CMAKE_INCLUDE_CURRENT_DIR on)
 
 foreach(GLSL ${GLSL_SOURCE_FILES})
-  get_filename_component(FILE_NAME ${GLSL} NAME)
-  set(SPIRV "${SHADER_BINARY_DIR}/${FILE_NAME}.spv")
-  add_custom_command(
+	get_filename_component(FILE_NAME ${GLSL} NAME)
+	set(SPIRV "${SHADER_BINARY_DIR}/${FILE_NAME}.spv")
+	add_custom_command(
     OUTPUT ${SPIRV}
     COMMAND ${Vulkan_GLSLC_EXECUTABLE} ${GLSL} -o ${SPIRV}
     DEPENDS ${GLSL})

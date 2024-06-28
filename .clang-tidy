@@ -35,7 +35,6 @@ Checks: >
     modernize-use-equals-delete,
     modernize-use-nullptr,
     modernize-use-override,
-    modernize-use-trailing-return-type,
     modernize-use-transparent-functors,
     modernize-use-uncaught-exceptions,
     modernize-use-using,
@@ -58,14 +57,14 @@ CheckOptions:
     - { key: readability-identifier-naming.NamespaceCase,       value: CamelCase  }
     - { key: readability-identifier-naming.ClassCase,           value: CamelCase  }
     - { key: readability-identifier-naming.ClassMemberCase,     value: CamelCase  }
-    - { key: readability-identifier-naming.PrivateMemberPrefix, value: ''         }
-    - { key: readability-identifier-naming.PrivateMemberCase,   value: CamelCase  }
+    - { key: readability-identifier-naming.PrivateMemberPrefix, value: 'm_'       }
+    - { key: readability-identifier-naming.PrivateMemberCase,   value: camelBack  }
     - { key: readability-identifier-naming.PublicMemberPrefix,  value: ''         }
     - { key: readability-identifier-naming.PublicMemberCase,    value: camelBack  }
     - { key: readability-identifier-naming.StructCase,          value: CamelCase  }
     - { key: readability-identifier-naming.StructMemberCase,    value: CamelCase  }
     - { key: readability-identifier-naming.FunctionCase,        value: CamelCase  }
     - { key: readability-identifier-naming.VariableCase,        value: camelBack  }
-    - { key: readability-identifier-naming.GlobalConstantCase,  value: camelBack }
+    - { key: readability-identifier-naming.GlobalConstantCase,  value: UPPER_CASE }
     - { key: hicpp-signed-bitwise.IgnorePositiveIntegerLiterals, value: true}
     - { key: readability-braces-around-statements.ShortStatementLines, value: 0 }
