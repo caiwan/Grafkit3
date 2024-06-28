@@ -7,7 +7,7 @@ using namespace Grafkit::Core;
 
 constexpr uint32_t MAX_SET_COUNT = 4096;
 
-DescriptorPool::DescriptorPool(const DeviceRef& device, const uint32_t maxSets, const std::vector<PoolSet> poolRatios)
+DescriptorPool::DescriptorPool(const DeviceRef& device, const uint32_t maxSets, const std::vector<PoolSet>& poolRatios)
 	: m_device(device)
 	, m_poolSets(poolRatios.begin(), poolRatios.end())
 	, m_maxSets(std::min(maxSets, MAX_SET_COUNT))

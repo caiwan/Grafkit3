@@ -5,44 +5,41 @@
 #include <grafkit/render/mesh.h>
 #include <grafkit/resource/resource.h>
 
-namespace Grafkit {
-	namespace Resource {
+namespace Grafkit::Resource {
 
-		struct PrimitiveDesc {
-			std::vector<Vertex> vertices;
-			std::vector<uint32_t> indices;
-			Grafkit::MaterialPtr material;
-		};
+	struct PrimitiveDesc {
+		std::vector<Vertex> vertices;
+		std::vector<uint32_t> indices;
+		Grafkit::MaterialPtr material;
+	};
 
-		struct MeshDesc {
-			std::vector<PrimitiveDesc> primitives;
-		};
+	struct MeshDesc {
+		std::vector<PrimitiveDesc> primitives;
+	};
 
-		class MeshBuilder : public ResourceBuilder<MeshDesc, Grafkit::Mesh> {
-		public:
-			explicit MeshBuilder(const MeshDesc& desc = {})
-				: ResourceBuilder(desc)
-			{
-			}
+	class MeshBuilder : public ResourceBuilder<MeshDesc, Grafkit::Mesh> {
+	public:
+		explicit MeshBuilder(const MeshDesc& desc = {})
+			: ResourceBuilder(desc)
+		{
+		}
 
-			virtual void Build(const Core::DeviceRef& device) override;
-		};
+		void Build(const Core::DeviceRef& device) override;
+	};
 
-		// // ...
-		// struct SceneGraphDesc { };
+	// // ...
+	// struct SceneGraphDesc { };
 
-		// class SceneGraphBuilder : public ResourceBuilder<SceneGraphDesc, Grafkit::SceneGraph> {
-		// public:
-		// 	explicit SceneGraphBuilder(const SceneGraphDesc& desc = {})
-		// 		: ResourceBuilder(desc)
-		// 	{
-		// 	}
+	// class SceneGraphBuilder : public ResourceBuilder<SceneGraphDesc, Grafkit::SceneGraph> {
+	// public:
+	// 	explicit SceneGraphBuilder(const SceneGraphDesc& desc = {})
+	// 		: ResourceBuilder(desc)
+	// 	{
+	// 	}
 
-		// 	virtual void Build(const Core::DeviceRef& device, const ResoureMangerRef& resources) override;
-		// };
+	// 	virtual void Build(const Core::DeviceRef& device, const ResoureMangerRef& resources) override;
+	// };
 
-	} // namespace Resource
-
-} // namespace Grafkit
+} // namespace Grafkit::Resource
 
 #endif // SCENEGRAPH_BUILDER_H

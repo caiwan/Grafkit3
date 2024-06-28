@@ -17,7 +17,7 @@ using namespace Grafkit::Core;
 constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
 RenderContext::RenderContext(const Core::WindowRef& window)
-	: window(window)
+	: m_window(window)
 {
 	m_instance = std::make_unique<Core::Instance>(window);
 

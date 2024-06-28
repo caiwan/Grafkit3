@@ -10,7 +10,7 @@ namespace Grafkit {
 		GRAFKIT_RESOURCE_KIND("Texture")
 
 		explicit Texture(const Core::DeviceRef& device, Core::ImagePtr image, VkSampler sampler = VK_NULL_HANDLE);
-		virtual ~Texture();
+		~Texture() override;
 
 		void Bind(const Core::CommandBufferRef& commandBuffer,
 			const Core::PipelinePtr& pipeline,

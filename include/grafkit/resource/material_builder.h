@@ -2,6 +2,8 @@
 #define GRAFKIT_TEXTURE_BUILDER_H
 
 #include <grafkit/common.h>
+#include <grafkit/render/material.h>
+#include <grafkit/render/texture.h>
 #include <grafkit/resource/resource.h>
 #include <unordered_map>
 
@@ -38,7 +40,7 @@ namespace Grafkit::Resource {
 			return *this;
 		}
 
-		virtual void Build(const Core::DeviceRef& device) override;
+		void Build(const Core::DeviceRef& device) override;
 
 	private:
 		Core::PipelinePtr m_pipeline;
@@ -58,7 +60,7 @@ namespace Grafkit::Resource {
 		{
 		}
 
-		virtual void Build(const Core::DeviceRef& device) override;
+		void Build(const Core::DeviceRef& device) override;
 
 		[[nodiscard]] TextureBuilder& SetImage(const Core::ImagePtr& image)
 		{

@@ -4,8 +4,8 @@
 
 using namespace Grafkit::Core;
 
-std::mutex Log::g_mutex;
-std::unique_ptr<Logger> Log::g_logger;
+std::mutex Log::GMutex;
+std::unique_ptr<Logger> Log::GLogger;
 
 constexpr std::string_view DEBUG_COLOR_CODE = "\033[1;30m";
 constexpr std::string_view WARNING_COLOR_CODE = "\033[1;33m";

@@ -63,7 +63,8 @@ uint32_t Grafkit::Core::SwapChain::AcquireNextFrame()
 	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
 		// TODO: recreate swap chain -> Handle window resize
 		throw std::runtime_error("swap chain out of date!");
-	} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+	}
+	if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 		throw std::runtime_error("failed to acquire swap chain image!");
 	}
 
@@ -107,7 +108,8 @@ void SwapChain::Present()
 	if ((result == VK_ERROR_OUT_OF_DATE_KHR) || (result == VK_SUBOPTIMAL_KHR)) {
 		// TODO: recreate swap chain -> Handle window resize
 		throw std::runtime_error("swap chain out of date!");
-	} else if (result != VK_SUCCESS) {
+	}
+	if (result != VK_SUCCESS) {
 		throw std::runtime_error("failed to present swap chain image!");
 	}
 
@@ -129,16 +131,15 @@ VkExtent2D SwapChain::ChooseSwapExtent(const WindowRef& window, const DeviceRef&
 
 	if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
 		return capabilities.currentExtent;
-	} else {
-		VkExtent2D actualExtent = { static_cast<uint32_t>(windowSize.width), static_cast<uint32_t>(windowSize.height) };
-
-		actualExtent.width
-			= std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
-		actualExtent.height
-			= std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
-
-		return actualExtent;
 	}
+	VkExtent2D actualExtent = { static_cast<uint32_t>(windowSize.width), static_cast<uint32_t>(windowSize.height) };
+
+	actualExtent.width
+		= std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+	actualExtent.height
+		= std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+
+	return actualExtent;
 }
 
 void SwapChain::InitializeSwapChain(const WindowRef& window, const InstanceRef& instance, const DeviceRef& device)

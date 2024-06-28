@@ -7,11 +7,15 @@
 #include <grafkit/core/pipeline.h>
 #include <grafkit/render/texture.h>
 
+#include <utility>
+
+#include <utility>
+
 using namespace Grafkit;
 
 Texture::Texture(const Core::DeviceRef& device, Core::ImagePtr image, VkSampler sampler)
 	: m_device(device)
-	, m_image(image)
+	, m_image(std::move(std::move(image)))
 	, m_sampler(sampler)
 {
 	assert(m_image != nullptr);

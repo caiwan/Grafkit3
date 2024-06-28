@@ -51,7 +51,7 @@ ImagePtr Image::CreateImage(const DeviceRef& device,
 	// always allocate images on dedicated GPU memory
 	VmaAllocationCreateInfo allocInfo = {};
 	allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-	allocInfo.requiredFlags = VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	allocInfo.requiredFlags = static_cast<VkMemoryPropertyFlags>(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 	// allocate and create the image
 	if (vmaCreateImage(device->GetVmaAllocator(), &imageInfo, &allocInfo, &image, &allocation, nullptr) != VK_SUCCESS) {
@@ -107,15 +107,15 @@ ImagePtr Image::CreateImage(const DeviceRef& device,
 	const VkImageUsageFlags usage,
 	const VkImageLayout layout)
 {
-	const size_t data_size = size.depth * size.width * size.height * channels;
+	const size_t dataSize = size.depth * size.width * size.height * channels;
 	Buffer uploadbuffer
-		= Buffer::CreateBuffer(device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
+		= Buffer::CreateBuffer(device, dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
 
 	if (data != nullptr) {
-		uploadbuffer.Update(device, data, data_size);
+		uploadbuffer.Update(device, data, dataSize);
 	}
 
-	ImagePtr new_image = Image::CreateImage(device,
+	ImagePtr newImage = Image::CreateImage(device,
 		size,
 		format,
 		type,
@@ -123,10 +123,10 @@ ImagePtr Image::CreateImage(const DeviceRef& device,
 		usage | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
 		layout);
 
-	auto commandBuffer = device->BeginSingleTimeCommands();
+	auto* commandBuffer = device->BeginSingleTimeCommands();
 
 	TransitionImageLayout(
-		commandBuffer, new_image->GetImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+		commandBuffer, newImage->GetImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
 	VkBufferImageCopy copyRegion = {};
 	copyRegion.bufferOffset = 0;
@@ -139,20 +139,16 @@ ImagePtr Image::CreateImage(const DeviceRef& device,
 	copyRegion.imageSubresource.layerCount = 1;
 	copyRegion.imageExtent = size;
 
-	vkCmdCopyBufferToImage(commandBuffer,
-		uploadbuffer.buffer,
-		new_image->GetImage(),
-		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-		1,
-		&copyRegion);
+	vkCmdCopyBufferToImage(
+		commandBuffer, uploadbuffer.buffer, newImage->GetImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyRegion);
 
-	TransitionImageLayout(commandBuffer, new_image->GetImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, layout);
+	TransitionImageLayout(commandBuffer, newImage->GetImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, layout);
 
 	device->EndSingleTimeCommands(commandBuffer);
 
 	uploadbuffer.Destroy(device);
 
-	return new_image;
+	return newImage;
 }
 
 void Image::TransitionImageLayout(

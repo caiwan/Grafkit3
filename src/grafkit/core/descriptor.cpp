@@ -68,9 +68,9 @@ void DescriptorSet::Update(
 			m_descriptorSets[frame.value()], VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, binding, &bufferInfo);
 		vkUpdateDescriptorSets(**m_device, 1, &descriptorWrite, 0, nullptr);
 	} else {
-		for (size_t i = 0; i < m_descriptorSets.size(); i++) {
+		for (auto& mDescriptorSet : m_descriptorSets) {
 			VkWriteDescriptorSet descriptorWrite = Initializers::WriteDescriptorSet(
-				m_descriptorSets[i], VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, binding, &bufferInfo);
+				mDescriptorSet, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, binding, &bufferInfo);
 			vkUpdateDescriptorSets(**m_device, 1, &descriptorWrite, 0, nullptr);
 		}
 	}
@@ -84,9 +84,9 @@ void DescriptorSet::Update(
 			m_descriptorSets[frame.value()], VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, binding, &imageInfo);
 		vkUpdateDescriptorSets(**m_device, 1, &descriptorWrite, 0, nullptr);
 	} else {
-		for (size_t i = 0; i < m_descriptorSets.size(); i++) {
+		for (auto& mDescriptorSet : m_descriptorSets) {
 			VkWriteDescriptorSet descriptorWrite = Initializers::WriteDescriptorSet(
-				m_descriptorSets[i], VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, binding, &imageInfo);
+				mDescriptorSet, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, binding, &imageInfo);
 			vkUpdateDescriptorSets(**m_device, 1, &descriptorWrite, 0, nullptr);
 		}
 	}

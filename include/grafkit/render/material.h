@@ -12,18 +12,18 @@ namespace Grafkit {
 		float metallicFactor = 1.0f;
 	};
 
-	constexpr uint32_t TextureSet = 0;
-	constexpr uint32_t CameraViewSet = 1;
-	constexpr uint32_t ModelViewSet = 2;
+	constexpr uint32_t TEXTURE_SET = 0;
+	constexpr uint32_t CAMERA_VIEW_SET = 1;
+	constexpr uint32_t MODEL_VIEW_SET = 2;
 
-	constexpr uint32_t DiffuseTextureBinding = 0;
-	constexpr uint32_t NormalTextureBinding = 1;
-	constexpr uint32_t RoughnessTextureBinding = 2;
-	constexpr uint32_t MetallicTextureBinding = 3;
-	constexpr uint32_t AmbientOcclusionTextureBinding = 4;
-	constexpr uint32_t EmissiveTextureBinding = 5;
+	constexpr uint32_t DIFFUSE_TEXTURE_BINDING = 0;
+	constexpr uint32_t NORMAL_TEXTURE_BINDING = 1;
+	constexpr uint32_t ROUGHNESS_TEXTURE_BINDING = 2;
+	constexpr uint32_t METALLIC_TEXTURE_BINDING = 3;
+	constexpr uint32_t AMBIENT_OCCLUSION_TEXTURE_BINDING = 4;
+	constexpr uint32_t EMISSIVE_TEXTURE_BINDING = 5;
 
-	constexpr uint32_t ModelViewBinding = 0;
+	constexpr uint32_t MODEL_VIEW_BINDING = 0;
 
 	struct GKAPI Material : public IResource {
 		// enum class AlphaMode : uint32_t { Opaque, Mask, Blend };
@@ -38,45 +38,45 @@ namespace Grafkit {
 		{
 			return {
 				{
-					TextureSet,
+					TEXTURE_SET,
 					{
 						{
-							DiffuseTextureBinding,
+							DIFFUSE_TEXTURE_BINDING,
 							VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 							VK_SHADER_STAGE_FRAGMENT_BIT,
 						},
 						{
-							NormalTextureBinding,
+							NORMAL_TEXTURE_BINDING,
 							VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 							VK_SHADER_STAGE_FRAGMENT_BIT,
 						},
 						{
-							RoughnessTextureBinding,
+							ROUGHNESS_TEXTURE_BINDING,
 							VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 							VK_SHADER_STAGE_FRAGMENT_BIT,
 						},
 						{
-							MetallicTextureBinding,
+							METALLIC_TEXTURE_BINDING,
 							VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 							VK_SHADER_STAGE_FRAGMENT_BIT,
 						},
 						{
-							AmbientOcclusionTextureBinding,
+							AMBIENT_OCCLUSION_TEXTURE_BINDING,
 							VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 							VK_SHADER_STAGE_FRAGMENT_BIT,
 						},
 						{
-							EmissiveTextureBinding,
+							EMISSIVE_TEXTURE_BINDING,
 							VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 							VK_SHADER_STAGE_FRAGMENT_BIT,
 						},
 					},
 				},
 				{
-					CameraViewSet,
+					CAMERA_VIEW_SET,
 					{
 						{
-							ModelViewBinding,
+							MODEL_VIEW_BINDING,
 							VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 							VK_SHADER_STAGE_VERTEX_BIT,
 						},

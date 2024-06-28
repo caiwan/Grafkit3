@@ -64,11 +64,11 @@ public:
 		// m_resources = std::make_unique<Grafkit::Resource::ResoureManger>(m_renderContext.GetDevice());
 
 		m_materialDescriptor = m_renderContext.DescriptorBuilder()
-								   .AddLayoutBindings(Grafkit::Material::GetLayoutBindings()[Grafkit::TextureSet])
+								   .AddLayoutBindings(Grafkit::Material::GetLayoutBindings()[Grafkit::TEXTURE_SET])
 								   .Build();
 
 		m_modelviewDescriptor = m_renderContext.DescriptorBuilder()
-									.AddLayoutBindings(Grafkit::Material::GetLayoutBindings()[Grafkit::CameraViewSet])
+									.AddLayoutBindings(Grafkit::Material::GetLayoutBindings()[Grafkit::CAMERA_VIEW_SET])
 									.Build();
 
 		m_graphicsPipeline = m_renderContext.PipelineBuilder()
@@ -92,13 +92,13 @@ public:
 
 		Grafkit::MaterialPtr material = Grafkit::Resource::MaterialBuilder({})
 											.SetPipeline(m_graphicsPipeline)
-											.AddDescriptorSet(m_materialDescriptor, Grafkit::TextureSet)
-											.AddDescriptorSet(m_modelviewDescriptor, Grafkit::CameraViewSet)
-											.AddTexture(Grafkit::DiffuseTextureBinding, texture)
+											.AddDescriptorSet(m_materialDescriptor, Grafkit::TEXTURE_SET)
+											.AddDescriptorSet(m_modelviewDescriptor, Grafkit::CAMERA_VIEW_SET)
+											.AddTexture(Grafkit::DIFFUSE_TEXTURE_BINDING, texture)
 											.BuildResource(m_renderContext.GetDevice());
 
 		m_ubo = Grafkit::Core::UniformBuffer<Grafkit::CameraView>::CreateBuffer(m_renderContext.GetDevice());
-		m_modelviewDescriptor->Update(m_ubo.buffer, Grafkit::ModelViewBinding);
+		m_modelviewDescriptor->Update(m_ubo.buffer, Grafkit::MODEL_VIEW_BINDING);
 
 		Grafkit::MeshPtr mesh = Grafkit::Resource::MeshBuilder({
 																   .primitives = { {

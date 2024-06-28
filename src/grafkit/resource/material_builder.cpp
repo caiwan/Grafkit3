@@ -31,10 +31,10 @@ void MaterialBuilder::Build(const Core::DeviceRef& device)
 	// 	m_textures[bindId] = texture;
 	// }
 
-	assert(m_descriptorSets[Grafkit::TextureSet] != nullptr);
+	assert(m_descriptorSets[Grafkit::TEXTURE_SET] != nullptr);
 	for (const auto& [bindId, texture] : m_textures) {
 		assert(texture != nullptr);
-		m_descriptorSets[Grafkit::TextureSet]->Update(texture->GetImage(), texture->GetSampler(), bindId);
+		m_descriptorSets[Grafkit::TEXTURE_SET]->Update(texture->GetImage(), texture->GetSampler(), bindId);
 	}
 	m_resource = std::make_shared<Material>();
 

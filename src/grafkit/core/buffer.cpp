@@ -57,7 +57,7 @@ void Grafkit::Core::RingBuffer::Destroy(const DeviceRef& device)
 RingBuffer RingBuffer::CreateBuffer(
 	const DeviceRef& device, const size_t size, const VkBufferUsageFlags usage, const VmaMemoryUsage memoryUsage)
 {
-	RingBuffer RingBuffer = {};
+	RingBuffer ringBuffer = {};
 
 	for (size_t i = 0; i < device->GetMaxFramesInFlight(); i++) {
 		VkBufferCreateInfo bufferInfo = Initializers::BufferCreateInfo(usage, size);
@@ -79,11 +79,11 @@ RingBuffer RingBuffer::CreateBuffer(
 			throw std::runtime_error("failed to create buffer");
 		}
 
-		RingBuffer.buffers.push_back(buffer);
-		RingBuffer.mappedData.push_back(buffer.allocationInfo.pMappedData);
+		ringBuffer.buffers.push_back(buffer);
+		ringBuffer.mappedData.push_back(buffer.allocationInfo.pMappedData);
 	}
 
-	return RingBuffer;
+	return ringBuffer;
 }
 
 void Grafkit::Core::RingBuffer::Update(

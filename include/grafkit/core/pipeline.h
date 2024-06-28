@@ -28,7 +28,7 @@ namespace Grafkit::Core {
 		VkPipelineBindPoint const m_pipelineBindPoint;
 		VkPipeline m_pipeline;
 		VkPipelineLayout m_pipelineLayout;
-		std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+		std::vector<VkDescriptorSetLayout> m_descriptorSetLayouts;
 	};
 
 	// -----------------------------------------------------------------------------
@@ -43,7 +43,7 @@ namespace Grafkit::Core {
 		GraphicsPipelineBuilder& AddFragmentShader(const uint8_t* code, size_t len);
 		GraphicsPipelineBuilder& AddFragmentShader(const std::vector<char>& code);
 
-		GraphicsPipelineBuilder& SetVertexInputDescription(const VertexDescription desc);
+		GraphicsPipelineBuilder& SetVertexInputDescription(const VertexDescription& desc);
 
 		GraphicsPipelineBuilder& AddDescriptorSets(const std::vector<SetDescriptor>& bindings);
 		GraphicsPipelineBuilder& AddPushConstants(

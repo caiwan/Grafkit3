@@ -5,68 +5,65 @@
 #include <grafkit/core/buffer.h>
 #include <optional>
 
-namespace Grafkit {
-	namespace Core {
+namespace Grafkit::Core {
 
-		class GKAPI DescriptorSet {
-		public:
-			explicit DescriptorSet(const DeviceRef& device,
-				const VkDescriptorSetLayout layout,
-				const std::vector<VkDescriptorSet>& descriptors,
-				const uint32_t bindOffset = 0);
-			virtual ~DescriptorSet();
+	class GKAPI DescriptorSet {
+	public:
+		explicit DescriptorSet(const DeviceRef& device,
+			const VkDescriptorSetLayout layout,
+			const std::vector<VkDescriptorSet>& descriptors,
+			const uint32_t bindOffset = 0);
+		virtual ~DescriptorSet();
 
-			void Bind(const Core::CommandBufferRef& commandBuffer,
-				const VkPipelineLayout& pipelineLayout,
-				const uint32_t frame) const noexcept;
+		void Bind(const Core::CommandBufferRef& commandBuffer,
+			const VkPipelineLayout& pipelineLayout,
+			const uint32_t frame) const noexcept;
 
-			void Update(const Buffer& buffer,
-				const uint32_t binding,
-				const std::optional<uint32_t> frame = std::nullopt) noexcept;
+		void Update(
+			const Buffer& buffer, const uint32_t binding, const std::optional<uint32_t> frame = std::nullopt) noexcept;
 
-			void Update(const RingBuffer& buffer, const uint32_t binding) noexcept;
+		void Update(const RingBuffer& buffer, const uint32_t binding) noexcept;
 
-			void Update(const ImagePtr& image,
-				const VkSampler& sampler,
-				const uint32_t binding,
-				const std::optional<uint32_t> frame = std::nullopt) noexcept;
+		void Update(const ImagePtr& image,
+			const VkSampler& sampler,
+			const uint32_t binding,
+			const std::optional<uint32_t> frame = std::nullopt) noexcept;
 
-			[[nodiscard]] const VkDescriptorSetLayout& GetVkDescriptorSetLayout() const noexcept { return m_layout; }
-			[[nodiscard]] const VkDescriptorSet& GetVkDescriptorSet(const uint32_t currentFrame) const noexcept;
+		[[nodiscard]] const VkDescriptorSetLayout& GetVkDescriptorSetLayout() const noexcept { return m_layout; }
+		[[nodiscard]] const VkDescriptorSet& GetVkDescriptorSet(const uint32_t currentFrame) const noexcept;
 
-		private:
-			void Update(const VkDescriptorBufferInfo& bufferInfo,
-				const uint32_t binding,
-				const std::optional<uint32_t> frame = std::nullopt) noexcept;
+	private:
+		void Update(const VkDescriptorBufferInfo& bufferInfo,
+			const uint32_t binding,
+			const std::optional<uint32_t> frame = std::nullopt) noexcept;
 
-			void Update(const VkDescriptorImageInfo& imageInfo,
-				const uint32_t binding,
-				const std::optional<uint32_t> frame = std::nullopt) noexcept;
+		void Update(const VkDescriptorImageInfo& imageInfo,
+			const uint32_t binding,
+			const std::optional<uint32_t> frame = std::nullopt) noexcept;
 
-			const DeviceRef m_device;
-			std::vector<VkDescriptorSet> m_descriptorSets;
-			VkDescriptorSetLayout m_layout = VK_NULL_HANDLE;
-			uint32_t m_descriptorOffset = 0;
-		};
+		const DeviceRef m_device;
+		std::vector<VkDescriptorSet> m_descriptorSets;
+		VkDescriptorSetLayout m_layout = VK_NULL_HANDLE;
+		uint32_t m_descriptorOffset = 0;
+	};
 
-		// --
+	// --
 
-		class GKAPI DescriptorBuilder {
+	class GKAPI DescriptorBuilder {
 
-		public:
-			explicit DescriptorBuilder(const DeviceRef& device);
+	public:
+		explicit DescriptorBuilder(const DeviceRef& device);
 
-			DescriptorBuilder& AddLayoutBindings(const SetDescriptor& bindings);
+		DescriptorBuilder& AddLayoutBindings(const SetDescriptor& bindings);
 
-			[[nodiscard]] DescriptorSetPtr Build();
+		[[nodiscard]] DescriptorSetPtr Build();
 
-		private:
-			const DeviceRef m_device;
-			std::vector<VkDescriptorSetLayoutBinding> m_bindings;
-			uint32_t m_descriptorSet = 0;
-		};
+	private:
+		const DeviceRef m_device;
+		std::vector<VkDescriptorSetLayoutBinding> m_bindings;
+		uint32_t m_descriptorSet = 0;
+	};
 
-	} // namespace Core
-} // namespace Grafkit
+} // namespace Grafkit::Core
 
 #endif // GRAFKIT_CORE_DESCRIPTOR_H

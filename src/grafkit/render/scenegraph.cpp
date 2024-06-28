@@ -19,7 +19,7 @@ void Grafkit::Node::UpdateLocalMatrix()
 		= glm::translate(glm::mat4(1.0f), translation) * glm::mat4_cast(rotation) * glm::scale(glm::mat4(1.0f), scale);
 }
 
-Grafkit::NodePtr Grafkit::Scenegraph::CreateNode(const NodePtr& parent, MeshPtr mesh)
+Grafkit::NodePtr Grafkit::Scenegraph::CreateNode(const NodePtr& parent, const MeshPtr& mesh)
 {
 	NodePtr node = std::make_shared<Node>();
 	if (parent) {
@@ -56,7 +56,7 @@ void Grafkit::Scenegraph::Update(const Grafkit::TimeInfo& timeInfo)
 	stack.push(m_root);
 
 	std::stack<glm::mat4> matrixStack;
-	matrixStack.push(glm::mat4(1.0f));
+	matrixStack.emplace(1.0f);
 
 	while (!stack.empty()) {
 		NodePtr currentNode = stack.top();

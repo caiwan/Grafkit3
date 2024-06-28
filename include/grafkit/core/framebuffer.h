@@ -2,6 +2,8 @@
 #define GRAFKIT_FRAMEBUFFER_H
 
 #include <grafkit/common.h>
+#include <optional>
+#include <span>
 
 namespace Grafkit::Core {
 

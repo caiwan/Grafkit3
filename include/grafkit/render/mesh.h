@@ -81,7 +81,7 @@ namespace Grafkit {
 		GRAFKIT_RESOURCE_KIND("Mesh")
 
 		Mesh(const Core::DeviceRef& device);
-		~Mesh();
+		~Mesh() override;
 
 		void Create(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 
@@ -92,7 +92,7 @@ namespace Grafkit {
 
 		const Core::DeviceRef m_device;
 
-		uint32_t id;
+		uint32_t m_id;
 		std::vector<Primitive> m_primitives;
 		Core::Buffer m_vertexBuffer {};
 		Core::Buffer m_indexBuffer {};

@@ -151,19 +151,19 @@ void Device::CreateLogicalDevice()
 
 	createInfo.pEnabledFeatures = &deviceFeatures;
 
-	createInfo.enabledExtensionCount = static_cast<uint32_t>(Instance::deviceExtensions.size());
-	createInfo.ppEnabledExtensionNames = Instance::deviceExtensions.data();
+	createInfo.enabledExtensionCount = static_cast<uint32_t>(Instance::DEVICE_EXTENSIONS.size());
+	createInfo.ppEnabledExtensionNames = Instance::DEVICE_EXTENSIONS.data();
 
 	std::stringstream logExtList {};
 	logExtList << "Device extensions: ";
-	for (const auto& extension : Instance::deviceExtensions) {
+	for (const auto& extension : Instance::DEVICE_EXTENSIONS) {
 		logExtList << extension << " ";
 	}
 	Log::Instance().Info(logExtList.str());
 
-	if (Instance::enableValidationLayers) {
-		createInfo.enabledLayerCount = static_cast<uint32_t>(Instance::validationLayers.size());
-		createInfo.ppEnabledLayerNames = Instance::validationLayers.data();
+	if (Instance::ENABLE_VALIDATION_LAYERS) {
+		createInfo.enabledLayerCount = static_cast<uint32_t>(Instance::VALIDATION_LAYERS.size());
+		createInfo.ppEnabledLayerNames = Instance::VALIDATION_LAYERS.data();
 	} else {
 		createInfo.enabledLayerCount = 0;
 	}
@@ -282,7 +282,7 @@ bool Device::CheckDeviceExtensionSupport(const VkPhysicalDevice& device) const
 	std::vector<VkExtensionProperties> availableExtensions(extensionCount);
 	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
 
-	std::set<std::string> requiredExtensions(Instance::deviceExtensions.begin(), Instance::deviceExtensions.end());
+	std::set<std::string> requiredExtensions(Instance::DEVICE_EXTENSIONS.begin(), Instance::DEVICE_EXTENSIONS.end());
 
 	for (const auto& extension : availableExtensions) {
 		requiredExtensions.erase(extension.extensionName);

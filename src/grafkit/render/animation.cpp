@@ -27,7 +27,7 @@ void Animation::Update(const Grafkit::TimeInfo& timeInfo)
 		// Find the keyframe
 		const size_t keyIndex = channel->FindKey(localTime);
 
-		glm::vec4 value = glm::vec4(0.0f);
+		auto value = glm::vec4(0.0f);
 		if (keyIndex >= channel->keys.size() - 1) {
 			value = channel->keys[keyIndex].value;
 		} else {

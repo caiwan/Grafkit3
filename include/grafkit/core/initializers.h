@@ -16,14 +16,14 @@
 
 namespace Grafkit::Core::Initializers {
 
-	inline VkMemoryAllocateInfo memoryAllocateInfo()
+	inline VkMemoryAllocateInfo MemoryAllocateInfo()
 	{
 		VkMemoryAllocateInfo memAllocInfo {};
 		memAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		return memAllocInfo;
 	}
 
-	inline VkMappedMemoryRange mappedMemoryRange()
+	inline VkMappedMemoryRange MappedMemoryRange()
 	{
 		VkMappedMemoryRange mappedMemoryRange {};
 		mappedMemoryRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
@@ -41,7 +41,7 @@ namespace Grafkit::Core::Initializers {
 		return commandBufferAllocateInfo;
 	}
 
-	inline VkCommandPoolCreateInfo commandPoolCreateInfo()
+	inline VkCommandPoolCreateInfo CommandPoolCreateInfo()
 	{
 		VkCommandPoolCreateInfo cmdPoolCreateInfo {};
 		cmdPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -55,7 +55,7 @@ namespace Grafkit::Core::Initializers {
 		return cmdBufferBeginInfo;
 	}
 
-	inline VkCommandBufferInheritanceInfo commandBufferInheritanceInfo()
+	inline VkCommandBufferInheritanceInfo CommandBufferInheritanceInfo()
 	{
 		VkCommandBufferInheritanceInfo cmdBufferInheritanceInfo {};
 		cmdBufferInheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
@@ -69,7 +69,7 @@ namespace Grafkit::Core::Initializers {
 		return renderPassBeginInfo;
 	}
 
-	inline VkRenderPassCreateInfo renderPassCreateInfo()
+	inline VkRenderPassCreateInfo RenderPassCreateInfo()
 	{
 		VkRenderPassCreateInfo renderPassCreateInfo {};
 		renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -128,7 +128,7 @@ namespace Grafkit::Core::Initializers {
 		return subImage;
 	}
 
-	inline VkMemoryBarrier memoryBarrier()
+	inline VkMemoryBarrier MemoryBarrier()
 	{
 		VkMemoryBarrier memoryBarrier {};
 		memoryBarrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
@@ -191,7 +191,7 @@ namespace Grafkit::Core::Initializers {
 		return imageViewCreateInfo;
 	}
 
-	inline VkFramebufferCreateInfo framebufferCreateInfo()
+	inline VkFramebufferCreateInfo FramebufferCreateInfo()
 	{
 		VkFramebufferCreateInfo framebufferCreateInfo {};
 		framebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -213,7 +213,7 @@ namespace Grafkit::Core::Initializers {
 		return fenceCreateInfo;
 	}
 
-	inline VkEventCreateInfo eventCreateInfo()
+	inline VkEventCreateInfo EventCreateInfo()
 	{
 		VkEventCreateInfo eventCreateInfo {};
 		eventCreateInfo.sType = VK_STRUCTURE_TYPE_EVENT_CREATE_INFO;
@@ -227,7 +227,7 @@ namespace Grafkit::Core::Initializers {
 		return submitInfo;
 	}
 
-	inline VkViewport viewport(float width, float height, float minDepth, float maxDepth)
+	inline VkViewport Viewport(float width, float height, float minDepth, float maxDepth)
 	{
 		VkViewport viewport {};
 		viewport.width = width;
@@ -237,7 +237,7 @@ namespace Grafkit::Core::Initializers {
 		return viewport;
 	}
 
-	inline VkRect2D rect2D(int32_t width, int32_t height, int32_t offsetX, int32_t offsetY)
+	inline VkRect2D Rect2D(int32_t width, int32_t height, int32_t offsetX, int32_t offsetY)
 	{
 		VkRect2D rect2D {};
 		rect2D.extent.width = width;
@@ -287,10 +287,10 @@ namespace Grafkit::Core::Initializers {
 
 	inline VkDescriptorPoolSize DescriptorPoolSize(VkDescriptorType type, uint32_t descriptorCount)
 	{
-		VkDescriptorPoolSize DescriptorPoolSize {};
-		DescriptorPoolSize.type = type;
-		DescriptorPoolSize.descriptorCount = descriptorCount;
-		return DescriptorPoolSize;
+		VkDescriptorPoolSize descriptorPoolSize {};
+		descriptorPoolSize.type = type;
+		descriptorPoolSize.descriptorCount = descriptorCount;
+		return descriptorPoolSize;
 	}
 
 	inline VkDescriptorSetLayoutBinding DescriptorSetLayoutBinding(
@@ -395,7 +395,7 @@ namespace Grafkit::Core::Initializers {
 		return writeDescriptorSet;
 	}
 
-	inline VkVertexInputBindingDescription vertexInputBindingDescription(
+	inline VkVertexInputBindingDescription VertexInputBindingDescription(
 		uint32_t binding, uint32_t stride, VkVertexInputRate inputRate)
 	{
 		VkVertexInputBindingDescription vInputBindDescription {};
@@ -405,7 +405,7 @@ namespace Grafkit::Core::Initializers {
 		return vInputBindDescription;
 	}
 
-	inline VkVertexInputAttributeDescription vertexInputAttributeDescription(
+	inline VkVertexInputAttributeDescription VertexInputAttributeDescription(
 		uint32_t binding, uint32_t location, VkFormat format, uint32_t offset)
 	{
 		VkVertexInputAttributeDescription vInputAttribDescription {};
@@ -438,7 +438,7 @@ namespace Grafkit::Core::Initializers {
 		return pipelineVertexInputStateCreateInfo;
 	}
 
-	inline VkPipelineInputAssemblyStateCreateInfo pipelineInputAssemblyStateCreateInfo(
+	inline VkPipelineInputAssemblyStateCreateInfo PipelineInputAssemblyStateCreateInfo(
 		VkPrimitiveTopology topology, VkPipelineInputAssemblyStateCreateFlags flags, VkBool32 primitiveRestartEnable)
 	{
 		VkPipelineInputAssemblyStateCreateInfo pipelineInputAssemblyStateCreateInfo {};
@@ -465,7 +465,7 @@ namespace Grafkit::Core::Initializers {
 		return pipelineRasterizationStateCreateInfo;
 	}
 
-	inline VkPipelineColorBlendAttachmentState pipelineColorBlendAttachmentState(
+	inline VkPipelineColorBlendAttachmentState PipelineColorBlendAttachmentState(
 		VkColorComponentFlags colorWriteMask, VkBool32 blendEnable)
 	{
 		VkPipelineColorBlendAttachmentState pipelineColorBlendAttachmentState {};
@@ -474,7 +474,7 @@ namespace Grafkit::Core::Initializers {
 		return pipelineColorBlendAttachmentState;
 	}
 
-	inline VkPipelineColorBlendStateCreateInfo pipelineColorBlendStateCreateInfo(
+	inline VkPipelineColorBlendStateCreateInfo PipelineColorBlendStateCreateInfo(
 		uint32_t attachmentCount, const VkPipelineColorBlendAttachmentState* pAttachments)
 	{
 		VkPipelineColorBlendStateCreateInfo pipelineColorBlendStateCreateInfo {};
@@ -496,7 +496,7 @@ namespace Grafkit::Core::Initializers {
 		return pipelineDepthStencilStateCreateInfo;
 	}
 
-	inline VkPipelineViewportStateCreateInfo pipelineViewportStateCreateInfo(
+	inline VkPipelineViewportStateCreateInfo PipelineViewportStateCreateInfo(
 		uint32_t viewportCount, uint32_t scissorCount, VkPipelineViewportStateCreateFlags flags = 0)
 	{
 		VkPipelineViewportStateCreateInfo pipelineViewportStateCreateInfo {};
@@ -507,7 +507,7 @@ namespace Grafkit::Core::Initializers {
 		return pipelineViewportStateCreateInfo;
 	}
 
-	inline VkPipelineMultisampleStateCreateInfo pipelineMultisampleStateCreateInfo(
+	inline VkPipelineMultisampleStateCreateInfo PipelineMultisampleStateCreateInfo(
 		VkSampleCountFlagBits rasterizationSamples, VkPipelineMultisampleStateCreateFlags flags = 0)
 	{
 		VkPipelineMultisampleStateCreateInfo pipelineMultisampleStateCreateInfo {};
@@ -539,7 +539,7 @@ namespace Grafkit::Core::Initializers {
 		return pipelineDynamicStateCreateInfo;
 	}
 
-	inline VkPipelineTessellationStateCreateInfo pipelineTessellationStateCreateInfo(uint32_t patchControlPoints)
+	inline VkPipelineTessellationStateCreateInfo PipelineTessellationStateCreateInfo(uint32_t patchControlPoints)
 	{
 		VkPipelineTessellationStateCreateInfo pipelineTessellationStateCreateInfo {};
 		pipelineTessellationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
@@ -547,7 +547,7 @@ namespace Grafkit::Core::Initializers {
 		return pipelineTessellationStateCreateInfo;
 	}
 
-	inline VkGraphicsPipelineCreateInfo pipelineCreateInfo(
+	inline VkGraphicsPipelineCreateInfo PipelineCreateInfo(
 		VkPipelineLayout layout, VkRenderPass renderPass, VkPipelineCreateFlags flags = 0)
 	{
 		VkGraphicsPipelineCreateInfo pipelineCreateInfo {};
@@ -569,7 +569,7 @@ namespace Grafkit::Core::Initializers {
 		return pipelineCreateInfo;
 	}
 
-	inline VkComputePipelineCreateInfo computePipelineCreateInfo(
+	inline VkComputePipelineCreateInfo ComputePipelineCreateInfo(
 		VkPipelineLayout layout, VkPipelineCreateFlags flags = 0)
 	{
 		VkComputePipelineCreateInfo computePipelineCreateInfo {};
@@ -588,7 +588,7 @@ namespace Grafkit::Core::Initializers {
 		return pushConstantRange;
 	}
 
-	inline VkBindSparseInfo bindSparseInfo()
+	inline VkBindSparseInfo BindSparseInfo()
 	{
 		VkBindSparseInfo bindSparseInfo {};
 		bindSparseInfo.sType = VK_STRUCTURE_TYPE_BIND_SPARSE_INFO;
@@ -596,7 +596,7 @@ namespace Grafkit::Core::Initializers {
 	}
 
 	/** @brief Initialize a map entry for a shader specialization constant */
-	inline VkSpecializationMapEntry specializationMapEntry(uint32_t constantID, uint32_t offset, size_t size)
+	inline VkSpecializationMapEntry SpecializationMapEntry(uint32_t constantID, uint32_t offset, size_t size)
 	{
 		VkSpecializationMapEntry specializationMapEntry {};
 		specializationMapEntry.constantID = constantID;
@@ -606,7 +606,7 @@ namespace Grafkit::Core::Initializers {
 	}
 
 	/** @brief Initialize a specialization constant info structure to pass to a shader stage */
-	inline VkSpecializationInfo specializationInfo(
+	inline VkSpecializationInfo SpecializationInfo(
 		uint32_t mapEntryCount, const VkSpecializationMapEntry* mapEntries, size_t dataSize, const void* data)
 	{
 		VkSpecializationInfo specializationInfo {};
@@ -618,7 +618,7 @@ namespace Grafkit::Core::Initializers {
 	}
 
 	/** @brief Initialize a specialization constant info structure to pass to a shader stage */
-	inline VkSpecializationInfo specializationInfo(
+	inline VkSpecializationInfo SpecializationInfo(
 		const std::vector<VkSpecializationMapEntry>& mapEntries, size_t dataSize, const void* data)
 	{
 		VkSpecializationInfo specializationInfo {};
@@ -630,14 +630,14 @@ namespace Grafkit::Core::Initializers {
 	}
 
 	// Ray tracing related
-	inline VkAccelerationStructureGeometryKHR accelerationStructureGeometryKHR()
+	inline VkAccelerationStructureGeometryKHR AccelerationStructureGeometryKhr()
 	{
 		VkAccelerationStructureGeometryKHR accelerationStructureGeometryKHR {};
 		accelerationStructureGeometryKHR.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
 		return accelerationStructureGeometryKHR;
 	}
 
-	inline VkAccelerationStructureBuildGeometryInfoKHR accelerationStructureBuildGeometryInfoKHR()
+	inline VkAccelerationStructureBuildGeometryInfoKHR AccelerationStructureBuildGeometryInfoKhr()
 	{
 		VkAccelerationStructureBuildGeometryInfoKHR accelerationStructureBuildGeometryInfoKHR {};
 		accelerationStructureBuildGeometryInfoKHR.sType
@@ -645,28 +645,28 @@ namespace Grafkit::Core::Initializers {
 		return accelerationStructureBuildGeometryInfoKHR;
 	}
 
-	inline VkAccelerationStructureBuildSizesInfoKHR accelerationStructureBuildSizesInfoKHR()
+	inline VkAccelerationStructureBuildSizesInfoKHR AccelerationStructureBuildSizesInfoKhr()
 	{
 		VkAccelerationStructureBuildSizesInfoKHR accelerationStructureBuildSizesInfoKHR {};
 		accelerationStructureBuildSizesInfoKHR.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
 		return accelerationStructureBuildSizesInfoKHR;
 	}
 
-	inline VkRayTracingShaderGroupCreateInfoKHR rayTracingShaderGroupCreateInfoKHR()
+	inline VkRayTracingShaderGroupCreateInfoKHR RayTracingShaderGroupCreateInfoKhr()
 	{
 		VkRayTracingShaderGroupCreateInfoKHR rayTracingShaderGroupCreateInfoKHR {};
 		rayTracingShaderGroupCreateInfoKHR.sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
 		return rayTracingShaderGroupCreateInfoKHR;
 	}
 
-	inline VkRayTracingPipelineCreateInfoKHR rayTracingPipelineCreateInfoKHR()
+	inline VkRayTracingPipelineCreateInfoKHR RayTracingPipelineCreateInfoKhr()
 	{
 		VkRayTracingPipelineCreateInfoKHR rayTracingPipelineCreateInfoKHR {};
 		rayTracingPipelineCreateInfoKHR.sType = VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR;
 		return rayTracingPipelineCreateInfoKHR;
 	}
 
-	inline VkWriteDescriptorSetAccelerationStructureKHR writeDescriptorSetAccelerationStructureKHR()
+	inline VkWriteDescriptorSetAccelerationStructureKHR WriteDescriptorSetAccelerationStructureKhr()
 	{
 		VkWriteDescriptorSetAccelerationStructureKHR writeDescriptorSetAccelerationStructureKHR {};
 		writeDescriptorSetAccelerationStructureKHR.sType

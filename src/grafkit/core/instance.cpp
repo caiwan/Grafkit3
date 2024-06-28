@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include <sstream>
+#include <utility>
 //
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -16,18 +17,19 @@ VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
 	const VkAllocationCallbacks* pAllocator,
 	VkDebugUtilsMessengerEXT* pDebugMessenger)
 {
-	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+	auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
+		vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
 	if (func != nullptr) {
 		return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
-	} else {
-		return VK_ERROR_EXTENSION_NOT_PRESENT;
 	}
+	return VK_ERROR_EXTENSION_NOT_PRESENT;
 }
 
 void DestroyDebugUtilsMessengerEXT(
 	VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator)
 {
-	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+	auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
+		vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
 	if (func != nullptr) {
 		func(instance, debugMessenger, pAllocator);
 	}
@@ -35,9 +37,9 @@ void DestroyDebugUtilsMessengerEXT(
 
 // ----------------------------------------------------------------------------
 
-const std::vector<const char*> Instance::validationLayers = { "VK_LAYER_KHRONOS_validation" };
+const std::vector<const char*> Instance::VALIDATION_LAYERS = { "VK_LAYER_KHRONOS_validation" };
 
-const std::vector<const char*> Instance::deviceExtensions = {
+const std::vector<const char*> Instance::DEVICE_EXTENSIONS = {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 	VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
 	VK_KHR_MAINTENANCE_4_EXTENSION_NAME,
@@ -45,7 +47,7 @@ const std::vector<const char*> Instance::deviceExtensions = {
 
 // ----------------------------------------------------------------------------
 
-Grafkit::Core::Instance::Instance(const Core::WindowRef& window, std::vector<std::string> instanceExtensions)
+Grafkit::Core::Instance::Instance(const Core::WindowRef& window, const std::vector<std::string>& instanceExtensions)
 	: m_instance(CreateInstance(instanceExtensions))
 	, m_surface(CreateSurface(window))
 {
@@ -61,7 +63,7 @@ Instance::Instance(const Core::WindowRef& window)
 
 Instance::~Instance()
 {
-	if (enableValidationLayers) {
+	if (!VALIDATION_LAYERS.empty()) {
 		DestroyDebugUtilsMessengerEXT(m_instance, m_debugMessenger, nullptr);
 	}
 	vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
@@ -70,9 +72,9 @@ Instance::~Instance()
 
 // ----------------------------------------------------------------------------
 
-VkInstance Instance::CreateInstance(std::vector<std::string> instanceExtensions)
+VkInstance Instance::CreateInstance(const std::vector<std::string>& instanceExtensions)
 {
-	if (Instance::enableValidationLayers && !CheckValidationLayerSupport()) {
+	if (Instance::ENABLE_VALIDATION_LAYERS && !CheckValidationLayerSupport()) {
 		throw std::runtime_error("validation layers requested, but not available!");
 	}
 
@@ -85,7 +87,7 @@ VkInstance Instance::CreateInstance(std::vector<std::string> instanceExtensions)
 		VK_API_VERSION_1_3);
 
 	auto extensions = GetRequiredExtensions();
-	for (auto& extension : instanceExtensions) {
+	for (const auto& extension : instanceExtensions) {
 		extensions.emplace_back(extension.c_str());
 	}
 
@@ -103,14 +105,14 @@ VkInstance Instance::CreateInstance(std::vector<std::string> instanceExtensions)
 	createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
 	createInfo.ppEnabledExtensionNames = extensions.data();
 
-	void** ppNext = (void**)&createInfo.pNext;
+	void** ppNext = const_cast<void**>(&createInfo.pNext);
 
 	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = CreateDebugMessengerCreateInfo();
-	if (enableValidationLayers) {
-		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-		createInfo.ppEnabledLayerNames = validationLayers.data();
+	if (!VALIDATION_LAYERS.empty()) {
+		createInfo.enabledLayerCount = static_cast<uint32_t>(VALIDATION_LAYERS.size());
+		createInfo.ppEnabledLayerNames = VALIDATION_LAYERS.data();
 
-		*ppNext = (void*)&debugCreateInfo;
+		*ppNext = (void*)&debugCreateInfo; // NOLINT (cppcoreguidelines-pro-type-cstyle-cast) - Vulkan API
 	} else {
 		createInfo.enabledLayerCount = 0;
 		createInfo.pNext = nullptr;
@@ -128,7 +130,7 @@ VkInstance Instance::CreateInstance(std::vector<std::string> instanceExtensions)
 
 VkDebugUtilsMessengerCreateInfoEXT Instance::CreateDebugMessengerCreateInfo()
 {
-	if (Instance::enableValidationLayers) {
+	if (Instance::ENABLE_VALIDATION_LAYERS) {
 		VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 		createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
@@ -138,9 +140,8 @@ VkDebugUtilsMessengerCreateInfoEXT Instance::CreateDebugMessengerCreateInfo()
 		createInfo.pfnUserCallback = DebugCallback;
 
 		return createInfo;
-	} else {
-		return VkDebugUtilsMessengerCreateInfoEXT();
 	}
+	return {};
 }
 
 VkSurfaceKHR Instance::CreateSurface(const Core::WindowRef& window)
@@ -152,7 +153,7 @@ VkSurfaceKHR Instance::CreateSurface(const Core::WindowRef& window)
 
 void Grafkit::Core::Instance::SetupDebugMessenger()
 {
-	if (Instance::enableValidationLayers) {
+	if (Instance::ENABLE_VALIDATION_LAYERS) {
 
 		const VkDebugUtilsMessengerCreateInfoEXT createInfo = CreateDebugMessengerCreateInfo();
 
@@ -170,7 +171,7 @@ std::vector<const char*> Instance::GetRequiredExtensions()
 
 	std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
-	if (Instance::enableValidationLayers) {
+	if (Instance::ENABLE_VALIDATION_LAYERS) {
 		extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 	}
 
@@ -185,7 +186,7 @@ bool Instance::CheckValidationLayerSupport()
 	std::vector<VkLayerProperties> availableLayers(layerCount);
 	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-	for (const char* layerName : Instance::validationLayers) {
+	for (const char* layerName : Instance::VALIDATION_LAYERS) {
 		bool layerFound = false;
 
 		for (const auto& layerProperties : availableLayers) {

@@ -6,7 +6,7 @@
 //
 #include <grafkit/common.h>
 
-typedef struct GLFWwindow GLFWwindow;
+using GLFWwindow = struct GLFWwindow;
 
 namespace Grafkit {
 	class RenderContext;
@@ -52,11 +52,11 @@ namespace Grafkit::Core {
 		[[nodiscard]] WindowBufferSize GetBufferSize() const;
 
 	protected:
-		GLFWwindow* GetWindow() const { return window; }
+		GLFWwindow* GetWindow() const { return m_window; }
 
 	private:
 		void Init(const int width, const int height, const char* title);
-		GLFWwindow* window;
+		GLFWwindow* m_window;
 	};
 } // namespace Grafkit::Core
 

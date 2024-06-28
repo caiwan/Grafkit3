@@ -10,14 +10,14 @@ namespace Grafkit::Core {
 #ifdef NDEBUG
 		static constexpr bool enableValidationLayers = false;
 #else
-		static constexpr bool enableValidationLayers = true;
+		static constexpr bool ENABLE_VALIDATION_LAYERS = true;
 #endif
 
-		static const std::vector<const char*> validationLayers;
-		static const std::vector<const char*> deviceExtensions;
+		static const std::vector<const char*> VALIDATION_LAYERS;
+		static const std::vector<const char*> DEVICE_EXTENSIONS;
 
 		explicit Instance(const Core::WindowRef& window);
-		explicit Instance(const Core::WindowRef& window, std::vector<std::string> instanceExtensions);
+		explicit Instance(const Core::WindowRef& window, const std::vector<std::string>& instanceExtensions);
 		~Instance();
 
 		[[nodiscard]] const VkInstance& GetVkInstance() const { return m_instance; }
@@ -28,7 +28,7 @@ namespace Grafkit::Core {
 		VkDebugUtilsMessengerEXT m_debugMessenger;
 		VkSurfaceKHR m_surface;
 
-		VkInstance CreateInstance(std::vector<std::string> instanceExtensions);
+		VkInstance CreateInstance(const std::vector<std::string>& instanceExtensions);
 
 		bool CheckValidationLayerSupport();
 		[[nodiscard]] VkSurfaceKHR CreateSurface(const Core::WindowRef& window);

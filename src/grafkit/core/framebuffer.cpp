@@ -34,7 +34,7 @@ FrameBuffer::~FrameBuffer()
 {
 	vkDestroyRenderPass(**m_device, m_renderPass, nullptr);
 
-	for (auto framebuffer : m_frameBuffers) {
+	for (auto* framebuffer : m_frameBuffers) {
 		vkDestroyFramebuffer(m_device->GetVkDevice(), framebuffer, nullptr);
 	}
 
@@ -115,7 +115,7 @@ void Grafkit::Core::FrameBuffer::AddAttachment(const FrameBufferAttachmentInfo& 
 
 	VmaAllocationCreateInfo allocInfo = {};
 	allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-	allocInfo.requiredFlags = VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	allocInfo.requiredFlags = static_cast<VkMemoryPropertyFlags>(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 	VkImage image = VK_NULL_HANDLE;
 	VmaAllocation allocation = VK_NULL_HANDLE;
@@ -183,7 +183,7 @@ void Grafkit::Core::FrameBuffer::CreateDepthAttachment()
 
 	VmaAllocationCreateInfo imageAllocInfo = {};
 	imageAllocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-	imageAllocInfo.requiredFlags = VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	imageAllocInfo.requiredFlags = static_cast<VkMemoryPropertyFlags>(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 	if (vmaCreateImage(m_device->GetVmaAllocator(), &imageInfo, &imageAllocInfo, &image, &imageAllocation, nullptr)
 		!= VK_SUCCESS) {
@@ -263,7 +263,7 @@ void Grafkit::Core::FrameBuffer::CreateRenderPass()
 
 #else // Re-initiate old render pass
 
-	const auto m_swapChainImageFormat = m_device->ChooseSwapSurfaceFormat().format;
+	const auto mSwapChainImageFormat = m_device->ChooseSwapSurfaceFormat().format;
 
 	std::array<VkAttachmentDescription, 2> attachments = {};
 	// Color attachment

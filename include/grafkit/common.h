@@ -29,6 +29,7 @@
 #include <cstring>
 #include <map>
 #include <memory>
+#include <string>
 #include <tuple>
 #include <vector>
 
@@ -50,7 +51,7 @@ namespace Grafkit {
 	template <typename T> class RefWrapper {
 	public:
 		explicit RefWrapper(T& ref)
-			: ptr(&ref)
+			: m_ptr(&ref)
 		{
 		}
 
@@ -58,31 +59,31 @@ namespace Grafkit {
 
 		[[nodiscard]] T& operator*() const noexcept
 		{
-			assert(ptr);
-			return *ptr;
+			assert(m_ptr);
+			return *m_ptr;
 		}
 
 		[[nodiscard]] T* operator->() const noexcept
 		{
-			assert(ptr);
-			return ptr;
+			assert(m_ptr);
+			return m_ptr;
 		}
 
 		[[nodiscard]] T* Get() const noexcept
 		{
-			assert(ptr);
-			return ptr;
+			assert(m_ptr);
+			return m_ptr;
 		}
 
 		template <typename U> [[nodiscard]] RefWrapper<U> Cast()
 		{
-			U* p = dynamic_cast<U*>(ptr);
+			U* p = dynamic_cast<U*>(m_ptr);
 			assert(p);
 			return p;
 		}
 
 	private:
-		T* ptr = nullptr;
+		T* m_ptr = nullptr;
 	};
 
 	// Factory function to simplify the creation of a RefWrapper
@@ -118,10 +119,10 @@ namespace Grafkit {
 		using DescriptorPoolRef = RefWrapper<DescriptorPool>;
 
 		class Image;
-		typedef std::shared_ptr<Image> ImagePtr;
+		using ImagePtr = std::shared_ptr<Image>;
 
 		class Pipeline; // Pipeline + PipelineLayout (Shader)
-		typedef std::shared_ptr<Pipeline> PipelinePtr;
+		using PipelinePtr = std::shared_ptr<Pipeline>;
 
 		struct VertexDescription {
 			std::vector<VkVertexInputBindingDescription> bindings;
@@ -140,7 +141,7 @@ namespace Grafkit {
 		};
 
 		class DescriptorSet; // DescriptorSetLayout + DescriptorSet
-		typedef std::shared_ptr<DescriptorSet> DescriptorSetPtr;
+		using DescriptorSetPtr = std::shared_ptr<DescriptorSet>;
 
 		constexpr size_t MAX_PUSH_CONSTANT_SIZE = 128;
 
@@ -158,30 +159,30 @@ namespace Grafkit {
 	// namespace Render {
 
 	struct Material; // Material "Shader + Texture + UBOs"
-	typedef std::shared_ptr<Material> MaterialPtr;
+	using MaterialPtr = std::shared_ptr<Material>;
 
 	class Texture; // Texture
-	typedef std::shared_ptr<Texture> TexturePtr;
+	using TexturePtr = std::shared_ptr<Texture>;
 
 	// struct Primitive; // Primitive "Meshlet"
 	// typedef std::shared_ptr<Primitive> PrimitivePtr;
 
 	class Mesh; // Mesh "Model"
-	typedef std::shared_ptr<Mesh> MeshPtr;
+	using MeshPtr = std::shared_ptr<Mesh>;
 
 	class Scenegraph;
-	typedef std::shared_ptr<Scenegraph> ScenegraphPtr;
+	using ScenegraphPtr = std::shared_ptr<Scenegraph>;
 
 	// } // namespace Render
 	namespace Animation {
 		struct Channel;
-		typedef std::shared_ptr<Channel> ChannelPtr;
+		using ChannelPtr = std::shared_ptr<Channel>;
 
 		class Target;
-		typedef std::shared_ptr<Target> TargetPtr;
+		using TargetPtr = std::shared_ptr<Target>;
 
 		struct Animation;
-		typedef std::shared_ptr<Animation> AnimationPtr;
+		using AnimationPtr = std::shared_ptr<Animation>;
 
 	} // namespace Animation
 

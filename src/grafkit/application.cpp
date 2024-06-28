@@ -11,7 +11,7 @@ Application::Application()
 {
 }
 
-Application::Application(const int width, const int height, const std::string windowTitle)
+Application::Application(const int width, const int height, const std::string& windowTitle)
 	: m_window(width, height, windowTitle.c_str())
 	, m_renderContext(MakeReference(m_window))
 {
@@ -27,7 +27,7 @@ void Grafkit::Application::Run()
 	double fpsTimer = 0.0;
 	int frameCount = 0;
 
-	while (m_window.IsClosing() == false) {
+	while (!m_window.IsClosing()) {
 
 		const auto startTime = std::chrono::steady_clock::now();
 
@@ -63,4 +63,4 @@ void Grafkit::Application::Run()
 	Shutdown();
 }
 
-Application::~Application() { }
+Application::~Application() = default;

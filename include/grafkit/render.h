@@ -43,7 +43,7 @@ namespace Grafkit {
 		[[nodiscard]] uint32_t GetNextFrameIndex() const { return m_nextFrameIndex; }
 
 	private:
-		const Core::WindowRef window;
+		const Core::WindowRef m_window;
 
 		Core::InstancePtr m_instance;
 		Core::DevicePtr m_device;

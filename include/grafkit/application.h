@@ -9,7 +9,7 @@ namespace Grafkit {
 	class Application {
 	public:
 		Application();
-		explicit Application(const int width, const int height, const std::string windowTitle);
+		explicit Application(const int width, const int height, const std::string& windowTitle);
 		virtual ~Application();
 		void Run();
 

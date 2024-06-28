@@ -7,8 +7,8 @@
 namespace Grafkit {
 
 	struct Node;
-	typedef std::shared_ptr<Node> NodePtr;
-	typedef std::weak_ptr<Node> NodeRef;
+	using NodePtr = std::shared_ptr<Node>;
+	using NodeRef = std::weak_ptr<Node>;
 
 	struct Node {
 		uint32_t id = 0;
@@ -36,7 +36,7 @@ namespace Grafkit {
 		Scenegraph() = default;
 		virtual ~Scenegraph();
 
-		NodePtr CreateNode(const NodePtr& parent = nullptr, MeshPtr mesh = nullptr);
+		NodePtr CreateNode(const NodePtr& parent = nullptr, const MeshPtr& mesh = nullptr);
 
 		void AddMaterial(const MaterialPtr& material);
 		void AddTexture(const TexturePtr& texture);

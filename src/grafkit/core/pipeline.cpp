@@ -15,7 +15,7 @@ Pipeline::Pipeline(DeviceRef const& m_device,
 	, m_pipelineBindPoint(pipelineBindPoint)
 	, m_pipeline(std::get<0>(pipeline))
 	, m_pipelineLayout(std::get<1>(pipeline))
-	, descriptorSetLayouts(std::get<2>(pipeline))
+	, m_descriptorSetLayouts(std::get<2>(pipeline))
 {
 }
 
@@ -23,7 +23,7 @@ Pipeline::~Pipeline()
 {
 	vkDestroyPipeline(**m_device, m_pipeline, nullptr);
 	vkDestroyPipelineLayout(**m_device, m_pipelineLayout, nullptr);
-	for (auto descriptorSetLayout : descriptorSetLayouts) {
+	for (auto& descriptorSetLayout : m_descriptorSetLayouts) {
 		vkDestroyDescriptorSetLayout(**m_device, descriptorSetLayout, nullptr);
 	}
 }
@@ -46,11 +46,11 @@ GraphicsPipelineBuilder::GraphicsPipelineBuilder(const DeviceRef& device, const 
 		VK_FRONT_FACE_CLOCKWISE); // TOOD: Clarify default polygon winding order
 	SetMultisampling(VK_SAMPLE_COUNT_1_BIT, VK_FALSE);
 
-	VkPipelineColorBlendAttachmentState m_colorBlendAttachment {};
-	m_colorBlendAttachment.colorWriteMask
+	VkPipelineColorBlendAttachmentState mColorBlendAttachment {};
+	mColorBlendAttachment.colorWriteMask
 		= VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-	m_colorBlendAttachment.blendEnable = VK_FALSE;
-	SetColorBlending(m_colorBlendAttachment);
+	mColorBlendAttachment.blendEnable = VK_FALSE;
+	SetColorBlending(mColorBlendAttachment);
 
 	SetDynamicState({ VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR });
 }
@@ -92,7 +92,7 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetInputAssembly(
 	return *this;
 }
 
-GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetVertexInputDescription(const VertexDescription desc)
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetVertexInputDescription(const VertexDescription& desc)
 {
 	m_vertexBindingDescriptions = desc.bindings;
 	m_vertexInputAttrDescriptions = desc.attributes;
@@ -179,10 +179,10 @@ PipelinePtr GraphicsPipelineBuilder::Build()
 	}
 
 	// --- Pipeline
-	VkPipelineViewportStateCreateInfo m_viewportState {};
-	m_viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-	m_viewportState.viewportCount = 1;
-	m_viewportState.scissorCount = 1;
+	VkPipelineViewportStateCreateInfo mViewportState {};
+	mViewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+	mViewportState.viewportCount = 1;
+	mViewportState.scissorCount = 1;
 
 	VkPipelineColorBlendStateCreateInfo colorBlending {};
 	colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -214,7 +214,7 @@ PipelinePtr GraphicsPipelineBuilder::Build()
 
 	pipelineInfo.pVertexInputState = &vertexInputInfo;
 	pipelineInfo.pInputAssemblyState = &m_inputAssembly;
-	pipelineInfo.pViewportState = &m_viewportState;
+	pipelineInfo.pViewportState = &mViewportState;
 	pipelineInfo.pRasterizationState = &m_rasterizer;
 	pipelineInfo.pMultisampleState = &m_multisampling;
 	pipelineInfo.pColorBlendState = &colorBlending;
