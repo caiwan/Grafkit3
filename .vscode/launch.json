@@ -9,9 +9,11 @@
       "cwd": "${fileDirname}",
       "windows": {
         "program": "${workspaceRoot}/build/src/player/player.exe",
+        "cwd": "${workspaceRoot}"
       },
       "linux": {
         "program": "${workspaceRoot}/build/src/player/player",
+        "cwd": "${workspaceRoot}"
       },
       "preLaunchTask": "CMake: build all"
     }

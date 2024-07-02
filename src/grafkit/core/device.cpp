@@ -11,7 +11,7 @@ using namespace Grafkit::Core;
 
 constexpr uint32_t INITIAL_DESCRIPTOR_SET_SIZE = 2;
 
-constexpr VkFormat DEPTH_FORMATS[] = {
+constexpr std::array<VkFormat, 4> DEPTH_FORMATS = {
 	VK_FORMAT_D32_SFLOAT_S8_UINT,
 	VK_FORMAT_D32_SFLOAT,
 	VK_FORMAT_D24_UNORM_S8_UINT,

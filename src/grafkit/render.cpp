@@ -65,12 +65,7 @@ void RenderContext::BeginFrame(const Core::CommandBufferRef& commandBuffer)
 	const auto swapChainExtent = m_swapChain->GetExtent();
 
 	// TOOD: Move to FrameBuffer + Use std::span
-	VkClearValue clearValues[2] = {
-		{ 0.0f, 0.0f, 0.2f, 1.0f },
-		{ 1.0f, 0 },
-	};
-	// clearValues[0].color = { { 0.0f, 0.0f, 0.2f, 1.0f } };
-	// clearValues[1].depthStencil = { 1.0f, 0 };
+	std::array<VkClearValue, 2> clearValues = { { { 0.0f, 0.0f, 0.2f, 1.0f }, { 1.0f, 0 } } };
 
 	m_frameBuffer->BeginRenderPass(commandBuffer, m_currentImageIndex, clearValues);
 

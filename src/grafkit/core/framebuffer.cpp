@@ -57,17 +57,8 @@ void Grafkit::Core::FrameBuffer::BeginRenderPass(
 	renderPassInfo.renderArea.extent = m_extent;
 	renderPassInfo.framebuffer = m_frameBuffers[imageIndex];
 
-	// renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-	// renderPassInfo.pClearValues = clearValues.data();
-
-	// TOOD: Fuck this shit
-
-	VkClearValue lclearValues[2];
-	lclearValues[0].color = { { 0.0f, 0.0f, 0.2f, 1.0f } };
-	lclearValues[1].depthStencil = { 1.0f, 0 };
-
-	renderPassInfo.clearValueCount = 2;
-	renderPassInfo.pClearValues = lclearValues;
+	renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+	renderPassInfo.pClearValues = clearValues.data();
 
 	vkCmdBeginRenderPass(**commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 }

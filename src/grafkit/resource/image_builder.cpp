@@ -9,7 +9,7 @@ using Grafkit::Core::Image;
 void ImageBuilder::Build(const Core::DeviceRef& device)
 {
 	m_resource = Image::CreateImage(device,
-		(void*)(m_descriptor.image.data()),
+		reinterpret_cast<void*>(m_descriptor.image.data()), // NOLINT vulkan API requires void* here
 		{
 			m_descriptor.size.x,
 			m_descriptor.size.y,
@@ -26,7 +26,7 @@ void ImageBuilder::Build(const Core::DeviceRef& device)
 void SolidImageBuilder::Build(const Core::DeviceRef& device)
 {
 	m_resource = Image::CreateImage(device,
-		(void*)&m_descriptor.color,
+		reinterpret_cast<void*>(&m_descriptor.color), // NOLINT vulkan API requires void* here
 		{ 1, 1, 1 },
 		4,
 		VK_FORMAT_R8G8B8A8_UNORM,
