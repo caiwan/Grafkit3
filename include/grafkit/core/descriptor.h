@@ -54,7 +54,7 @@ namespace Grafkit::Core {
 	public:
 		explicit DescriptorBuilder(const DeviceRef& device);
 
-		DescriptorBuilder& AddLayoutBindings(const SetDescriptor& bindings);
+		DescriptorBuilder& AddLayoutBindings(const DescriptorSetLayoutBinding& bindings);
 
 		[[nodiscard]] DescriptorSetPtr Build();
 
@@ -62,6 +62,14 @@ namespace Grafkit::Core {
 		const DeviceRef m_device;
 		std::vector<VkDescriptorSetLayoutBinding> m_bindings;
 		uint32_t m_descriptorSet = 0;
+	};
+
+	class GKAPI DescriptorFactory {
+	public:
+		[[nodiscard]] DescriptorBuilder CreateDescriptorBuilder(const DeviceRef& device) const
+		{
+			return DescriptorBuilder(device);
+		}
 	};
 
 } // namespace Grafkit::Core

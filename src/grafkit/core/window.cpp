@@ -1,70 +1,158 @@
-#include <grafkit/core/window.h>
+#include "stdafx.h"
 
 #include <GLFW/glfw3.h>
 #include <stdexcept>
 
+#include "grafkit/core/log.h"
+#include "grafkit/core/window.h"
+
 using namespace Grafkit::Core;
 
-Window::Window()
-{
-	Init(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_TITLE.data());
-	SetFullscreen(false);
-	SetVsync(true);
-	SetResizable(true);
-}
+namespace {
+	void ErrorCallback(int error, const char* description)
+	{
+		Log::Instance().Error("GLFW error: %d: %s", error, description);
+	}
+} // namespace
 
-Window::Window(const int width, const int height, const char* title, bool fullscreen, bool vsync, bool resizable)
+GLFWWindow::GLFWWindow(const WindowSize size,
+	const std::string& title,
+	const WindowMode mode,
+	const WindowVsync vsync,
+	const WindowResizable resizable)
 {
-	Init(width, height, title);
-	SetFullscreen(fullscreen);
+	Init(size, title);
 	SetVsync(vsync);
+	SetWindowMode(mode);
 	SetResizable(resizable);
+
+	PollEvents();
 }
 
-Window::~Window()
+GLFWWindow::~GLFWWindow()
 {
-	glfwDestroyWindow(m_window);
+	if (m_window) {
+		// glfwSetWindowMonitor(m_window, nullptr, 0, 0, m_size.width, m_size.height, 0);
+		glfwDestroyWindow(m_window);
+	}
 	glfwTerminate();
 }
 
-void Window::Init(const int width, const int height, const char* title)
+void GLFWWindow::Init(const WindowSize& size, const std::string& title)
 {
-	glfwInit();
+	glfwSetErrorCallback(ErrorCallback);
+
+	if (!glfwInit()) {
+		throw std::runtime_error("Failed to initialize GLFW");
+	}
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-	m_window = glfwCreateWindow(width, height, title, nullptr, nullptr);
+	m_window = glfwCreateWindow(size.width, size.height, title.c_str(), nullptr, nullptr);
 	if (!m_window) {
+		glfwTerminate();
 		throw std::runtime_error("Failed to create window");
 	}
+
+	glfwSetWindowAttrib(m_window, GLFW_DECORATED, GLFW_TRUE);
+
+	m_size = size;
 }
 
-void Window::SetFullscreen(bool fullscreen)
+void GLFWWindow::SetWindowMode(WindowMode windowMode)
 {
-	if (fullscreen) {
-		const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-		glfwSetWindowMonitor(m_window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, mode->refreshRate);
-	} else {
-		int xpos, ypos;
-		glfwGetWindowPos(m_window, &xpos, &ypos);
-		glfwSetWindowMonitor(m_window, nullptr, xpos, ypos, DEFAULT_WIDTH, DEFAULT_HEIGHT, 0);
+	int xpos = 0, ypos = 0;
+	const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+	const GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+
+	if (m_window) {
+		switch (windowMode) {
+		case WindowMode::Fullscreen:
+			glfwSetWindowAttrib(m_window, GLFW_DECORATED, GLFW_FALSE);
+			glfwSetWindowMonitor(m_window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, mode->refreshRate);
+			break;
+		case WindowMode::Windowed:
+			glfwGetWindowPos(m_window, &xpos, &ypos);
+			glfwSetWindowMonitor(m_window, nullptr, xpos, ypos, m_size.width, m_size.height, 0);
+			glfwSetWindowAttrib(m_window, GLFW_DECORATED, GLFW_TRUE);
+			break;
+		case WindowMode::Borderless:
+			glfwGetWindowPos(m_window, &xpos, &ypos);
+			glfwSetWindowMonitor(m_window, nullptr, 0, 0, m_size.width, m_size.height, 0);
+			glfwSetWindowAttrib(m_window, GLFW_DECORATED, GLFW_FALSE);
+			break;
+		}
 	}
 }
 
-void Window::SetVsync(bool vsync) { glfwSwapInterval(vsync ? 1 : 0); }
-
-void Window::SetResizable(bool resizable) { glfwWindowHint(GLFW_RESIZABLE, resizable ? GLFW_TRUE : GLFW_FALSE); }
-
-void Window::SetSize(const size_t width, const size_t height) { glfwSetWindowSize(m_window, width, height); }
-
-void Window::PollEvents() { glfwPollEvents(); }
-
-bool Window::IsClosing() const { return glfwWindowShouldClose(m_window); }
-
-WindowBufferSize Window::GetBufferSize() const
+void GLFWWindow::SetVsync(WindowVsync vsync)
 {
-	WindowBufferSize size;
-	glfwGetFramebufferSize(m_window, &size.width, &size.height);
-	return size;
+	if (m_window) {
+		glfwMakeContextCurrent(m_window);
+		glfwSwapInterval(vsync == WindowVsync::On ? 1 : 0);
+	}
+}
+
+void GLFWWindow::SetResizable(WindowResizable resizable)
+{
+	if (m_window) {
+		glfwWindowHint(GLFW_RESIZABLE, resizable == WindowResizable::On ? GLFW_TRUE : GLFW_FALSE);
+	}
+}
+
+void GLFWWindow::Resize(const int width, const int height)
+{
+	if (m_window) {
+		m_size = { width, height };
+		glfwSetWindowSize(m_window, width, height);
+	}
+}
+
+void GLFWWindow::Show(bool visible)
+{
+	if (m_window) {
+
+		if (visible && !m_isVisible) {
+			glfwShowWindow(m_window);
+		} else if (!visible && m_isVisible) {
+			glfwHideWindow(m_window);
+		}
+		m_isVisible = visible;
+	}
+}
+
+void GLFWWindow::Focus()
+{
+	if (m_window) {
+		glfwFocusWindow(m_window);
+	}
+}
+
+void GLFWWindow::PollEvents() { glfwPollEvents(); }
+
+bool GLFWWindow::IsClosing() const { return glfwWindowShouldClose(m_window); }
+
+WindowSize GLFWWindow::GetBufferSize() const
+{
+	if (m_window) {
+		WindowSize size;
+		glfwGetFramebufferSize(m_window, &size.width, &size.height);
+		return size;
+	}
+
+	return {};
+}
+
+VkSurfaceKHR GLFWWindow::CreateSurface(const VkInstance& instance) const
+{
+	if (m_window) {
+		VkSurfaceKHR vkSurface = VK_NULL_HANDLE;
+		if (glfwCreateWindowSurface(instance, m_window, nullptr, &vkSurface) != VK_SUCCESS) {
+			throw std::runtime_error("Failed to create window surface");
+		}
+		return vkSurface;
+	}
+	return VK_NULL_HANDLE;
 }

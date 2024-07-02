@@ -1,0 +1,18 @@
+#ifndef ASSIMP_H
+#define ASSIMP_H
+
+#include <grafkit/common.h>
+#include <grafkit/resource/resource.h>
+
+class AssimpLoader
+{
+	public:
+		AssimpLoader() = default;
+		~AssimpLoader() = default;
+
+		Grafkit::ScenegraphPtr Load(const std::string & filename);
+
+
+};
+
+#endif // ASSIMP_H

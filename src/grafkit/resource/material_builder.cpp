@@ -10,6 +10,33 @@
 
 using namespace Grafkit::Resource;
 using Grafkit::Texture;
+using Grafkit::TexturePtr;
+
+bool Grafkit::Resource::MaterialBuilder::ResolveDependencies(const RefWrapper<ResourceManager>& resources)
+{
+	bool result = true;
+	if (m_pipeline == nullptr && !m_descriptor.pipeline.empty()) {
+		const auto pipeline = resources->Get<Core::Pipeline>(m_descriptor.pipeline);
+		if (m_pipeline != nullptr) {
+			m_pipeline = pipeline;
+		} else {
+			result = false;
+		}
+	}
+
+	if (m_images.empty() && !m_descriptor.textures.empty()) {
+		for (const auto& [bindId, textureName] : m_descriptor.textures) {
+			const auto image = resources->Get<Core::Image>(textureName);
+			if (image != nullptr) {
+				m_images[bindId] = image;
+			} else {
+				result = false;
+			}
+		}
+	}
+
+	return result;
+}
 
 void MaterialBuilder::Build(const Core::DeviceRef& device)
 {
@@ -21,20 +48,14 @@ void MaterialBuilder::Build(const Core::DeviceRef& device)
 		throw std::runtime_error("Error: Pipeline is null");
 	}
 
-	// TODO: -> Find textures
-	// std::unordered_map<uint32_t, TexturePtr> textures;
-	// for (const auto& [bindId, textureName] : m_descriptor.textures) {
-	// 	auto texture = resources->Get<Texture>(textureName);
-	// 	if (texture == nullptr) {
-	// 		throw std::runtime_error("Error: Texture is null");
-	// 	}
-	// 	m_textures[bindId] = texture;
-	// }
+	std::map<uint32_t, TexturePtr> textures;
 
 	assert(m_descriptorSets[Grafkit::TEXTURE_SET] != nullptr);
-	for (const auto& [bindId, texture] : m_textures) {
-		assert(texture != nullptr);
+	for (const auto& [bindId, image] : m_images) {
+		assert(image != nullptr);
+		const auto texture = CreateTexture(device, image);
 		m_descriptorSets[Grafkit::TEXTURE_SET]->Update(texture->GetImage(), texture->GetSampler(), bindId);
+		textures[bindId] = texture;
 	}
 	m_resource = std::make_shared<Material>();
 
@@ -45,8 +66,8 @@ void MaterialBuilder::Build(const Core::DeviceRef& device)
 		m_resource->descriptorSets[set] = descriptorSet;
 	}
 
-	m_resource->textures.resize(m_textures.size());
-	for (const auto& [bindId, texture] : m_textures) {
+	m_resource->textures.resize(m_images.size());
+	for (const auto& [bindId, texture] : textures) {
 		assert(texture != nullptr);
 		m_resource->textures[bindId] = texture;
 	}
@@ -54,8 +75,13 @@ void MaterialBuilder::Build(const Core::DeviceRef& device)
 	m_resource->pipeline = m_pipeline;
 }
 
-void TextureBuilder::Build(const Core::DeviceRef& device)
+const TexturePtr MaterialBuilder::CreateTexture(const Core::DeviceRef& device, const Core::ImagePtr& image) const
 {
+	if (image == nullptr) {
+		throw std::runtime_error("Error: Image is null");
+	}
+
+	// TOOD: Separate sampler from texture
 	VkSamplerCreateInfo samplerInfo = Core::Initializers::SamplerCreateInfo();
 
 	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
@@ -65,16 +91,12 @@ void TextureBuilder::Build(const Core::DeviceRef& device)
 	samplerInfo.minFilter = VK_FILTER_LINEAR;
 	samplerInfo.magFilter = VK_FILTER_LINEAR;
 
-	Core::ImagePtr image = m_image;
-
-	if (image == nullptr) {
-		throw std::runtime_error("Error: Image is null");
-	}
+	// ---
 
 	VkSampler sampler {};
 	if (vkCreateSampler(**device, &samplerInfo, nullptr, &sampler) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create texture sampler!");
 	}
 
-	m_resource = std::make_shared<Texture>(device, image, sampler);
+	return std::make_shared<Texture>(device, image, sampler);
 }

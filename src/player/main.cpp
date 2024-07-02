@@ -14,9 +14,14 @@
 #include <grafkit/render/scenegraph.h>
 #include <grafkit/render/texture.h>
 
+#include <grafkit/core/log.h>
+
+#include <grafkit_loader/asset_loader_system.h>
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <grafkit/resource/image_builder.h>
 #include <grafkit/resource/material_builder.h>
+#include <grafkit/resource/resource.h>
 #include <grafkit/resource/scenegraph_builder.h>
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -30,11 +35,16 @@
 constexpr int WIDTH = 1024;
 constexpr int HEIGHT = 768;
 
+constexpr uint32_t DEFAULT_PIPELINE_DESCRIPTOR = 0;
+
 class HelloApplication : public Grafkit::Application {
 private:
 	Grafkit::Core::DescriptorSetPtr m_materialDescriptor;
 	Grafkit::Core::DescriptorSetPtr m_modelviewDescriptor;
 	Grafkit::Core::PipelinePtr m_graphicsPipeline;
+
+	std::unique_ptr<Grafkit::Asset::JsonAssetLoader> m_assetLoader;
+	Grafkit::Resource::ResourceManagerPtr m_resources;
 
 	Grafkit::ScenegraphPtr m_sceneGraph;
 
@@ -55,28 +65,36 @@ public:
 	HelloApplication()
 		: Grafkit::Application(WIDTH, HEIGHT, "Test application")
 	{
+		m_assetLoader = std::make_unique<Grafkit::Asset::JsonAssetLoader>();
+		m_resources = std::make_unique<Grafkit::Resource::ResourceManager>(
+			Grafkit::MakeReferenceAs<Grafkit::Asset::IAssetLoader>(*m_assetLoader));
 	}
 
 	virtual ~HelloApplication() = default;
 
 	virtual void Init() override
 	{
-		// m_resources = std::make_unique<Grafkit::Resource::ResoureManger>(m_renderContext.GetDevice());
+		const auto& device = m_renderContext->GetDevice();
+		const auto resources = Grafkit::MakeReference(*m_resources);
 
-		m_materialDescriptor = m_renderContext.DescriptorBuilder()
+		m_materialDescriptor = m_renderContext->DescriptorBuilder()
 								   .AddLayoutBindings(Grafkit::Material::GetLayoutBindings()[Grafkit::TEXTURE_SET])
 								   .Build();
 
-		m_modelviewDescriptor = m_renderContext.DescriptorBuilder()
+		m_modelviewDescriptor = m_renderContext->DescriptorBuilder()
 									.AddLayoutBindings(Grafkit::Material::GetLayoutBindings()[Grafkit::CAMERA_VIEW_SET])
 									.Build();
 
-		m_graphicsPipeline = m_renderContext.PipelineBuilder()
+		m_renderContext->AddStaticPipelineDescriptor(DEFAULT_PIPELINE_DESCRIPTOR,
+			Grafkit::Core::PipelineDescriptor {
+				Grafkit::Vertex::GetVertexDescription(),
+				Grafkit::Material::GetLayoutBindings(),
+				{ { VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Grafkit::ModelView) } },
+			});
+
+		m_graphicsPipeline = m_renderContext->PipelineBuilder(DEFAULT_PIPELINE_DESCRIPTOR)
 								 .AddVertexShader(triangle_vert, triangle_vert_len)
 								 .AddFragmentShader(triangle_frag, triangle_frag_len)
-								 .SetVertexInputDescription(Grafkit::Vertex::GetVertexDescription())
-								 .AddPushConstants(VK_SHADER_STAGE_VERTEX_BIT, sizeof(Grafkit::ModelView))
-								 .AddDescriptorSets(Grafkit::Material::GetLayoutBindings())
 								 .Build();
 
 		Grafkit::Core::ImagePtr image = Grafkit::Resource::CheckerImageBuilder({
@@ -85,34 +103,26 @@ public:
 																				   { 65, 105, 225, 255 },
 																				   { 255, 165, 79, 255 },
 																			   })
-											.BuildResource(m_renderContext.GetDevice());
-
-		Grafkit::TexturePtr texture
-			= Grafkit::Resource::TextureBuilder({}).SetImage(image).BuildResource(m_renderContext.GetDevice());
+											.BuildResource(device, resources);
 
 		Grafkit::MaterialPtr material = Grafkit::Resource::MaterialBuilder({})
 											.SetPipeline(m_graphicsPipeline)
 											.AddDescriptorSet(m_materialDescriptor, Grafkit::TEXTURE_SET)
 											.AddDescriptorSet(m_modelviewDescriptor, Grafkit::CAMERA_VIEW_SET)
-											.AddTexture(Grafkit::DIFFUSE_TEXTURE_BINDING, texture)
-											.BuildResource(m_renderContext.GetDevice());
+											.AddTextureImage(Grafkit::DIFFUSE_TEXTURE_BINDING, image)
+											.BuildResource(device, resources);
 
-		m_ubo = Grafkit::Core::UniformBuffer<Grafkit::CameraView>::CreateBuffer(m_renderContext.GetDevice());
+		m_ubo = Grafkit::Core::UniformBuffer<Grafkit::CameraView>::CreateBuffer(device);
 		m_modelviewDescriptor->Update(m_ubo.buffer, Grafkit::MODEL_VIEW_BINDING);
 
-		Grafkit::MeshPtr mesh = Grafkit::Resource::MeshBuilder({
-																   .primitives = { {
-																	   .vertices = TestApplication::vertices,
-																	   .indices = TestApplication::indices,
-																	   .material = material,
-																   } },
-															   })
-									.BuildResource(m_renderContext.GetDevice());
+		Grafkit::MeshPtr mesh = Grafkit::Resource::MeshBuilder()
+									.AddPrimitive(TestApplication::vertices, TestApplication::indices, 0)
+									.AddMaterial(0, material)
+									.BuildResource(device, resources);
 
 		m_sceneGraph = std::make_shared<Grafkit::Scenegraph>();
 		m_sceneGraph->AddMesh(mesh);
 		m_sceneGraph->AddMaterial(material);
-		m_sceneGraph->AddTexture(texture);
 
 		// Nodes
 		m_nodes.rootNode = m_sceneGraph->CreateNode();
@@ -127,9 +137,9 @@ public:
 
 	void Update([[maybe_unused]] const Grafkit::TimeInfo& timeInfo) override
 	{
-		m_ubo.data.projection = glm::perspective(glm::radians(45.0f), m_renderContext.GetAspectRatio(), 0.1f, 100.0f);
+		m_ubo.data.projection = glm::perspective(glm::radians(45.0f), m_renderContext->GetAspectRatio(), 0.1f, 100.0f);
 		m_ubo.data.camera = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -10.0f));
-		m_ubo.Update(m_renderContext.GetDevice(), m_renderContext.GetNextFrameIndex());
+		m_ubo.Update(m_renderContext->GetDevice(), m_renderContext->GetNextFrameIndex());
 
 		m_nodes.rootNode->translation = glm::vec3(0.0f, 0.0f, 0.0f);
 		m_nodes.centerNode->translation = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -176,7 +186,6 @@ public:
 	void Render([[maybe_unused]] const Grafkit::Core::CommandBufferRef& commandBuffer) override
 	{
 		m_sceneGraph->Draw(commandBuffer);
-		// throw std::runtime_error("Halt and catch fire");
 	}
 
 	virtual void Shutdown() override
@@ -184,18 +193,18 @@ public:
 		m_sceneGraph.reset();
 		m_materialDescriptor.reset();
 		m_modelviewDescriptor.reset();
-		m_ubo.Destroy(m_renderContext.GetDevice());
+		m_ubo.Destroy(m_renderContext->GetDevice());
 		m_graphicsPipeline.reset();
 	}
 };
 
 int main()
 {
+	HelloApplication app;
 	try {
-		HelloApplication app;
 		app.Run();
 	} catch (const std::exception& e) {
-		std::cerr << e.what() << std::endl;
+		Grafkit::Core::Log::Instance().Error("Exception: %s", e.what());
 		return EXIT_FAILURE;
 	}
 

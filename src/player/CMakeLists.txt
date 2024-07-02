@@ -8,9 +8,7 @@ create_python_venv("venv" PYTHON_VENV_EXECUTABLE)
 find_package(Vulkan REQUIRED)
 
 file(GLOB_RECURSE SOURCE_FILES *.cpp *.c)
-
 file(GLOB_RECURSE HEADER_FILES *.h *.hpp *.hxx)
-
 file(GLOB_RECURSE GLSL_SOURCE_FILES *.vert *.frag *.comp)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
@@ -51,7 +49,10 @@ target_link_libraries(${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME} PRIVATE ${GENERATED_INCLUDE_DIR})
 target_link_libraries(
   ${PROJECT_NAME}
-  Grafkit::Grafkit)
+  Grafkit::Grafkit
+  Grafkit::GrafkitLoader
+  assimp
+  )
 
 # Install?
 include(GNUInstallDirs)

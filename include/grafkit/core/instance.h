@@ -31,7 +31,6 @@ namespace Grafkit::Core {
 		VkInstance CreateInstance(const std::vector<std::string>& instanceExtensions);
 
 		bool CheckValidationLayerSupport();
-		[[nodiscard]] VkSurfaceKHR CreateSurface(const Core::WindowRef& window);
 
 		// ---
 		VkDebugUtilsMessengerCreateInfoEXT CreateDebugMessengerCreateInfo();

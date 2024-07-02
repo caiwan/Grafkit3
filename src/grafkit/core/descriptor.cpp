@@ -102,7 +102,7 @@ DescriptorBuilder::DescriptorBuilder(const DeviceRef& device)
 {
 }
 
-DescriptorBuilder& DescriptorBuilder::AddLayoutBindings(const Core::SetDescriptor& descriptor)
+DescriptorBuilder& DescriptorBuilder::AddLayoutBindings(const Core::DescriptorSetLayoutBinding& descriptor)
 {
 	m_descriptorSet = descriptor.set;
 	for (const auto& binding : descriptor.bindings) {

@@ -38,20 +38,16 @@
 
 namespace Grafkit {
 
-	class IResource {
-	public:
-		virtual ~IResource() = default;
-		virtual std::string Kind() const = 0;
-	};
-
-#define GRAFKIT_RESOURCE_KIND(kind)                  \
-	static constexpr std::string_view KIND = (kind); \
-	[[nodiscard]] std::string Kind() const override { return (kind); }
-
+	// MARK: Reference Wrapper
 	template <typename T> class RefWrapper {
 	public:
 		explicit RefWrapper(T& ref)
 			: m_ptr(&ref)
+		{
+		}
+
+		explicit RefWrapper(T* ref)
+			: m_ptr(ref)
 		{
 		}
 
@@ -77,9 +73,9 @@ namespace Grafkit {
 
 		template <typename U> [[nodiscard]] RefWrapper<U> Cast()
 		{
-			U* p = dynamic_cast<U*>(m_ptr);
-			assert(p);
-			return p;
+			U* ptr = dynamic_cast<U*>(m_ptr);
+			assert(ptr);
+			return ptr;
 		}
 
 	private:
@@ -88,17 +84,24 @@ namespace Grafkit {
 
 	// Factory function to simplify the creation of a RefWrapper
 	template <typename T> RefWrapper<T> MakeReference(T& ref) { return RefWrapper<T>(ref); }
+	template <typename S, typename T> RefWrapper<S> MakeReferenceAs(T& ref)
+	{
+		S* ptr = dynamic_cast<S*>(&ref);
+		assert(ptr);
+		return RefWrapper<S>(ptr);
+	}
 
+	// MARK: Common Structures
 	// TOOD: This has to be memory aligned
 	struct TimeInfo {
 		float time = 0.0f;
 		float deltaTime = 0.0f;
 	};
 
-	// Forward declarations
+	// MARK: Forward declarations
 	namespace Core {
-		class Window; // GLFW Window
-		using WindowRef = RefWrapper<Window>;
+		class IWindow; // GLFW Window
+		using WindowRef = RefWrapper<IWindow>;
 
 		class Instance; // Vulkan Instance
 		using InstanceRef = RefWrapper<Instance>;
@@ -135,7 +138,7 @@ namespace Grafkit {
 			VkShaderStageFlags stageFlags;
 		};
 
-		struct SetDescriptor {
+		struct DescriptorSetLayoutBinding {
 			uint32_t set;
 			std::vector<DescriptorBinding> bindings;
 		};
@@ -151,7 +154,7 @@ namespace Grafkit {
 		class ResoureManger;
 		using ResoureMangerRef = RefWrapper<ResoureManger>;
 
-		class IResourceBuilder;
+		class IResourceLoader;
 		template <typename ParamT, typename ResourceT> class ResourceBuilder;
 
 	} // namespace Resource

@@ -108,11 +108,6 @@ function(set_project_warnings TARGET)
 	endif()
 endfunction()
 
-# ---
-include (PyEnv)
-create_python_venv("venv" PYTHON_VENV_EXECUTABLE)
-set(TOUCH_COMMAND "${PYTHON_VENV_EXECUTABLE};-c;import sys, os\\\; os.makedirs(os.path.dirname(sys.argv[1]), exist_ok=True)\\\; open(sys.argv[1], 'w').close()\\\;")
-
 # Function: set_project_clang_format
 # Sets up clang-format for the specified target.
 #
@@ -137,12 +132,18 @@ function(set_project_clang_format TARGET_NAME)
 
 			# Create a flag file for each source file to avoid reformatting all files each time
 			file(RELATIVE_PATH RELATIVE_SOURCE_FILENAME "${CMAKE_SOURCE_DIR}" "${SOURCE}")
-			set(FORMATTED_SOURCE_FLAG "${CMAKE_CURRENT_BINARY_DIR}/${RELATIVE_SOURCE_FILENAME}.formatted")
+			file(TO_NATIVE_PATH "${CMAKE_CURRENT_BINARY_DIR}/${RELATIVE_SOURCE_FILENAME}.formatted" FORMATTED_SOURCE_FLAG)
+
+			if (WIN32)
+				set(TOUCH_COMMAND "copy;/y;NUL;${FORMATTED_SOURCE_FLAG};>;NUL")
+			else()
+				set(TOUCH_COMMAND "touch;${FORMATTED_SOURCE_FLAG}")
+			endif()
 
 			add_custom_command(
 				OUTPUT "${FORMATTED_SOURCE_FLAG}"
 				COMMAND ${CLANG_FORMAT_EXECUTABLE} -style=file -assume-filename=${CMAKE_SOURCE_DIR}/.clang-format -i ${SOURCE}
-				COMMAND ${TOUCH_COMMAND} ${FORMATTED_SOURCE_FLAG}
+				COMMAND ${TOUCH_COMMAND}
 				DEPENDS "${SOURCE}"
 				COMMENT "Running clang-format on ${SOURCE}"
 				COMMAND_EXPAND_LISTS
@@ -225,12 +226,18 @@ function(set_project_clang_tidy TARGET_NAME)
 	foreach(SOURCE ${TARGET_SOURCES})
 		# Create a flag file for each source file to avoid reformatting all files each time
 		file(RELATIVE_PATH RELATIVE_SOURCE_FILENAME "${CMAKE_SOURCE_DIR}" "${SOURCE}")
-		set(TIDIED_SOURCE_FLAG "${CMAKE_CURRENT_BINARY_DIR}/${RELATIVE_SOURCE_FILENAME}.tidy")
+		file(TO_NATIVE_PATH "${CMAKE_CURRENT_BINARY_DIR}/${RELATIVE_SOURCE_FILENAME}.tidy" TIDIED_SOURCE_FLAG)
+
+		if (WIN32)
+				set(TOUCH_COMMAND "copy;/y;NUL;${TIDIED_SOURCE_FLAG};>;NUL")
+			else()
+				set(TOUCH_COMMAND "touch;${TIDIED_SOURCE_FLAG}")
+			endif()
 
 		add_custom_command(
 			OUTPUT ${TIDIED_SOURCE_FLAG}
 			COMMAND ${CLANG_TIDY_EXECUTABLE} ${SOURCE} ${CLANG_TIDY_CMD} --extra-arg=${INCLUDE_FLAGS} -p ${CMAKE_CURRENT_BINARY_DIR}
-			COMMAND ${TOUCH_COMMAND} ${TIDIED_SOURCE_FLAG}
+			COMMAND ${TOUCH_COMMAND}
 			DEPENDS "${SOURCE}"
 			COMMENT "Running clang-tidy with fix-ups on ${SOURCE}"
 			VERBATIM

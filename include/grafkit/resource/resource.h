@@ -1,25 +1,39 @@
 #ifndef GRAFKIT_BUILDER_H
 #define GRAFKIT_BUILDER_H
 
-#include <fstream>
 #include <grafkit/common.h>
+
+#include <fstream>
+#include <functional>
 #include <string>
+#include <typeindex>
+
+namespace Grafkit::Asset {
+	class IAssetLoader;
+	using IAssetLoaderRef = Grafkit::RefWrapper<IAssetLoader>;
+} // namespace Grafkit::Asset
 
 namespace Grafkit::Resource {
+	class ResourceManager;
+	using ResourceManagerPtr = std::unique_ptr<ResourceManager>;
+	using ResourceManagerRef = Grafkit::RefWrapper<ResourceManager>;
 
-	class IResourceBuilder {
+	// MARK: Resource Loader Interface
+	class GKAPI IResourceLoader {
 	public:
-		IResourceBuilder() = default;
-		IResourceBuilder(const IResourceBuilder&) = delete; // Delete copy constructor
-		IResourceBuilder& operator=(const IResourceBuilder&) = delete; // Delete copy assignment operator
+		IResourceLoader() = default;
+		IResourceLoader(const IResourceLoader&) = delete; // Delete copy constructor
+		IResourceLoader& operator=(const IResourceLoader&) = delete; // Delete copy assignment operator
 
-		virtual ~IResourceBuilder() = default;
+		virtual ~IResourceLoader() = default;
+
+		[[nodiscard]] virtual bool ResolveDependencies(const RefWrapper<ResourceManager>& resources) = 0;
 		virtual void Build(const Core::DeviceRef& device) = 0;
-		virtual std::shared_ptr<IResource> Raw() const = 0;
-		virtual std::string Kind() const = 0;
+
+		[[nodiscard]] virtual std::shared_ptr<void> GetResource() const = 0;
 	};
 
-	template <typename DescriptorT, typename ResourceT> class ResourceBuilder : public IResourceBuilder {
+	template <class DescriptorT, class ResourceT> class GKAPI ResourceBuilder : public IResourceLoader {
 	public:
 		using ResourceType = ResourceT;
 		using DescriptorType = DescriptorT;
@@ -31,8 +45,12 @@ namespace Grafkit::Resource {
 		{
 		}
 
-		[[nodiscard]] ResourcePtr BuildResource(const Core::DeviceRef& device)
+		[[nodiscard]] ResourcePtr BuildResource(
+			const Core::DeviceRef& device, const RefWrapper<ResourceManager>& resources)
 		{
+			if (!ResolveDependencies(resources)) {
+				return nullptr;
+			}
 			Build(device);
 			return m_resource;
 		}
@@ -40,62 +58,75 @@ namespace Grafkit::Resource {
 		[[nodiscard]] const DescriptorType& Descriptor() const { return m_descriptor; }
 		[[nodiscard]] ResourcePtr Resource() const { return m_resource; }
 
-		[[nodiscard]] std::shared_ptr<IResource> Raw() const override
-		{
-			const auto p = std::dynamic_pointer_cast<IResource>(m_resource);
-			assert(p);
-			return p;
-		}
-
-		[[nodiscard]] std::string Kind() const override { return ResourceType::KIND.data(); }
+		[[nodiscard]] std::shared_ptr<void> GetResource() const final { return m_resource; }
 
 	protected:
 		DescriptorType m_descriptor {};
 		ResourcePtr m_resource {};
 	};
 
-	// ---------------------------------------------------------------------------------
-
-	class ResoureManger {
+	// -----------------------------------------------------------------------------
+	// MARK: Loader system
+	// TODO: Create a mixin for it for Application
+	class ResourceLoaderRegistry {
 	public:
-		ResoureManger(const Core::DeviceRef& device)
-			: m_device(device)
+		using LoaderFunc = std::function<bool(std::shared_ptr<void>&, const std::string&, ResourceManager&)>;
+
+		static ResourceLoaderRegistry& Instance()
+		{
+			static ResourceLoaderRegistry instance;
+			return instance;
+		}
+
+		template <typename T> void RegisterLoader(LoaderFunc func) { m_loaders[typeid(T)] = std::move(func); }
+		LoaderFunc GetLoader(std::type_index type) const;
+
+	private:
+		ResourceLoaderRegistry() = default;
+		std::unordered_map<std::type_index, LoaderFunc> m_loaders;
+	};
+
+	class ResourceManager {
+	public:
+		explicit ResourceManager(const Asset::IAssetLoaderRef loader)
+			: m_loader(loader)
 		{
 		}
 
-		ResoureManger(const ResoureManger&) = delete; // Delete copy constructor
-		ResoureManger& operator=(const ResoureManger&) = delete; // Delete copy assignment operator
-
-		virtual ~ResoureManger() = default;
-
-		template <typename ResourceType, typename BuilderType>
-		std::shared_ptr<ResourceType> LoadResource(const std::string& name, BuilderType&& builder)
+		// Template method to load different types of assets
+		template <typename T> std::shared_ptr<T> Load(const std::string& name)
 		{
-			builder.Build(m_device, Grafkit::MakeReference(*this));
-			std::string kind = builder.Kind();
-			m_resources[kind][name] = builder.Raw();
-			return builder.Resource();
+			// std::shared_ptr<void> asset = std::make_shared<T>();
+			// ResourceLoaderRegistry::LoaderFunc loader = ResourceLoaderRegistry::Instance().GetLoader(typeid(T));
+			// if (loader && loader(asset, filename, *this)) {
+			// 	m_assets[typeid(T)][name] = asset;
+			// 	return std::static_pointer_cast<T>(asset);
+			// } else {
+			// 	// std::cerr << "Failed to load asset: " << filename << std::endl;
+			// 	return nullptr;
+			// }
 		}
 
-		template <typename ResourceType> std::shared_ptr<ResourceType> Get(const std::string& name)
+		// Template method to get different types of assets
+		template <typename T> std::shared_ptr<T> Get(const std::string& name) const
 		{
-			const std::string kind = ResourceType::KIND.data();
-			const auto it = m_resources.find(kind);
-			if (it != m_resources.end()) {
-				const auto it2 = it->second.find(name);
-				if (it2 != it->second.end()) {
-					return std::dynamic_pointer_cast<ResourceType>(it2->second);
+			auto typeAssets = m_assets.find(typeid(T));
+			if (typeAssets != m_assets.end()) {
+				auto it = typeAssets->second.find(name);
+				if (it != typeAssets->second.end()) {
+					return std::static_pointer_cast<T>(it->second);
 				}
 			}
+			// std::cerr << "Asset not found: " << name << std::endl;
 			return nullptr;
 		}
 
-		void CollectGarbage();
-
 	private:
-		Core::DeviceRef m_device;
-		std::map<std::string, std::map<std::string, std::shared_ptr<IResource>>> m_resources;
+		const Asset::IAssetLoaderRef m_loader;
+		std::unordered_map<std::type_index, std::unordered_map<std::string, std::shared_ptr<void>>> m_assets;
 	};
+
+	// Mixins
 
 } // namespace Grafkit::Resource
 

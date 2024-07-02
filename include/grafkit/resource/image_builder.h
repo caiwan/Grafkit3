@@ -24,9 +24,13 @@ namespace Grafkit::Resource {
 			: ResourceBuilder<ImageDesc, Core::Image>(desc)
 		{
 		}
-		void Build(const Core::DeviceRef& device) override;
 
-		std::string Kind() const override { return "Image"; }
+		[[nodiscard]] bool ResolveDependencies([[maybe_unused]] const RefWrapper<ResourceManager>& resources) final
+		{
+			return true;
+		}
+
+		void Build(const Core::DeviceRef& device) override;
 	};
 
 	struct SolidImageDesc {
@@ -40,9 +44,12 @@ namespace Grafkit::Resource {
 		{
 		}
 
-		void Build(const Core::DeviceRef& device) override;
+		[[nodiscard]] bool ResolveDependencies([[maybe_unused]] const RefWrapper<ResourceManager>& resources) final
+		{
+			return true;
+		}
 
-		std::string Kind() const override { return "Image"; }
+		void Build(const Core::DeviceRef& device) override;
 	};
 
 	struct CheckerImageDesc {
@@ -60,9 +67,12 @@ namespace Grafkit::Resource {
 		{
 		}
 
-		void Build(const Core::DeviceRef& device) override;
+		[[nodiscard]] bool ResolveDependencies([[maybe_unused]] const RefWrapper<ResourceManager>& resources) final
+		{
+			return true;
+		}
 
-		std::string Kind() const override { return "Image"; }
+		void Build(const Core::DeviceRef& device) override;
 	};
 
 } // namespace Grafkit::Resource

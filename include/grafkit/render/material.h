@@ -25,16 +25,14 @@ namespace Grafkit {
 
 	constexpr uint32_t MODEL_VIEW_BINDING = 0;
 
-	struct GKAPI Material : public IResource {
+	struct GKAPI Material {
 		// enum class AlphaMode : uint32_t { Opaque, Mask, Blend };
 
 		Core::PipelinePtr pipeline;
 		std::vector<Core::DescriptorSetPtr> descriptorSets;
 		std::vector<TexturePtr> textures;
 
-		GRAFKIT_RESOURCE_KIND("Material")
-
-		static std::vector<Core::SetDescriptor> GetLayoutBindings()
+		static std::vector<Core::DescriptorSetLayoutBinding> GetLayoutBindings()
 		{
 			return {
 				{

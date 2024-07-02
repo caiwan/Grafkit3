@@ -41,6 +41,6 @@ std::string Grafkit::Core::Logger::FormatString(const char* format, ...)
 	std::vector<char> buffer(MAX_BUFFER_LENGTH);
 	vsnprintf(buffer.data(), buffer.size(), format, args);
 	va_end(args);
-	return std::string(buffer.data());
+	return { buffer.data() };
 }
 #endif

@@ -16,7 +16,7 @@ using namespace Grafkit::Core;
 
 constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
-RenderContext::RenderContext(const Core::WindowRef& window)
+BaseRenderContext::BaseRenderContext(const Core::WindowRef& window)
 	: m_window(window)
 {
 	m_instance = std::make_unique<Core::Instance>(window);
@@ -31,7 +31,7 @@ RenderContext::RenderContext(const Core::WindowRef& window)
 	SetupViewport();
 }
 
-RenderContext::~RenderContext()
+BaseRenderContext::~BaseRenderContext()
 {
 	Flush();
 
@@ -43,9 +43,7 @@ RenderContext::~RenderContext()
 	m_instance.reset();
 }
 
-const Core::DeviceRef RenderContext::GetDevice() const { return MakeReference(*m_device); }
-
-Core::CommandBufferRef RenderContext::BeginCommandBuffer()
+Core::CommandBufferRef BaseRenderContext::BeginCommandBuffer()
 {
 	m_currentImageIndex = m_swapChain->GetCurrentImageIndex();
 	m_nextFrameIndex = m_swapChain->AcquireNextFrame();
@@ -54,7 +52,7 @@ Core::CommandBufferRef RenderContext::BeginCommandBuffer()
 	return MakeReference(*m_commandBuffers[m_currentImageIndex]);
 }
 
-void RenderContext::BeginFrame(const Core::CommandBufferRef& commandBuffer)
+void BaseRenderContext::BeginFrame(const Core::CommandBufferRef& commandBuffer)
 {
 	VkCommandBufferBeginInfo beginInfo = Core::Initializers::CommandBufferBeginInfo();
 
@@ -73,7 +71,7 @@ void RenderContext::BeginFrame(const Core::CommandBufferRef& commandBuffer)
 	vkCmdSetScissor(**commandBuffer, 0, 1, &m_scissor);
 }
 
-void RenderContext::EndFrame(const Core::CommandBufferRef& commandBuffer)
+void BaseRenderContext::EndFrame(const Core::CommandBufferRef& commandBuffer)
 {
 	commandBuffer->End();
 
@@ -81,7 +79,7 @@ void RenderContext::EndFrame(const Core::CommandBufferRef& commandBuffer)
 	m_swapChain->Present();
 }
 
-void RenderContext::Flush()
+void BaseRenderContext::Flush()
 {
 	m_swapChain->WaitForFences();
 	m_device->WaitIdle();
@@ -89,23 +87,14 @@ void RenderContext::Flush()
 
 // ----------------------------------------------------------------------------
 
-DescriptorBuilder RenderContext::DescriptorBuilder() const { return Core::DescriptorBuilder(MakeReference(*m_device)); }
-
-GraphicsPipelineBuilder RenderContext::PipelineBuilder() const
-{
-	return GraphicsPipelineBuilder(MakeReference(*m_device), MakeReference(*m_frameBuffer));
-}
-
-// ----------------------------------------------------------------------------
-
-void RenderContext::InitializeCommandBuffers()
+void BaseRenderContext::InitializeCommandBuffers()
 {
 	for (uint32_t frameIndex = 0; frameIndex < m_swapChain->GetImageCount(); frameIndex++) {
 		m_commandBuffers.push_back(std::make_unique<Core::CommandBuffer>(MakeReference(*m_device), frameIndex));
 	}
 }
 
-void RenderContext::SetupViewport()
+void BaseRenderContext::SetupViewport()
 {
 	const auto& swapChainExtent = m_swapChain->GetExtent();
 	m_viewport.x = 0.0f;
@@ -119,7 +108,7 @@ void RenderContext::SetupViewport()
 	m_scissor.extent = swapChainExtent;
 }
 
-[[nodiscard]] float RenderContext::GetAspectRatio() const
+[[nodiscard]] float BaseRenderContext::GetAspectRatio() const
 {
 	const auto extent = m_swapChain->GetExtent();
 	return static_cast<float>(extent.width) / static_cast<float>(extent.height);

@@ -6,19 +6,11 @@
 
 using namespace Grafkit::Resource;
 
-void Grafkit::Resource::ResoureManger::CollectGarbage()
+ResourceLoaderRegistry::LoaderFunc ResourceLoaderRegistry::GetLoader(std::type_index type) const
 {
-	size_t count = 0;
-	do {
-		for (auto& [kind, resources] : m_resources) {
-			for (auto it = resources.begin(); it != resources.end();) {
-				if (it->second.use_count() == 1) {
-					it = resources.erase(it);
-					count++;
-				} else {
-					++it;
-				}
-			}
-		}
-	} while (count > 0);
+	auto it = m_loaders.find(type);
+	if (it != m_loaders.end()) {
+		return it->second;
+	}
+	return nullptr;
 }
