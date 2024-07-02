@@ -11,9 +11,7 @@ namespace Grafkit::Resource {
 
 	// TOOD: Merge matertial and texture
 
-	struct MaterialDesc {
-		// std::map<uint32_t, std::string> textures;
-	};
+	struct MaterialDesc { };
 
 	class MaterialBuilder : public ResourceBuilder<MaterialDesc, Grafkit::Material> {
 	public:

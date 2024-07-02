@@ -8,17 +8,15 @@
 
 namespace Grafkit::Core {
 
-	class Image : public IResource {
+	class Image {
 	public:
-		GRAFKIT_RESOURCE_KIND("Image")
-
 		explicit Image(const DeviceRef& device,
 			const VkImage& image,
 			const VkImageView& imageView,
 			const VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 			const std::optional<VmaAllocation> allocation = std::nullopt);
 
-		~Image() override;
+		~Image();
 
 		[[nodiscard]] const VkImage& GetImage() const { return m_image; }
 		[[nodiscard]] const VkImageView& GetImageView() const { return m_imageView; }

@@ -15,8 +15,6 @@ namespace Grafkit::Resource {
 
 		virtual ~IResourceBuilder() = default;
 		virtual void Build(const Core::DeviceRef& device) = 0;
-		virtual std::shared_ptr<IResource> Raw() const = 0;
-		virtual std::string Kind() const = 0;
 	};
 
 	template <typename DescriptorT, typename ResourceT> class ResourceBuilder : public IResourceBuilder {
@@ -39,15 +37,6 @@ namespace Grafkit::Resource {
 
 		[[nodiscard]] const DescriptorType& Descriptor() const { return m_descriptor; }
 		[[nodiscard]] ResourcePtr Resource() const { return m_resource; }
-
-		[[nodiscard]] std::shared_ptr<IResource> Raw() const override
-		{
-			const auto p = std::dynamic_pointer_cast<IResource>(m_resource);
-			assert(p);
-			return p;
-		}
-
-		[[nodiscard]] std::string Kind() const override { return ResourceType::KIND.data(); }
 
 	protected:
 		DescriptorType m_descriptor {};

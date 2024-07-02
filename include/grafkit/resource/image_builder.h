@@ -25,8 +25,6 @@ namespace Grafkit::Resource {
 		{
 		}
 		void Build(const Core::DeviceRef& device) override;
-
-		std::string Kind() const override { return "Image"; }
 	};
 
 	struct SolidImageDesc {
@@ -41,8 +39,6 @@ namespace Grafkit::Resource {
 		}
 
 		void Build(const Core::DeviceRef& device) override;
-
-		std::string Kind() const override { return "Image"; }
 	};
 
 	struct CheckerImageDesc {
@@ -61,8 +57,6 @@ namespace Grafkit::Resource {
 		}
 
 		void Build(const Core::DeviceRef& device) override;
-
-		std::string Kind() const override { return "Image"; }
 	};
 
 } // namespace Grafkit::Resource

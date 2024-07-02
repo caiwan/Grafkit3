@@ -5,12 +5,10 @@
 
 namespace Grafkit {
 
-	class GKAPI Texture : public IResource {
+	class GKAPI Texture {
 	public:
-		GRAFKIT_RESOURCE_KIND("Texture")
-
 		explicit Texture(const Core::DeviceRef& device, Core::ImagePtr image, VkSampler sampler = VK_NULL_HANDLE);
-		~Texture() override;
+		~Texture();
 
 		void Bind(const Core::CommandBufferRef& commandBuffer,
 			const Core::PipelinePtr& pipeline,

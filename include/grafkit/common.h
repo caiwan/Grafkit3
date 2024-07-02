@@ -38,16 +38,6 @@
 
 namespace Grafkit {
 
-	class IResource {
-	public:
-		virtual ~IResource() = default;
-		virtual std::string Kind() const = 0;
-	};
-
-#define GRAFKIT_RESOURCE_KIND(kind)                  \
-	static constexpr std::string_view KIND = (kind); \
-	[[nodiscard]] std::string Kind() const override { return (kind); }
-
 	template <typename T> class RefWrapper {
 	public:
 		explicit RefWrapper(T& ref)

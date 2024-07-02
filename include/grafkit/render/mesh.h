@@ -75,16 +75,13 @@ namespace Grafkit {
 	};
 
 	// TOOD: Use Class + proper dtor
-	class Mesh : public IResource {
+	class Mesh {
 	public:
 		friend class Scenegraph;
-		GRAFKIT_RESOURCE_KIND("Mesh")
-
 		Mesh(const Core::DeviceRef& device);
-		~Mesh() override;
+		~Mesh();
 
 		void Create(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
-
 		void AddPrimitive(const Primitive& primitive) { m_primitives.push_back(primitive); }
 
 	private:
