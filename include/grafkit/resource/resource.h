@@ -54,49 +54,6 @@ namespace Grafkit::Resource {
 		ResourcePtr m_resource {};
 	};
 
-	// ---------------------------------------------------------------------------------
-
-	class ResoureManger {
-	public:
-		ResoureManger(const Core::DeviceRef& device)
-			: m_device(device)
-		{
-		}
-
-		ResoureManger(const ResoureManger&) = delete; // Delete copy constructor
-		ResoureManger& operator=(const ResoureManger&) = delete; // Delete copy assignment operator
-
-		virtual ~ResoureManger() = default;
-
-		template <typename ResourceType, typename BuilderType>
-		std::shared_ptr<ResourceType> LoadResource(const std::string& name, BuilderType&& builder)
-		{
-			builder.Build(m_device, Grafkit::MakeReference(*this));
-			std::string kind = builder.Kind();
-			m_resources[kind][name] = builder.Raw();
-			return builder.Resource();
-		}
-
-		template <typename ResourceType> std::shared_ptr<ResourceType> Get(const std::string& name)
-		{
-			const std::string kind = ResourceType::KIND.data();
-			const auto it = m_resources.find(kind);
-			if (it != m_resources.end()) {
-				const auto it2 = it->second.find(name);
-				if (it2 != it->second.end()) {
-					return std::dynamic_pointer_cast<ResourceType>(it2->second);
-				}
-			}
-			return nullptr;
-		}
-
-		void CollectGarbage();
-
-	private:
-		Core::DeviceRef m_device;
-		std::map<std::string, std::map<std::string, std::shared_ptr<IResource>>> m_resources;
-	};
-
 } // namespace Grafkit::Resource
 
 #endif // BUILDER_H
