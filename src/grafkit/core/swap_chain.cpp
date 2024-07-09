@@ -150,7 +150,8 @@ void SwapChain::InitializeSwapChain(const WindowRef& window, const InstanceRef& 
 	const VkExtent2D extent = ChooseSwapExtent(window, device);
 
 	const QueueFamilyIndices indices = device->GetQueueFamilies();
-	const uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
+	const std::array<uint32_t, 2> queueFamilyIndices
+		= { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
 	VkSwapchainCreateInfoKHR createInfo {};
 	createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -166,7 +167,7 @@ void SwapChain::InitializeSwapChain(const WindowRef& window, const InstanceRef& 
 	if (indices.graphicsFamily != indices.presentFamily) {
 		createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
 		createInfo.queueFamilyIndexCount = 2;
-		createInfo.pQueueFamilyIndices = queueFamilyIndices;
+		createInfo.pQueueFamilyIndices = queueFamilyIndices.data();
 	} else {
 		createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	}

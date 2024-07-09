@@ -21,19 +21,10 @@ void MaterialBuilder::Build(const Core::DeviceRef& device)
 		throw std::runtime_error("Error: Pipeline is null");
 	}
 
-	// TODO: -> Find textures
-	// std::unordered_map<uint32_t, TexturePtr> textures;
-	// for (const auto& [bindId, textureName] : m_descriptor.textures) {
-	// 	auto texture = resources->Get<Texture>(textureName);
-	// 	if (texture == nullptr) {
-	// 		throw std::runtime_error("Error: Texture is null");
-	// 	}
-	// 	m_textures[bindId] = texture;
-	// }
-
 	assert(m_descriptorSets[Grafkit::TEXTURE_SET] != nullptr);
-	for (const auto& [bindId, texture] : m_textures) {
-		assert(texture != nullptr);
+	for (const auto& [bindId, image] : m_textures) {
+		assert(image != nullptr); // TODO: Clean this up
+		const auto texture = CreateTexture(device, bindId);
 		m_descriptorSets[Grafkit::TEXTURE_SET]->Update(texture->GetImage(), texture->GetSampler(), bindId);
 	}
 	m_resource = std::make_shared<Material>();
@@ -54,8 +45,10 @@ void MaterialBuilder::Build(const Core::DeviceRef& device)
 	m_resource->pipeline = m_pipeline;
 }
 
-void TextureBuilder::Build(const Core::DeviceRef& device)
+const TexturePtr Grafkit::Resource::MaterialBuilder::CreateTexture(
+	const Core::DeviceRef& device, const uint32_t binding) const // TODO: Clean this up
 {
+	// TOOD: Separate sampler from texture
 	VkSamplerCreateInfo samplerInfo = Core::Initializers::SamplerCreateInfo();
 
 	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
@@ -65,8 +58,7 @@ void TextureBuilder::Build(const Core::DeviceRef& device)
 	samplerInfo.minFilter = VK_FILTER_LINEAR;
 	samplerInfo.magFilter = VK_FILTER_LINEAR;
 
-	Core::ImagePtr image = m_image;
-
+	const auto image = m_textures.at(binding);
 	if (image == nullptr) {
 		throw std::runtime_error("Error: Image is null");
 	}
@@ -76,5 +68,5 @@ void TextureBuilder::Build(const Core::DeviceRef& device)
 		throw std::runtime_error("failed to create texture sampler!");
 	}
 
-	m_resource = std::make_shared<Texture>(device, image, sampler);
+	return std::make_shared<Texture>(device, image, sampler);
 }

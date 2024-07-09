@@ -20,8 +20,8 @@ namespace Grafkit {
 		virtual void Compute(const Core::CommandBufferRef& commandBuffer) = 0;
 		virtual void Render(const Core::CommandBufferRef& commandBuffer) = 0;
 
-		Grafkit::Core::Window m_window;
-		Grafkit::RenderContext m_renderContext;
+		std::unique_ptr<Grafkit::Core::IWindow> m_window;
+		std::unique_ptr<Grafkit::RenderContext> m_renderContext;
 	};
 } // namespace Grafkit
 

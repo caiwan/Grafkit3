@@ -20,42 +20,62 @@ namespace Grafkit::Core {
 	constexpr int DEFAULT_HEIGHT = 600;
 	constexpr std::string_view DEFAULT_TITLE("Grafkit Application");
 
-	struct WindowBufferSize {
+	struct WindowSize {
 		int width;
 		int height;
 	};
 
-	class GKAPI Window {
+	enum class WindowMode { Windowed, Fullscreen, Borderless };
+	enum class WindowVsync { Off, On };
+	enum class WindowResizable { Off, On };
+
+	GKAPI class IWindow {
+	public:
+		virtual ~IWindow() = default;
+
+		virtual void SetWindowMode(WindowMode windowMode) = 0;
+		virtual void SetVsync(WindowVsync vsync) = 0;
+		virtual void SetResizable(WindowResizable resizable) = 0;
+		virtual void Resize(const int width, const int height) = 0;
+
+		virtual void PollEvents() = 0;
+
+		[[nodiscard]] virtual bool IsClosing() const = 0;
+		[[nodiscard]] virtual WindowSize GetBufferSize() const = 0;
+		[[nodiscard]] virtual VkSurfaceKHR CreateSurface(const VkInstance& instance) const = 0;
+	};
+
+	// ---
+
+	class GKAPI GLFWWindow : public IWindow {
 		friend class Grafkit::RenderContext;
 		friend class Core::Device;
 		friend class Core::Instance;
 
 	public:
-		Window();
-		explicit Window(const int width,
-			const int height,
-			const char* title,
-			bool fullscreen = false,
-			bool vsync = true,
-			bool resizable = true);
+		GLFWWindow();
 
-		virtual ~Window();
+		explicit GLFWWindow(const WindowSize size,
+			const std::string& title = DEFAULT_TITLE.data(),
+			const WindowMode mode = WindowMode::Windowed,
+			const WindowVsync vsync = WindowVsync::On,
+			const WindowResizable resizable = WindowResizable::On);
 
-		void SetFullscreen(bool fullscreen);
-		void SetVsync(bool vsync);
-		void SetResizable(bool resizable);
-		void SetSize(const size_t width, const size_t height);
+		~GLFWWindow() override;
 
-		void PollEvents();
-		[[nodiscard]] bool IsClosing() const;
+		void SetWindowMode(WindowMode windowMode) override;
+		void SetVsync(WindowVsync vsync) override;
+		void SetResizable(WindowResizable resizable) override;
+		void Resize(const int width, const int height) override;
 
-		[[nodiscard]] WindowBufferSize GetBufferSize() const;
+		void PollEvents() override;
 
-	protected:
-		GLFWwindow* GetWindow() const { return m_window; }
+		[[nodiscard]] bool IsClosing() const override;
+		[[nodiscard]] WindowSize GetBufferSize() const override;
+		[[nodiscard]] VkSurfaceKHR CreateSurface(const VkInstance& instance) const override;
 
 	private:
-		void Init(const int width, const int height, const char* title);
+		void Init(const WindowSize& size, const std::string& title);
 		GLFWwindow* m_window;
 	};
 } // namespace Grafkit::Core

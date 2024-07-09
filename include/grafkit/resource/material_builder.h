@@ -3,13 +3,12 @@
 
 #include <grafkit/common.h>
 #include <grafkit/render/material.h>
-#include <grafkit/render/texture.h>
+// #include <grafkit/render/texture.h>
+// #include <grafkit/core/image.h>
 #include <grafkit/resource/resource.h>
 #include <unordered_map>
 
 namespace Grafkit::Resource {
-
-	// TOOD: Merge matertial and texture
 
 	struct MaterialDesc { };
 
@@ -32,9 +31,10 @@ namespace Grafkit::Resource {
 			return *this;
 		}
 
-		[[nodiscard]] MaterialBuilder& AddTexture(const uint32_t binding, const TexturePtr& texture)
+		[[nodiscard]] MaterialBuilder& AddTexture(
+			const uint32_t binding, const Core::ImagePtr& image) // TOOD: Add sampler
 		{
-			m_textures[binding] = texture;
+			m_textures[binding] = image;
 			return *this;
 		}
 
@@ -43,31 +43,9 @@ namespace Grafkit::Resource {
 	private:
 		Core::PipelinePtr m_pipeline;
 		std::unordered_map<uint32_t, Core::DescriptorSetPtr> m_descriptorSets;
-		std::unordered_map<uint32_t, TexturePtr> m_textures;
-	};
+		std::unordered_map<uint32_t, Core::ImagePtr> m_textures;
 
-	struct TextureDesc {
-		std::string imageName;
-	};
-
-	// Texture = Image + sampler
-	class TextureBuilder : public ResourceBuilder<TextureDesc, Grafkit::Texture> {
-	public:
-		explicit TextureBuilder(const TextureDesc& desc = {})
-			: ResourceBuilder(desc)
-		{
-		}
-
-		void Build(const Core::DeviceRef& device) override;
-
-		[[nodiscard]] TextureBuilder& SetImage(const Core::ImagePtr& image)
-		{
-			m_image = image;
-			return *this;
-		}
-
-	private:
-		Core::ImagePtr m_image;
+		[[nodiscard]] const TexturePtr CreateTexture(const Core::DeviceRef& device, const uint32_t binding) const;
 	};
 
 } // namespace Grafkit::Resource

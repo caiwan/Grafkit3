@@ -116,8 +116,8 @@ void Grafkit::Scenegraph::Draw(const Grafkit::Core::CommandBufferRef& commandBuf
 					&currentNode->modelView);
 
 				// Bind vertex buffer
-				VkDeviceSize offsets[] = { primitive.vertexOffset };
-				vkCmdBindVertexBuffers(**commandBuffer, 0, 1, &mesh->m_vertexBuffer.buffer, offsets);
+				std::array<VkDeviceSize, 1> offsets = { primitive.vertexOffset };
+				vkCmdBindVertexBuffers(**commandBuffer, 0, 1, &mesh->m_vertexBuffer.buffer, offsets.data());
 				vkCmdBindIndexBuffer(**commandBuffer, mesh->m_indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
 				//
 				vkCmdDrawIndexed(

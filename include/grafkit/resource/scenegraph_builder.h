@@ -10,35 +10,32 @@ namespace Grafkit::Resource {
 	struct PrimitiveDesc {
 		std::vector<Vertex> vertices;
 		std::vector<uint32_t> indices;
-		Grafkit::MaterialPtr material;
 	};
 
 	struct MeshDesc {
 		std::vector<PrimitiveDesc> primitives;
 	};
 
-	class MeshBuilder : public ResourceBuilder<MeshDesc, Grafkit::Mesh> {
+	struct NodeDesc {
+		std::string name;
+		std::vector<uint32_t> meshIndices;
+		std::vector<NodeDesc> children;
+	};
+
+	struct SceneGraphDesc {
+		std::vector<MeshDesc> meshes;
+		std::vector<NodeDesc> nodes;
+	};
+
+	class SceneGraphBuilder : public ResourceBuilder<SceneGraphDesc, Grafkit::Scenegraph> {
 	public:
-		explicit MeshBuilder(const MeshDesc& desc = {})
+		explicit SceneGraphBuilder(const SceneGraphDesc& desc = {})
 			: ResourceBuilder(desc)
 		{
 		}
 
 		void Build(const Core::DeviceRef& device) override;
 	};
-
-	// // ...
-	// struct SceneGraphDesc { };
-
-	// class SceneGraphBuilder : public ResourceBuilder<SceneGraphDesc, Grafkit::SceneGraph> {
-	// public:
-	// 	explicit SceneGraphBuilder(const SceneGraphDesc& desc = {})
-	// 		: ResourceBuilder(desc)
-	// 	{
-	// 	}
-
-	// 	virtual void Build(const Core::DeviceRef& device, const ResoureMangerRef& resources) override;
-	// };
 
 } // namespace Grafkit::Resource
 

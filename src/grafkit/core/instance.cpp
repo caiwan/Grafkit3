@@ -49,15 +49,15 @@ const std::vector<const char*> Instance::DEVICE_EXTENSIONS = {
 
 Grafkit::Core::Instance::Instance(const Core::WindowRef& window, const std::vector<std::string>& instanceExtensions)
 	: m_instance(CreateInstance(instanceExtensions))
-	, m_surface(CreateSurface(window))
 {
+	m_surface = window->CreateSurface(m_instance);
 	SetupDebugMessenger();
 }
 
 Instance::Instance(const Core::WindowRef& window)
 	: m_instance(CreateInstance({}))
-	, m_surface(CreateSurface(window))
 {
+	m_surface = window->CreateSurface(m_instance);
 	SetupDebugMessenger();
 }
 
@@ -142,13 +142,6 @@ VkDebugUtilsMessengerCreateInfoEXT Instance::CreateDebugMessengerCreateInfo()
 		return createInfo;
 	}
 	return {};
-}
-
-VkSurfaceKHR Instance::CreateSurface(const Core::WindowRef& window)
-{
-	VkSurfaceKHR vkSurface = VK_NULL_HANDLE;
-	glfwCreateWindowSurface(m_instance, window->GetWindow(), nullptr, &vkSurface);
-	return vkSurface;
 }
 
 void Grafkit::Core::Instance::SetupDebugMessenger()

@@ -87,8 +87,8 @@ namespace Grafkit {
 
 	// Forward declarations
 	namespace Core {
-		class Window; // GLFW Window
-		using WindowRef = RefWrapper<Window>;
+		class IWindow; // GLFW Window
+		using WindowRef = RefWrapper<IWindow>;
 
 		class Instance; // Vulkan Instance
 		using InstanceRef = RefWrapper<Instance>;
