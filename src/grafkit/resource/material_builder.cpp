@@ -10,6 +10,7 @@
 
 using namespace Grafkit::Resource;
 using Grafkit::Texture;
+using Grafkit::TexturePtr;
 
 void MaterialBuilder::Build(const Core::DeviceRef& device)
 {
@@ -21,11 +22,14 @@ void MaterialBuilder::Build(const Core::DeviceRef& device)
 		throw std::runtime_error("Error: Pipeline is null");
 	}
 
+	std::map<uint32_t, TexturePtr> textures;
+
 	assert(m_descriptorSets[Grafkit::TEXTURE_SET] != nullptr);
-	for (const auto& [bindId, image] : m_textures) {
-		assert(image != nullptr); // TODO: Clean this up
-		const auto texture = CreateTexture(device, bindId);
+	for (const auto& [bindId, image] : m_images) {
+		assert(image != nullptr);
+		const auto texture = CreateTexture(device, image);
 		m_descriptorSets[Grafkit::TEXTURE_SET]->Update(texture->GetImage(), texture->GetSampler(), bindId);
+		textures[bindId] = texture;
 	}
 	m_resource = std::make_shared<Material>();
 
@@ -36,8 +40,8 @@ void MaterialBuilder::Build(const Core::DeviceRef& device)
 		m_resource->descriptorSets[set] = descriptorSet;
 	}
 
-	m_resource->textures.resize(m_textures.size());
-	for (const auto& [bindId, texture] : m_textures) {
+	m_resource->textures.resize(m_images.size());
+	for (const auto& [bindId, texture] : textures) {
 		assert(texture != nullptr);
 		m_resource->textures[bindId] = texture;
 	}
@@ -45,9 +49,12 @@ void MaterialBuilder::Build(const Core::DeviceRef& device)
 	m_resource->pipeline = m_pipeline;
 }
 
-const TexturePtr Grafkit::Resource::MaterialBuilder::CreateTexture(
-	const Core::DeviceRef& device, const uint32_t binding) const // TODO: Clean this up
+const TexturePtr MaterialBuilder::CreateTexture(const Core::DeviceRef& device, const Core::ImagePtr& image) const
 {
+	if (image == nullptr) {
+		throw std::runtime_error("Error: Image is null");
+	}
+
 	// TOOD: Separate sampler from texture
 	VkSamplerCreateInfo samplerInfo = Core::Initializers::SamplerCreateInfo();
 
@@ -58,10 +65,7 @@ const TexturePtr Grafkit::Resource::MaterialBuilder::CreateTexture(
 	samplerInfo.minFilter = VK_FILTER_LINEAR;
 	samplerInfo.magFilter = VK_FILTER_LINEAR;
 
-	const auto image = m_textures.at(binding);
-	if (image == nullptr) {
-		throw std::runtime_error("Error: Image is null");
-	}
+	// ---
 
 	VkSampler sampler {};
 	if (vkCreateSampler(**device, &samplerInfo, nullptr, &sampler) != VK_SUCCESS) {

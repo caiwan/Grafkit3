@@ -5,6 +5,10 @@
 
 using namespace Grafkit;
 
+// TODO: Application shouls be a commposite of multiple classes allowin to add multiple runtimes into it at
+// instantiation E.g. Choose window, choose render context, choose input handler, choose audio handler, choose physics
+// handler, etc. Or even add an initialization handler to allow for more complex setups such as settung up window,
+// render context, input handler, loading assets, etc. This would allow to create a more modular application class
 Application::Application()
 {
 	m_window = std::make_unique<Core::GLFWWindow>();

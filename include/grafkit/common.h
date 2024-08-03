@@ -38,6 +38,7 @@
 
 namespace Grafkit {
 
+	// MARK: Reference Wrapper
 	template <typename T> class RefWrapper {
 	public:
 		explicit RefWrapper(T& ref)
@@ -79,13 +80,26 @@ namespace Grafkit {
 	// Factory function to simplify the creation of a RefWrapper
 	template <typename T> RefWrapper<T> MakeReference(T& ref) { return RefWrapper<T>(ref); }
 
+	// MARK: Compose Mixins
+	// Variadic template to inherit multiple mix-in templates
+	template <class BaseType, template <class> class... Mixins> struct ComposeMixins;
+
+	// Base case: when no more mix-ins are left
+	template <class BaseType> struct ComposeMixins<BaseType> : public BaseType { };
+
+	// Recursive case: inherit from the first mix-in and then from the rest
+	template <class BaseType, template <class> class First, template <class> class... Rest>
+	struct ComposeMixins<BaseType, First, Rest...> : public First<ComposeMixins<BaseType, Rest...>> { };
+
+	// MARK: Common Structures
+
 	// TOOD: This has to be memory aligned
 	struct TimeInfo {
 		float time = 0.0f;
 		float deltaTime = 0.0f;
 	};
 
-	// Forward declarations
+	// MARK: Forward declarations
 	namespace Core {
 		class IWindow; // GLFW Window
 		using WindowRef = RefWrapper<IWindow>;
@@ -125,7 +139,7 @@ namespace Grafkit {
 			VkShaderStageFlags stageFlags;
 		};
 
-		struct SetDescriptor {
+		struct DescriptorSetLayoutBinding {
 			uint32_t set;
 			std::vector<DescriptorBinding> bindings;
 		};

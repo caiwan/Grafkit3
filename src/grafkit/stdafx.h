@@ -11,12 +11,14 @@
 #include <iostream>
 #include <limits>
 #include <list>
+#include <map>
 #include <memory>
 #include <optional>
 #include <set>
 #include <span>
 #include <stdexcept>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
 
 #include <glm/glm.hpp>

@@ -32,7 +32,7 @@ namespace Grafkit {
 		std::vector<Core::DescriptorSetPtr> descriptorSets;
 		std::vector<TexturePtr> textures;
 
-		static std::vector<Core::SetDescriptor> GetLayoutBindings()
+		static std::vector<Core::DescriptorSetLayoutBinding> GetLayoutBindings()
 		{
 			return {
 				{

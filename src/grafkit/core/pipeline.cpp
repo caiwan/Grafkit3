@@ -35,7 +35,8 @@ void Pipeline::Bind(VkCommandBuffer commandBuffer)
 
 // -----------------------------------------------------------------------------
 
-GraphicsPipelineBuilder::GraphicsPipelineBuilder(const DeviceRef& device, const FrameBufferRef& frameBuffer)
+GraphicsPipelineBuilder::GraphicsPipelineBuilder(
+	const DeviceRef& device, const FrameBufferRef& frameBuffer, const std::optional<PipelineDescriptor>& descriptors)
 	: m_device(device)
 	, m_frameBuffer(frameBuffer)
 {
@@ -53,6 +54,14 @@ GraphicsPipelineBuilder::GraphicsPipelineBuilder(const DeviceRef& device, const 
 	SetColorBlending(mColorBlendAttachment);
 
 	SetDynamicState({ VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR });
+
+	if (descriptors.has_value()) {
+		SetVertexInputDescription(descriptors->vertexInputDescription);
+		AddDescriptorSets(descriptors->descriptorSetLayouts);
+		for (const auto& pushConstant : descriptors->pushConstants) {
+			m_pushConstants.push_back(pushConstant);
+		}
+	}
 }
 
 GraphicsPipelineBuilder& GraphicsPipelineBuilder::AddVertexShader(const uint8_t* code, size_t len)
@@ -99,9 +108,10 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetVertexInputDescription(cons
 	return *this;
 }
 
-GraphicsPipelineBuilder& GraphicsPipelineBuilder::AddDescriptorSets(const std::vector<SetDescriptor>& descriptorSets)
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::AddDescriptorSets(
+	const std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings)
 {
-	for (const auto& descriptor : descriptorSets) {
+	for (const auto& descriptor : descriptorSetLayoutBindings) {
 		m_descriptorSets[descriptor.set] = {};
 		for (const auto& binding : descriptor.bindings) {
 			m_descriptorSets[descriptor.set].push_back(

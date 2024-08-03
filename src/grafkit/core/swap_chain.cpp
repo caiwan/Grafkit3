@@ -1,14 +1,4 @@
-
-#include <algorithm>
-#include <cstdint>
-#include <cstdlib>
-#include <cstring>
-#include <fstream>
-#include <iostream>
-#include <limits>
-#include <optional>
-#include <set>
-#include <stdexcept>
+#include "stdafx.h"
 //
 #include <grafkit/core/device.h>
 #include <grafkit/core/image.h>

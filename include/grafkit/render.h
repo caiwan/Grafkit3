@@ -21,25 +21,32 @@ namespace Grafkit {
 		using CommandBufferPtr = std::unique_ptr<CommandBuffer>;
 	} // namespace Core
 
-	class GKAPI RenderContext {
+	// MARK: RenderContext Interface
+	class GKAPI IRenderContext {
 	public:
-		explicit RenderContext(const Core::WindowRef& window);
-		virtual ~RenderContext();
+		[[nodiscard]] virtual const Core::DeviceRef GetDevice() const = 0;
+		[[nodiscard]] virtual Core::CommandBufferRef BeginCommandBuffer() = 0;
+		virtual void BeginFrame(const Core::CommandBufferRef& commandBuffer) = 0;
+		virtual void EndFrame(const Core::CommandBufferRef& commandBuffer) = 0;
+		virtual void Flush() = 0;
+	};
 
-		[[nodiscard]] const Core::DeviceRef GetDevice() const;
+	// MARK: BaseRenderContext
+	class GKAPI BaseRenderContext : public IRenderContext {
+	public:
+		explicit BaseRenderContext(const Core::WindowRef& window);
+		virtual ~BaseRenderContext();
 
-		[[nodiscard]] Core::CommandBufferRef BeginCommandBuffer();
-		void BeginFrame(const Core::CommandBufferRef& commandBuffer);
-		void EndFrame(const Core::CommandBufferRef& commandBuffer);
+		[[nodiscard]] const Core::DeviceRef GetDevice() const override;
 
-		void Flush();
+		[[nodiscard]] Core::CommandBufferRef BeginCommandBuffer() override;
+		void BeginFrame(const Core::CommandBufferRef& commandBuffer) override;
+		void EndFrame(const Core::CommandBufferRef& commandBuffer) override;
 
-		[[nodiscard]] Grafkit::Core::DescriptorBuilder DescriptorBuilder() const;
-		[[nodiscard]] Grafkit::Core::GraphicsPipelineBuilder PipelineBuilder() const;
+		void Flush() override;
 
 		[[nodiscard]] float GetAspectRatio() const;
 
-		[[nodiscard]] uint32_t GetCurrentFrameIndex() const { return m_currentImageIndex; }
 		[[nodiscard]] uint32_t GetNextFrameIndex() const { return m_nextFrameIndex; }
 
 	private:
@@ -62,5 +69,49 @@ namespace Grafkit {
 		void InitializeCommandBuffers();
 		void SetupViewport();
 	};
+
+	// MARK: Mixins
+	template <class BaseType> class DescriptorFactoryMixin : virtual public BaseType {
+	public:
+		DescriptorFactoryMixin()
+			: m_descriptorFactory(std::make_unique<Core::DescriptorFactory>())
+		{
+		}
+
+		[[nodiscard]] Grafkit::Core::DescriptorBuilder DescriptorBuilder() const
+		{
+			return m_descriptorFactory->DescriptorBuilder(MakeReference(this->*m_device));
+		}
+
+	private:
+		std::unique_ptr<Core::DescriptorFactory> m_descriptorFactory;
+	};
+
+	template <class BaseType> class PipelineFactoryMixin : virtual public BaseType {
+	public:
+		PipelineFactoryMixin()
+			: m_pipelineFactory(std::make_unique<Core::PipelineFactory>())
+		{
+		}
+
+		void AddStaticPipelineDescriptor(const uint32_t slot, const Core::PipelineDescriptor& descriptors)
+		{
+			m_pipelineFactory->AddStaticPipelineDescriptor(slot, descriptors);
+		}
+
+		[[nodiscard]] Grafkit::Core::GraphicsPipelineBuilder PipelineBuilder(uint32_t descriptorSlot) const
+		{
+			return m_pipelineFactory->CreateGraphicsPipelineBuilder(
+				MakeReference(this->*m_device), MakeReference(this->*m_frameBuffer), descriptorSlot);
+		}
+
+	private:
+		std::unique_ptr<Core::PipelineFactory> m_pipelineFactory;
+	};
+
+	// --- RenderContext ---
+	using RenderContext = ComposeMixins<BaseRenderContext, DescriptorFactoryMixin, PipelineFactoryMixin>;
+
 } // namespace Grafkit
+
 #endif // __RENDER_CONTEXT_H__

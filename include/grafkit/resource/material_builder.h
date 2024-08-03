@@ -2,9 +2,9 @@
 #define GRAFKIT_TEXTURE_BUILDER_H
 
 #include <grafkit/common.h>
+#include <grafkit/core/image.h>
 #include <grafkit/render/material.h>
-// #include <grafkit/render/texture.h>
-// #include <grafkit/core/image.h>
+#include <grafkit/render/texture.h>
 #include <grafkit/resource/resource.h>
 #include <unordered_map>
 
@@ -31,10 +31,10 @@ namespace Grafkit::Resource {
 			return *this;
 		}
 
-		[[nodiscard]] MaterialBuilder& AddTexture(
+		[[nodiscard]] MaterialBuilder& AddTextureImage(
 			const uint32_t binding, const Core::ImagePtr& image) // TOOD: Add sampler
 		{
-			m_textures[binding] = image;
+			m_images[binding] = image;
 			return *this;
 		}
 
@@ -43,9 +43,9 @@ namespace Grafkit::Resource {
 	private:
 		Core::PipelinePtr m_pipeline;
 		std::unordered_map<uint32_t, Core::DescriptorSetPtr> m_descriptorSets;
-		std::unordered_map<uint32_t, Core::ImagePtr> m_textures;
+		std::unordered_map<uint32_t, Core::ImagePtr> m_images;
 
-		[[nodiscard]] const TexturePtr CreateTexture(const Core::DeviceRef& device, const uint32_t binding) const;
+		[[nodiscard]] const TexturePtr CreateTexture(const Core::DeviceRef& device, const Core::ImagePtr& image) const;
 	};
 
 } // namespace Grafkit::Resource

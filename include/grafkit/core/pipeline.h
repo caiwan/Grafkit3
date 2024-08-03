@@ -1,12 +1,15 @@
 #ifndef GRAFKIT_CORE_GRAPHICS_PIPELINE_H
 #define GRAFKIT_CORE_GRAPHICS_PIPELINE_H
 
+#include <optional>
 #include <unordered_map>
 #include <vector>
 //
 #include <grafkit/common.h>
 
 namespace Grafkit::Core {
+
+	// MARK: Pipeline
 	class GKAPI Pipeline {
 	public:
 		explicit Pipeline(const DeviceRef& device,
@@ -31,11 +34,19 @@ namespace Grafkit::Core {
 		std::vector<VkDescriptorSetLayout> m_descriptorSetLayouts;
 	};
 
-	// -----------------------------------------------------------------------------
+	struct PipelineDescriptor {
+		VertexDescription vertexInputDescription;
+		std::vector<DescriptorSetLayoutBinding> descriptorSetLayouts;
+		std::vector<VkPushConstantRange> pushConstants;
+	};
 
+	// MARK: GraphicsPipelineBuilder
 	class GKAPI GraphicsPipelineBuilder {
 	public:
-		explicit GraphicsPipelineBuilder(const DeviceRef& device, const FrameBufferRef& renderPass); // REPLACE !!!!
+		explicit GraphicsPipelineBuilder(const DeviceRef& device,
+			const FrameBufferRef& renderPass,
+			const std::optional<PipelineDescriptor>& descriptors = std::nullopt);
+
 		~GraphicsPipelineBuilder() = default;
 
 		GraphicsPipelineBuilder& AddVertexShader(const uint8_t* code, size_t len);
@@ -45,7 +56,7 @@ namespace Grafkit::Core {
 
 		GraphicsPipelineBuilder& SetVertexInputDescription(const VertexDescription& desc);
 
-		GraphicsPipelineBuilder& AddDescriptorSets(const std::vector<SetDescriptor>& bindings);
+		GraphicsPipelineBuilder& AddDescriptorSets(const std::vector<DescriptorSetLayoutBinding>& bindings);
 		GraphicsPipelineBuilder& AddPushConstants(
 			const VkShaderStageFlags stage, const uint32_t size, const uint32_t offset = 0);
 
@@ -85,5 +96,34 @@ namespace Grafkit::Core {
 
 		void AddShaderStage(VkShaderModule shaderModule, VkShaderStageFlagBits stage);
 	};
+
+	// MARK: ComputePipelineBuilder
+	class GKAPI ComputePipelineBuilder {
+		// TODO: ...
+	};
+
+	// MARK: PipelineFactory
+	class GKAPI PipelineFactory {
+	public:
+		explicit PipelineFactory() = default;
+		~PipelineFactory() = default;
+
+		void AddStaticPipelineDescriptor(const uint32_t slot, const PipelineDescriptor& descriptors)
+		{
+			m_descriptors[slot] = descriptors;
+		}
+
+		[[nodiscard]] GraphicsPipelineBuilder CreateGraphicsPipelineBuilder(
+			const DeviceRef& device, const FrameBufferRef& renderPass, const uint32_t slot) const
+		{
+			const PipelineDescriptor descriptors = m_descriptors.at(slot);
+			return GraphicsPipelineBuilder(device, renderPass, descriptors);
+		}
+		// [[nodiscard]] ComputePipelineBuilder ComputePipelineBuilder(); // TODO: ...
+
+	private:
+		std::unordered_map<uint32_t, PipelineDescriptor> m_descriptors;
+	};
+
 } // namespace Grafkit::Core
 #endif // __GRAFKIT_CORE_GRAPHICS_PIPELINE_H__
