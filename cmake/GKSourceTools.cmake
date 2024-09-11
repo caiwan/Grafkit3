@@ -26,9 +26,6 @@ function(initialize_source_tools)
 	endif ()
 
 	if (NOT _GK_PYTHON_TOOLS_OK)
-		_execute_pyton(MODULE "pip" OPTIONS install --upgrade setuptools setuptools_scm pip wheel)
-		_execute_pyton(MODULE "pip" OPTIONS install "cython<3.0.0")
-
 		if (ARGS_EDITABLE)
 			_execute_pyton(MODULE "pip" OPTIONS install --editable ${ARGS_PACKAGE})
 		else ()
