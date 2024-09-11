@@ -8,11 +8,11 @@ end_of_line = crlf
 insert_final_newline = true
 trim_trailing_whitespace = true
 
-[*.py,*.sh,*.bat,*.cmd,*.ps1,*.cfg]
+[*.{py,sh,bat,cmd,bat,sh,cfg}]
 indent_style = space
 indent_size = 4
 
-[*.json, *.yml, *.yaml, *.toml]
+[*.{json,yml,yaml,toml}]
 indent_style = space
 indent_size = 2
 
@@ -21,14 +21,6 @@ indent_size = 2
 indent_style = space
 indent_size = 2
 
-[.clang-tidy,.clang-format]
+[{.clang-tidy,.clang-format}]
 indent_style = space
 indent_size = 2
-
-# [CMakeLists.txt]
-# indent_style = space
-# indent_size = 2
-
-# [*.cmake]
-# indent_style = space
-# indent_size = 2

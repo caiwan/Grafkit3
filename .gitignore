@@ -230,7 +230,7 @@ shader-error.txt
 *.dll
 
 # VSCODE
-.vscode/*
+.vscode/
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
