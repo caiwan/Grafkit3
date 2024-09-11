@@ -18,23 +18,10 @@ option(GK_USE_CPACK "Pack project with CPack" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 
-include (PyEnv)
+include(PyEnv)
+include(GKSourceTools)
 create_python_venv("venv" PYTHON_VENV_EXECUTABLE)
-
-# --- Cache options
-# if(NOT DEFINED CMAKE_C_COMPILER_LAUNCHER AND NOT DEFINED CMAKE_CXX_COMPILER_LAUNCHER)
-#   find_program(CCACHE_FOUND ccache)
-#   find_program(SCCACHE_FOUND sccache)
-#   if(CCACHE_FOUND AND NOT SCCACHE_FOUND)
-#     message("setting CCACHE to ${CCACHE_FOUND}")
-#     set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_FOUND})
-#     set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_FOUND})
-#   elseif(SCCACHE_FOUND AND NOT CCACHE_FOUND)
-#     message("setting CCACHE to ${CCACHE_FOUND}")
-#     set(CMAKE_C_COMPILER_LAUNCHER ${SCCACHE_FOUND})
-#     set(CMAKE_CXX_COMPILER_LAUNCHER ${SCCACHE_FOUND})
-#   endif(CCACHE_FOUND AND NOT SCCACHE_FOUND)
-# endif()
+initialize_source_tools(EDITABLE PACKAGE "${CMAKE_SOURCE_DIR}/tools")
 
 # --- Project and build options
 set(CMAKE_C_STANDARD 99)
@@ -46,27 +33,20 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-# --- Compiler options
-# if(DEFINED CMAKE_C_COMPILER_LAUNCHER)
-#   if(WIN32)
-#     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-#       string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-#       string(REPLACE "/Zi" "/Z7" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
-#     elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-#       string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
-#       string(REPLACE "/Zi" "/Z7" CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
-#     elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-#       string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
-#       string(REPLACE "/Zi" "/Z7" CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO}")
-#     endif()
-#   endif()
-# endif()
-
 # --- Module and prefix path
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_DEBUG_POSTFIX
     "d"
-    CACHE STRING "")
+    CACHE STRING ""
+)
+
+if(NOT CMAKE_CONFIGURATION_TYPES)
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        add_compile_definitions(_DEBUG)
+    endif()
+else()
+    add_compile_definitions($<$<CONFIG:Debug>:_DEBUG>)
+endif()
 
 add_subdirectory(thirdparties)
 add_subdirectory(src)

@@ -229,10 +229,10 @@ function(set_project_clang_tidy TARGET_NAME)
 		file(TO_NATIVE_PATH "${CMAKE_CURRENT_BINARY_DIR}/${RELATIVE_SOURCE_FILENAME}.tidy" TIDIED_SOURCE_FLAG)
 
 		if (WIN32)
-				set(TOUCH_COMMAND "copy;/y;NUL;${TIDIED_SOURCE_FLAG};>;NUL")
-			else()
-				set(TOUCH_COMMAND "touch;${TIDIED_SOURCE_FLAG}")
-			endif()
+			set(TOUCH_COMMAND "copy;/y;NUL;${TIDIED_SOURCE_FLAG};>;NUL")
+		else()
+			set(TOUCH_COMMAND "touch;${TIDIED_SOURCE_FLAG}")
+		endif()
 
 		add_custom_command(
 			OUTPUT ${TIDIED_SOURCE_FLAG}

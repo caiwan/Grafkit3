@@ -6,11 +6,15 @@ if (MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /w")
     set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} /w")
 else ()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w -Wno-error -Wno-nullability-extension")
-    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -w -Wno-error -Wno-nullability-extension")
+  set (CXX_EXTRA_FLAGS
+    "-Wno-error -Wno-nullability-extension -Wno-implicit-function-declaration"
+  )
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w ${CXX_EXTRA_FLAGS}")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w ${CXX_EXTRA_FLAGS}")
 endif()
 
 # MARK: GLFW
+set(GLFW_BUILD_DOCS OFF)
 add_subdirectory(glfw)
 
 # MARK: GLM
@@ -24,6 +28,11 @@ install(TARGETS VulkanMemoryAllocator EXPORT VulkanMemoryAllocatorConfig INCLUDE
 install(EXPORT VulkanMemoryAllocatorConfig NAMESPACE "GPUOpen::" DESTINATION "share/cmake/VulkanMemoryAllocator")
 
 # MARK: Assimp
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
+set(ASSIMP_NO_EXPORT ON)
+set(ASSIMP_INSTALL OFF)
+set(ASSIMP_WARNINGS_AS_ERRORS OFF)
+set(ASSIMP_BUILD_TESTS OFF)
 add_subdirectory(assimp)
 
 # MARK: GoogleTest
