@@ -64,12 +64,19 @@ namespace Grafkit::Core {
 
 		[[nodiscard]] uint32_t GetMaxFramesInFlight() const;
 
+		[[nodiscard]] const VkPhysicalDeviceProperties& GetDeviceProperties() { return m_deviceProperties; }
+		[[nodiscard]] const VkPhysicalDeviceLimits& GetDeviceLimits() { return m_deviceProperties.limits; }
+
 	private:
 		void PickPhysicalDevice();
 		void CreateLogicalDevice();
 		void CreateGraphicsQueue();
 		void CreatePresentQueue();
 		void CreateCommandPool();
+
+#ifdef _DEBUG
+		void PrintVulkanDeviceLimits() const;
+#endif
 
 		void InitializeAllocator();
 
@@ -99,6 +106,8 @@ namespace Grafkit::Core {
 		mutable std::optional<QueueFamilyIndices> m_queueFamilyIndices = std::nullopt;
 		mutable std::optional<SwapChainSupportDetails> m_swapChainSupportDetails = std::nullopt;
 		mutable std::optional<uint32_t> m_maxImageCount = std::nullopt;
+
+		VkPhysicalDeviceProperties m_deviceProperties {};
 	};
 
 } // namespace Grafkit::Core

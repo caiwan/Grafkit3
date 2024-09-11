@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <iomanip>
 #include <sstream>
 //
 #include <vk_mem_alloc.h>
@@ -9,7 +10,7 @@
 
 using namespace Grafkit::Core;
 
-constexpr uint32_t INITIAL_DESCRIPTOR_SET_SIZE = 2;
+constexpr uint32_t INITIAL_DESCRIPTOR_SET_SIZE = 128;
 
 constexpr std::array<VkFormat, 4> DEPTH_FORMATS = {
 	VK_FORMAT_D32_SFLOAT_S8_UINT,
@@ -28,10 +29,16 @@ Device::Device(const Core::InstanceRef& instance)
 	CreatePresentQueue();
 	CreateCommandPool();
 
+	vkGetPhysicalDeviceProperties(m_physicalDevice, &m_deviceProperties);
+
+#ifdef _DEBUG
+	PrintVulkanDeviceLimits();
+#endif
+
 	InitializeAllocator();
 
 	m_descriptorPool = std::make_unique<Core::DescriptorPool>(MakeReference(*this),
-		INITIAL_DESCRIPTOR_SET_SIZE,
+		m_deviceProperties.limits.maxPerStageDescriptorUniformBuffers,
 		std::vector<DescriptorPool::PoolSet>({
 			{ VK_DESCRIPTOR_TYPE_SAMPLER, INITIAL_DESCRIPTOR_SET_SIZE },
 			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, INITIAL_DESCRIPTOR_SET_SIZE },
@@ -375,3 +382,120 @@ uint32_t Device::GetMaxFramesInFlight() const
 
 	return m_maxImageCount.value();
 }
+
+#ifdef _DEBUG
+// TODO: Should be moved to a separate file
+namespace {
+	// NOLINTNEXTLINE modernize-avoid-c-arrays - Keep C array for fixed size for Vulkan API
+	template <size_t UUID_SIZE> inline std::string PrintUUID(const uint8_t (&uuid)[UUID_SIZE])
+	{
+		std::stringstream ss;
+		for (int i = 0; i < UUID_SIZE; ++i) {
+			ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(uuid[i]);
+			// Add dashes to format as UUID: 8-4-4-4-12 format
+			if (i == 3 || i == 5 || i == 7 || i == 9) {
+				ss << "-";
+			}
+		}
+		return ss.str();
+	}
+
+} // namespace
+
+void Device::PrintVulkanDeviceLimits() const
+{
+	std::stringstream ss;
+
+	const VkPhysicalDeviceLimits& limits = m_deviceProperties.limits;
+	ss << std::endl;
+	ss << "Vulkan Device Properties:" << std::endl;
+	ss << "--------------------------" << std::endl;
+	ss << "Device Name: " << m_deviceProperties.deviceName << std::endl;
+	ss << "Device Type: " << m_deviceProperties.deviceType << std::endl;
+	ss << "API Version: " << m_deviceProperties.apiVersion << std::endl;
+	ss << "Driver Version: " << m_deviceProperties.driverVersion << std::endl;
+	ss << "Vendor ID: " << m_deviceProperties.vendorID << std::endl;
+	ss << "Device ID: " << m_deviceProperties.deviceID << std::endl;
+	ss << "Pipeline Cache UUID: " << PrintUUID(m_deviceProperties.pipelineCacheUUID) << std::endl;
+	ss << std::endl;
+	ss << "Vulkan Device Limitations:" << std::endl;
+	ss << "--------------------------" << std::endl;
+	ss << "Max Image Dimension 1D: " << limits.maxImageDimension1D << std::endl;
+	ss << "Max Image Dimension 2D: " << limits.maxImageDimension2D << std::endl;
+	ss << "Max Image Dimension 3D: " << limits.maxImageDimension3D << std::endl;
+	ss << "Max Image Dimension Cube: " << limits.maxImageDimensionCube << std::endl;
+	ss << "Max Image Array Layers: " << limits.maxImageArrayLayers << std::endl;
+	ss << "Max Texel Buffer Elements: " << limits.maxTexelBufferElements << std::endl;
+	ss << "Max Uniform Buffer Range: " << limits.maxUniformBufferRange << std::endl;
+	ss << "Max Storage Buffer Range: " << limits.maxStorageBufferRange << std::endl;
+	ss << "Max Push Constants Size: " << limits.maxPushConstantsSize << std::endl;
+	ss << "Max Memory Allocation Count: " << limits.maxMemoryAllocationCount << std::endl;
+	ss << "Max Sampler Allocation Count: " << limits.maxSamplerAllocationCount << std::endl;
+	ss << "Buffer Image Granularity: " << limits.bufferImageGranularity << std::endl;
+	ss << "Max Bound Descriptor Sets: " << limits.maxBoundDescriptorSets << std::endl;
+	ss << "Max Per Stage Descriptor Samplers: " << limits.maxPerStageDescriptorSamplers << std::endl;
+	ss << "Max Per Stage Descriptor Uniform Buffers: " << limits.maxPerStageDescriptorUniformBuffers << std::endl;
+	ss << "Max Per Stage Descriptor Storage Buffers: " << limits.maxPerStageDescriptorStorageBuffers << std::endl;
+	ss << "Max Per Stage Descriptor Sampled Images: " << limits.maxPerStageDescriptorSampledImages << std::endl;
+	ss << "Max Per Stage Descriptor Storage Images: " << limits.maxPerStageDescriptorStorageImages << std::endl;
+	ss << "Max Per Stage Descriptor Input Attachments: " << limits.maxPerStageDescriptorInputAttachments << std::endl;
+	ss << "Max Per Stage Resources: " << limits.maxPerStageResources << std::endl;
+	ss << "Max Descriptor Set Samplers: " << limits.maxDescriptorSetSamplers << std::endl;
+	ss << "Max Descriptor Set Uniform Buffers: " << limits.maxDescriptorSetUniformBuffers << std::endl;
+	ss << "Max Descriptor Set Storage Buffers: " << limits.maxDescriptorSetStorageBuffers << std::endl;
+	ss << "Max Descriptor Set Uniform Buffers Dynamic: " << limits.maxDescriptorSetUniformBuffersDynamic << std::endl;
+	ss << "Max Descriptor Set Storage Buffers Dynamic: " << limits.maxDescriptorSetStorageBuffersDynamic << std::endl;
+	ss << "Max Descriptor Set Sampled Images: " << limits.maxDescriptorSetSampledImages << std::endl;
+	ss << "Max Descriptor Set Storage Images: " << limits.maxDescriptorSetStorageImages << std::endl;
+	ss << "Max Descriptor Set Input Attachments: " << limits.maxDescriptorSetInputAttachments << std::endl;
+	ss << "Max Vertex Input Attributes: " << limits.maxVertexInputAttributes << std::endl;
+	ss << "Max Vertex Input Bindings: " << limits.maxVertexInputBindings << std::endl;
+	ss << "Max Vertex Input Attribute Offset: " << limits.maxVertexInputAttributeOffset << std::endl;
+	ss << "Max Vertex Input Binding Stride: " << limits.maxVertexInputBindingStride << std::endl;
+	ss << "Max Vertex Output Components: " << limits.maxVertexOutputComponents << std::endl;
+	ss << "Max Tessellation Generation Level: " << limits.maxTessellationGenerationLevel << std::endl;
+	ss << "Max Tessellation Patch Size: " << limits.maxTessellationPatchSize << std::endl;
+	ss << "Max Tessellation Control Per Vertex Input Components: "
+	   << limits.maxTessellationControlPerVertexInputComponents << std::endl;
+	ss << "Max Tessellation Control Per Vertex Output Components: "
+	   << limits.maxTessellationControlPerVertexOutputComponents << std::endl;
+	ss << "Max Tessellation Control Per Patch Output Components: "
+	   << limits.maxTessellationControlPerPatchOutputComponents << std::endl;
+	ss << "Max Tessellation Control Total Output Components: " << limits.maxTessellationControlTotalOutputComponents
+	   << std::endl;
+	ss << "Max Tessellation Evaluation Input Components: " << limits.maxTessellationEvaluationInputComponents
+	   << std::endl;
+	ss << "Max Tessellation Evaluation Output Components: " << limits.maxTessellationEvaluationOutputComponents
+	   << std::endl;
+	ss << "Max Geometry Shader Invocations: " << limits.maxGeometryShaderInvocations << std::endl;
+	ss << "Max Geometry Input Components: " << limits.maxGeometryInputComponents << std::endl;
+	ss << "Max Geometry Output Components: " << limits.maxGeometryOutputComponents << std::endl;
+	ss << "Max Geometry Output Vertices: " << limits.maxGeometryOutputVertices << std::endl;
+	ss << "Max Geometry Total Output Components: " << limits.maxGeometryTotalOutputComponents << std::endl;
+	ss << "Max Fragment Input Components: " << limits.maxFragmentInputComponents << std::endl;
+	ss << "Max Fragment Output Attachments: " << limits.maxFragmentOutputAttachments << std::endl;
+	ss << "Max Fragment Dual Src Attachments: " << limits.maxFragmentDualSrcAttachments << std::endl;
+	ss << "Max Fragment Combined Output Resources: " << limits.maxFragmentCombinedOutputResources << std::endl;
+	ss << "Max Compute Shared Memory Size: " << limits.maxComputeSharedMemorySize << std::endl;
+	ss << "Max Compute Work Group Count: (" << limits.maxComputeWorkGroupCount[0] << ", "
+	   << limits.maxComputeWorkGroupCount[1] << ", " << limits.maxComputeWorkGroupCount[2] << ")" << std::endl;
+	ss << "Max Compute Work Group Invocations: " << limits.maxComputeWorkGroupInvocations << std::endl;
+	ss << "Max Compute Work Group Size: (" << limits.maxComputeWorkGroupSize[0] << ", "
+	   << limits.maxComputeWorkGroupSize[1] << ", " << limits.maxComputeWorkGroupSize[2] << ")" << std::endl;
+	ss << "Sub-pixel Precision Bits: " << limits.subPixelPrecisionBits << std::endl;
+	ss << "Sub-texel Precision Bits: " << limits.subTexelPrecisionBits << std::endl;
+	ss << "Mip-map Precision Bits: " << limits.mipmapPrecisionBits << std::endl;
+	ss << "Max Draw Indexed Index Value: " << limits.maxDrawIndexedIndexValue << std::endl;
+	ss << "Max Draw Indirect Count: " << limits.maxDrawIndirectCount << std::endl;
+	ss << "Max Sampler LOD Bias: " << limits.maxSamplerLodBias << std::endl;
+	ss << "Max Sampler Anisotropy: " << limits.maxSamplerAnisotropy << std::endl;
+	ss << "Max Viewports: " << limits.maxViewports << std::endl;
+	ss << "Max Viewport Dimensions: (" << limits.maxViewportDimensions[0] << ", " << limits.maxViewportDimensions[1]
+	   << ")" << std::endl;
+	ss << "Viewport Bounds Range: (" << limits.viewportBoundsRange[0] << ", " << limits.viewportBoundsRange[1] << ")"
+	   << std::endl;
+	ss << "Viewport Sub-pixel Bits: " << limits.viewportSubPixelBits << std::endl;
+
+	Log::Instance().Info(ss.str());
+}
+#endif

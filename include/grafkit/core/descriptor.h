@@ -11,7 +11,7 @@ namespace Grafkit::Core {
 	public:
 		explicit DescriptorSet(const DeviceRef& device,
 			const VkDescriptorSetLayout layout,
-			const std::vector<VkDescriptorSet>& descriptors,
+			std::vector<VkDescriptorSet> descriptors,
 			const uint32_t bindOffset = 0);
 		virtual ~DescriptorSet();
 

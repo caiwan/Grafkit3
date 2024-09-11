@@ -5,6 +5,8 @@
 #include <optional>
 #include <span>
 
+#include <ranges>
+
 namespace Grafkit::Core {
 
 	struct FramebufferAttachment {
@@ -23,7 +25,7 @@ namespace Grafkit::Core {
 				VK_FORMAT_D24_UNORM_S8_UINT,
 				VK_FORMAT_D32_SFLOAT_S8_UINT,
 			};
-			return std::find(formats.begin(), formats.end(), format) != std::end(formats);
+			return std::ranges::find(formats, format) != std::end(formats);
 		}
 
 		bool HasStencil()
@@ -34,7 +36,7 @@ namespace Grafkit::Core {
 				VK_FORMAT_D24_UNORM_S8_UINT,
 				VK_FORMAT_D32_SFLOAT_S8_UINT,
 			};
-			return std::find(formats.begin(), formats.end(), format) != std::end(formats);
+			return std::ranges::find(formats, format) != std::end(formats);
 		}
 
 		bool IsDepthStencil() { return (HasDepth() || HasStencil()); }

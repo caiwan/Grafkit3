@@ -177,6 +177,8 @@ PipelinePtr GraphicsPipelineBuilder::Build()
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo = Initializers::PipelineLayoutCreateInfo(
 		descriptorSetLayouts.data(), static_cast<uint32_t>(descriptorSetLayouts.size()));
 
+	pipelineLayoutInfo.flags = VK_PIPELINE_LAYOUT_CREATE_INDEPENDENT_SETS_BIT_EXT;
+
 	if (!m_pushConstants.empty()) {
 		pipelineLayoutInfo.pushConstantRangeCount = m_pushConstants.size();
 		pipelineLayoutInfo.pPushConstantRanges = m_pushConstants.data();

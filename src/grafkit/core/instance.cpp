@@ -1,13 +1,14 @@
 #include "stdafx.h"
 #include <sstream>
 #include <utility>
-//
+
+#define GLFW_INCLUDE_NONE
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-//
-#include <grafkit/core/instance.h>
-#include <grafkit/core/log.h>
-#include <grafkit/core/window.h>
+
+#include "grafkit/core/instance.h"
+#include "grafkit/core/log.h"
+#include "grafkit/core/window.h"
 
 using namespace Grafkit::Core;
 
@@ -78,13 +79,13 @@ VkInstance Instance::CreateInstance(const std::vector<std::string>& instanceExte
 		throw std::runtime_error("validation layers requested, but not available!");
 	}
 
-	const VkApplicationInfo appInfo(VK_STRUCTURE_TYPE_APPLICATION_INFO,
+	const VkApplicationInfo appInfo { VK_STRUCTURE_TYPE_APPLICATION_INFO,
 		nullptr,
 		"GrafkitApp",
 		VK_MAKE_VERSION(1, 0, 0),
 		"GrafkitVK",
 		VK_MAKE_VERSION(1, 0, 0),
-		VK_API_VERSION_1_3);
+		VK_API_VERSION_1_3 };
 
 	auto extensions = GetRequiredExtensions();
 	for (const auto& extension : instanceExtensions) {

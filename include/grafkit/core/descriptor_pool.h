@@ -12,8 +12,7 @@ namespace Grafkit::Core {
 			uint32_t size;
 		};
 
-		explicit DescriptorPool(
-			const DeviceRef& device, const uint32_t maxSets, const std::vector<PoolSet>& poolRatios = {});
+		explicit DescriptorPool(const DeviceRef& device, const uint32_t maxSets, std::vector<PoolSet> poolSets = {});
 
 		virtual ~DescriptorPool();
 

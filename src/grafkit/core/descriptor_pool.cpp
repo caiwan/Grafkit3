@@ -5,13 +5,13 @@
 
 using namespace Grafkit::Core;
 
-constexpr uint32_t MAX_SET_COUNT = 4096;
-
-DescriptorPool::DescriptorPool(const DeviceRef& device, const uint32_t maxSets, const std::vector<PoolSet>& poolRatios)
+DescriptorPool::DescriptorPool(const DeviceRef& device, const uint32_t maxSets, std::vector<PoolSet> poolSets)
 	: m_device(device)
-	, m_poolSets(poolRatios.begin(), poolRatios.end())
-	, m_maxSets(std::min(maxSets, MAX_SET_COUNT))
+	, m_poolSets(std::move(poolSets))
+	, m_maxSets(maxSets)
 {
+	assert(m_maxSets > 0);
+	assert(!m_poolSets.empty());
 	m_readyPools.push_back(CreatePool());
 }
 
@@ -44,9 +44,11 @@ VkDescriptorSet DescriptorPool::AllocateDescriptorSet(const VkDescriptorSetLayou
 		poolToUse = GetPool();
 		allocInfo.descriptorPool = poolToUse;
 
-		if (vkAllocateDescriptorSets(**m_device, &allocInfo, &descriptorSet) != VK_SUCCESS) {
-			throw std::runtime_error("Failed to allocate descriptor set");
-		}
+		result = vkAllocateDescriptorSets(**m_device, &allocInfo, &descriptorSet);
+	}
+
+	if (result != VK_SUCCESS) {
+		throw std::runtime_error("Failed to allocate descriptor set");
 	}
 
 	m_readyPools.push_back(poolToUse);
@@ -66,10 +68,9 @@ VkDescriptorSet DescriptorPool::AllocateDescriptorSet(const VkDescriptorSetLayou
 VkDescriptorPool DescriptorPool::CreatePool()
 {
 	std::vector<VkDescriptorPoolSize> poolSizes;
-	for (PoolSet ratio : m_poolSets) {
-		poolSizes.push_back(Initializers::DescriptorPoolSize(ratio.type, static_cast<uint32_t>(ratio.size)));
-
-		ratio.size = std::min(ratio.size + ratio.size / 2, MAX_SET_COUNT);
+	poolSizes.reserve(m_poolSets.size());
+	for (const auto& poolSize : m_poolSets) {
+		poolSizes.push_back(Initializers::DescriptorPoolSize(poolSize.type, static_cast<uint32_t>(poolSize.size)));
 	}
 
 	VkDescriptorPoolCreateInfo info = Initializers::DescriptorPoolCreateInfo(poolSizes, m_maxSets);
@@ -91,9 +92,6 @@ VkDescriptorPool DescriptorPool::GetPool()
 		// need to create a new pool
 		pool = CreatePool();
 	}
-
-	m_maxSets = std::min(m_maxSets + m_maxSets / 2, MAX_SET_COUNT);
-
 	return pool;
 }
 

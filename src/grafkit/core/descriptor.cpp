@@ -11,11 +11,11 @@ using namespace Grafkit::Core;
 
 DescriptorSet::DescriptorSet(const DeviceRef& device,
 	const VkDescriptorSetLayout layout,
-	const std::vector<VkDescriptorSet>& descriptors,
+	std::vector<VkDescriptorSet> descriptors,
 	const uint32_t bindOffset)
 	: m_device(device)
 	, m_layout(layout)
-	, m_descriptorSets(descriptors)
+	, m_descriptorSets(std::move(descriptors))
 	, m_descriptorOffset(bindOffset)
 {
 }
