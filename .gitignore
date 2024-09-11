@@ -231,7 +231,6 @@ shader-error.txt
 
 # VSCODE
 .vscode/*
-!.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
@@ -240,3 +239,13 @@ shader-error.txt
 *.notes.txt
 
 .python-version
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyz
+*.pywz
+*.egg-info/

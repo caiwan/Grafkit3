@@ -1,4 +1,5 @@
 {
+  "version": "2.0.0",
   "tasks": [
     {
       // https://github.com/microsoft/vscode-cmake-tools/blob/main/docs/tasks.md

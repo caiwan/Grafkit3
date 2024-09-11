@@ -8,12 +8,14 @@ end_of_line = crlf
 insert_final_newline = true
 trim_trailing_whitespace = true
 
-[*.py]
+[*.py,*.sh,*.bat,*.cmd,*.ps1,*.cfg]
 indent_style = space
+indent_size = 4
 
-[*.json]
+[*.json, *.yml, *.yaml, *.toml]
 indent_style = space
 indent_size = 2
+
 
 [*.{xml,qrc}]
 indent_style = space

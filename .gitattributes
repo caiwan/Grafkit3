@@ -16,3 +16,5 @@
 
 *.fbx binary
 *.3ds binary
+
+*.whl binary
