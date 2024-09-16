@@ -4,7 +4,7 @@
 #include <typeindex>
 
 #include <grafkit/common.h>
-#include <grafkit/resource/asset.h>
+#include <grafkit/interface/asset.h>
 
 namespace Grafkit::Asset {
 
@@ -16,7 +16,7 @@ namespace Grafkit::Asset {
 
 		~FileAssetSource() override = default;
 
-		void ReadData(std::type_index assetType, const std::string& assetName, std::vector<uint8_t>& data) const final;
+		void ReadData(const std::string& assetName, std::vector<uint8_t>& data) const final;
 	};
 } // namespace Grafkit::Asset
 #endif // ASSET_FILE_LOADER_H

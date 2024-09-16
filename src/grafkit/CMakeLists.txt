@@ -12,17 +12,15 @@ include(ProjectWarnings)
 include(GKSourceTools)
 
 # --- Generated code
-
-file(GLOB_RECURSE GEN_DESCRIPTOR_SOURCES
-	${CMAKE_CURRENT_SOURCE_DIR}/*.gen.yaml
-)
 set(GRAFKIT_GENERATED_HEADERS "")
 
+file(GLOB_RECURSE GEN_DESCRIPTOR_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/descriptors/*.gen.yaml)
 generate_code_from_yaml_files(
 	SOURCES ${GEN_DESCRIPTOR_SOURCES}
 	TEMPLATE ${CMAKE_CURRENT_SOURCE_DIR}/descriptors/template.j2
 	GENERATED_FILES_ARG "GRAFKIT_GENERATED_HEADERS"
-	DESTINATION_DIRECTORY ${CMAKE_SOURCE_DIR}/include/grafkit/
+	TARGET_DIR ${CMAKE_SOURCE_DIR}/include/grafkit/
+	SUFFIX ".h"
 )
 
 add_custom_target(${PROJECT_NAME}_Generated DEPENDS ${GRAFKIT_GENERATED_HEADERS})

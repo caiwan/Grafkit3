@@ -6,23 +6,20 @@
 #include <vector>
 
 #include <grafkit/common.h>
-#include <grafkit/resource/asset.h>
+#include <grafkit/interface/asset.h>
 
 namespace Grafkit::Asset {
 	class GKAPI JsonAsset : virtual public ISerializedAsset {
 	public:
-		JsonAsset(const std::type_index assetType, const std::vector<uint8_t>& data)
-			: m_data(data)
-			, m_assetType(assetType)
-		{
-		}
+		JsonAsset(std::vector<uint8_t> data);
 		~JsonAsset() override = default;
 
-		void Deserialize(std::any& object) override;
+		void Deserialize(const std::type_index& assetType, std::any& object) override;
+
+		void ReadData(std::vector<uint8_t>& data) const override;
 
 	private:
 		const std::vector<uint8_t> m_data;
-		const std::type_index m_assetType;
 	};
 } // namespace Grafkit::Asset
 #endif // ASSET_JSON_DESERIALIZER_H

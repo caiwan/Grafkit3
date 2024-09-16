@@ -4,7 +4,7 @@
 #include <grafkit/common.h>
 
 #include <grafkit_loader/file_loader.h>
-#include <grafkit_loader/json_deserializer.h>
+#include <grafkit_loader/json_adapter.h>
 
 namespace Grafkit::Asset {
 	class GKAPI JsonAssetLoader final : virtual public AssetLoader<FileAssetSource, JsonAsset> {
