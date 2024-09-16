@@ -1,0 +1,57 @@
+/**
+ * @file {{ output_file }}
+ * @brief Json serialization functions
+ *
+ * This file has been automatically generated and should not be modified.
+ *
+ * Generated at: {{ timestamp }}
+ * Source files:
+ {%- for input_file in input_files %}
+ *   - {{ input_file }}
+ {%- endfor %}
+ * Template file: {{ template_file }}
+ */
+
+#include "stdafx.h"
+{# Includes #}
+{% for include in includes | sort -%}#include <{{ include }}>{{ '\n' if not loop.last }}{%- endfor %}
+
+#include "json/json_glm.h"
+#include "json/generated/{{ output_file | replace('.cpp', '.h') }}"
+
+// NOLINTBEGIN(readability-identifier-naming) The naming has to match with nlohmann_json
+{% for source in sources -%}
+
+{# ns #}
+/* {{ source.name }} */
+{% if source.namespace -%} namespace {{ source.namespace }} { {%- endif -%}
+
+{%- if source.types -%}
+{%- for type in source.types -%}
+{%- if type.comment %} // {{ type.comment }} {% endif -%}
+
+{# to_json #}
+	void to_json(nlohmann::json & j, const {{ type.name }} & obj)
+	{
+		{%- for field in type.fields %}
+		j["{{ field.name }}"] = obj.{{ field.name }};
+		{%- endfor %}
+	}
+{# from_json #}
+	void from_json(const nlohmann::json & j, {{ type.name }} & obj)
+	{
+		{%- for field in type.fields %}
+		obj.{{ field.name }} = j["{{ field.name }}"].get<{{ field.type }}>();
+		{%- endfor %}
+	}
+{{ '\n' if not loop.last }}
+{%- endfor -%}
+{%- endif -%}
+
+{# ns #}
+{%- if source.namespace -%} } // {{ source.namespace }} {%- endif -%}
+{{ '\n' if not loop.last }}
+{%- endfor %}
+
+// NOLINTEND(readability-identifier-naming)
+{{ '\n' }}

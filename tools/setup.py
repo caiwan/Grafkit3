@@ -8,11 +8,15 @@ install_requires = [
     "PyYAML==6.0.2",
     "dataclasses-json==0.5.7",
     "more-itertools==8.12.0",
+    "marshmallow==3.22.0",
+    "marshmallow-enum==1.5.1",
+    "marshmallow_dataclass==8.7.1",
 ]
 
 test_requires = [
     "flake8==7.1.1",
     "pytest==8.3.2",
+    "black==24.8.0",
 ]
 
 setup(
@@ -39,6 +43,7 @@ setup(
     entry_points={
         "console_scripts": [
             "hexdump=grafkit_tools.hexdump:main",
+            "codegen=grafkit_tools.codegen:main",
         ],
     },
     extras_require={"test": test_requires},

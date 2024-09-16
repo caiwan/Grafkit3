@@ -128,6 +128,8 @@ function(set_project_clang_format TARGET_NAME)
 		message(STATUS "Adding clang-format for ${TARGET_NAME}")
 
 		get_target_property(TARGET_SOURCES ${TARGET_NAME} SOURCES)
+		list(REMOVE_DUPLICATES TARGET_SOURCES)
+
 		foreach(SOURCE ${TARGET_SOURCES})
 
 			# Create a flag file for each source file to avoid reformatting all files each time
@@ -212,6 +214,7 @@ function(set_project_clang_tidy TARGET_NAME)
 
 	# -- Tidy all header files separately
 	get_target_property(TARGET_SOURCES ${TARGET_NAME} SOURCES)
+	list(REMOVE_DUPLICATES TARGET_SOURCES)
 
 	list(FILTER TARGET_SOURCES INCLUDE REGEX "\\.(h|hxx)$")
 	list(FILTER TARGET_SOURCES EXCLUDE REGEX "_generated\\.(h|hxx)$")

@@ -1,0 +1,9 @@
+---
+name: scene_desc
+includes:
+  - string
+  - vector
+  - map
+  - grafkit/common.h
+
+namespace: Grafkit::Resource

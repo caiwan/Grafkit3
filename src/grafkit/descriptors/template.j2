@@ -1,0 +1,68 @@
+/**
+ * @file {{ name }}.h
+ * @brief {{ name }} descriptor
+ *
+ * This file has been automatically generated and should not be modified.
+ *
+ * Generated on: {{ timestamp }}
+ * Source file: {{ input_file }}
+ */
+
+#ifndef __{{ name | upper }}_GENERATED_H__
+#define __{{ name | upper }}_GENERATED_H__
+
+{# Includes #}
+{% for include in includes | sort -%}#include <{{ include }}>{{ '\n' if not loop.last }}{%- endfor %}
+
+{% for source in sources -%}
+
+{# NS #}
+/* {{ source.name }} */
+{% if source.namespace -%} namespace {{ source.namespace }} { {%- endif -%}
+
+{# Enums #}
+{%- if source.enums -%}
+{%- for enum in source.enums%}
+
+{%- if enum.comment -%}
+	/**
+	* {{ enum.comment }}
+	*/
+{%- endif -%}
+
+	{{- '\n' -}} enum class {{ enum.name }} { {{- '\n' -}}
+		{%- for value in enum.elems -%}
+			{{- '\t' -}} {{ value.name }} = {{ value.value }},
+			{%- if value.comment %} // {{ value.comment }} {% endif -%} {{- '\n' -}}
+		{%- endfor -%}
+	};
+
+{% endfor -%}
+{%- endif -%}
+
+{# Structs #}
+{%- if source.types -%}
+{%- for type in source.types %}
+
+{%- if type.comment -%}
+	/**
+	* {{ type.comment }}
+	*/
+{%- endif -%}
+
+	{{- '\n' -}} struct {{ type.name }} { {{- '\n' -}}
+		{%- for field in type.fields -%}
+			{{- '\t' -}} {{ field.type }} {{ field.name }} {%- if field.default %} = {{ field.default }} {% endif -%};
+			{%- if field.comment %} // {{ field.comment }} {% endif -%} {{- '\n' -}}
+		{%- endfor -%}
+	};
+
+{% endfor -%}
+{%- endif -%}
+
+{# End NS #}
+{%- if source.namespace -%} } // {{ source.namespace }} {{- '\n' -}} {%- endif %}
+
+{%- endfor -%}
+
+#endif // __{{ name | upper }}_GENERATED_H__ {{- '\n' -}}

@@ -1,4 +1,4 @@
-project(player)
+project(Player)
 
 include(ProjectWarnings)
 
@@ -53,21 +53,21 @@ foreach(GLSL ${GLSL_SOURCE_FILES})
 		VERBATIM
 	)
 
-  	list(APPEND SPIRV_BINARY_FILES ${SPIRV})
-  	list(APPEND SPIRV_HEADER_FILES ${SPIRV_H})
+	list(APPEND SPIRV_BINARY_FILES ${SPIRV})
+	list(APPEND SPIRV_HEADER_FILES ${SPIRV_H})
 endforeach(GLSL)
 
-add_custom_target(Shaders DEPENDS ${SPIRV_BINARY_FILES} ${SPIRV_HEADER_FILES})
-add_dependencies(${PROJECT_NAME} Shaders)
+add_custom_target(${PROJECT_NAME}_Shaders DEPENDS ${SPIRV_BINARY_FILES} ${SPIRV_HEADER_FILES})
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_Shaders)
 
 target_link_libraries(${PROJECT_NAME})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${GENERATED_INCLUDE_DIR})
 target_link_libraries(
-  ${PROJECT_NAME}
-  Grafkit::Grafkit
-  Grafkit::GrafkitLoader
-  )
+	${PROJECT_NAME}
+	Grafkit::Grafkit
+	Grafkit::GrafkitLoader
+)
 
 # Install?
 include(GNUInstallDirs)

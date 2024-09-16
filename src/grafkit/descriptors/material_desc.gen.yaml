@@ -1,0 +1,28 @@
+---
+name: material_desc
+includes:
+  - string
+  - vector
+  - map
+  - grafkit/common.h
+
+namespace: "Grafkit::Resource"
+
+enums:
+  - name: TextureType
+    elems:
+      - { name: Diffuse, value: 0 }
+      - { name: Normal, value: 1 }
+      - { name: Roughness, value: 2 }
+      - { name: Metallic, value: 3 }
+      - { name: AmbientOcclusion, value: 4 }
+      - { name: Emissive, value: 5 }
+
+types:
+  - name: MaterialDesc
+    comment: ""
+    fields:
+      - { type: "std::string", name: name }
+      - { type: "uint32_t", name: type }
+      - { type: "std::string", name: pipeline }
+      - { type: "std::map<TextureType, std::string>", name: textures }

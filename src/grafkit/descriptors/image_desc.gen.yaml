@@ -1,0 +1,43 @@
+---
+name: image_desc
+includes:
+  - "string"
+  - "vector"
+  - "span"
+  - "grafkit/common.h"
+
+namespace: "Grafkit::Resource"
+
+enums:
+  - name: "ImageFormat"
+    elems:
+      - { name: "RGB", value: 1 }
+      - { name: "RGBA", value: 2 }
+      - { name: "Grayscale", value: 3 }
+
+types:
+  - name: "ImageDesc"
+    comment: ""
+    fields:
+      # - { type: "std::string", name: "name" }
+      - { type: "std::vector<uint8_t>", name: "image" }
+      - { type: "glm::uvec3", name: "size" }
+      - { type: "ImageFormat", name: "format" }
+      - { type: "uint32_t", name: "channels" }
+      - { type: "bool", name: "useMipmap", default: "false" }
+
+  - name: "SolidImageDesc"
+    comment: ""
+    fields:
+      # - { type: "std::string", name: "name" }
+      - { type: "glm::u8vec4", name: "color" }
+
+  - name: "CheckerImageDesc"
+    comment: ""
+    fields:
+      # - { type: "std::string", name: "name" }
+      - { type: "glm::uvec3", name: "size" }
+      - { type: "glm::uvec2", name: "divisions" }
+      - { type: "glm::u8vec4", name: "color1" }
+      - { type: "glm::u8vec4", name: "color2" }
+      - { type: "bool", name: useMipmap, default: "false" }

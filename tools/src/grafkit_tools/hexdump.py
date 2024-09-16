@@ -1,7 +1,7 @@
 import argparse
 import datetime
 import logging
-import re
+from grafkit_tools import utils
 import jinja2
 import sys
 
@@ -47,29 +47,9 @@ const size_t {{ array_name }}_len = {{ data|length }};
 """
 
 
-def hex_byte(value):
-    return f"0x{value:02x}"
-
-
-def generate_chunks(data, chunk_size=16):
-    for i in range(0, len(data), chunk_size):
-        chunk = data[i : i + chunk_size]
-        hex_bytes = [f"0x{byte:02x}" for byte in chunk]
-        yield {"offset": i, "bytes": hex_bytes}
-
-
-def sanitize_for_cpp(name):
-    sanitized_name = re.sub(r"[^a-zA-Z0-9_]", "_", name)
-    if re.match(r"^\d", sanitized_name):
-        sanitized_name = "_" + sanitized_name
-    return sanitized_name
-
-
 def hexdump_to_header(input_file, array_name, create_header, out_file=None, template_file=None):
     env = jinja2.Environment()
-    env.filters["hex_byte"] = hex_byte
-    env.filters["generate_chunks"] = generate_chunks
-    env.filters["sanitize_for_cpp"] = sanitize_for_cpp
+    utils.setup_env(env)
 
     with open(input_file, "rb") as file:
         data = bytearray(file.read())
@@ -97,7 +77,7 @@ def hexdump_to_header(input_file, array_name, create_header, out_file=None, temp
         print(content)
 
 
-def main():
+def build_parser():
     parser = argparse.ArgumentParser(description="Generate a C header file from a binary file.")
     parser.add_argument("--input_file", "-i", help="The binary file to process", required=True)
 
@@ -116,13 +96,17 @@ def main():
     )
     parser.add_argument("--output_file", "-o", help="The output file to write to", default=None)
     parser.add_argument("--template", "-t", help="The template file to use", default=None)
+    return parser
 
+
+def main():
+    parser = build_parser()
     args = parser.parse_args()
 
     try:
         hexdump_to_header(
             args.input_file,
-            sanitize_for_cpp(args.array_name),
+            utils.sanitize_string_for_cpp(args.array_name),
             args.header,
             args.output_file,
             args.template,

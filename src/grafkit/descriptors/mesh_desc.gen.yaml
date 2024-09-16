@@ -1,0 +1,16 @@
+---
+name: mesh_desc
+includes:
+  - string
+  - vector
+  - span
+  - grafkit/common.h
+
+
+namespace: Grafkit::Resource
+
+enums:
+  - name: MeshType
+    elems:
+      - { name: Static, value: 1 }
+      - { name: Skinned, value: 2 }
