@@ -10,8 +10,6 @@
 #include <nlohmann/json.hpp>
 
 namespace Grafkit::Serialization {
-
-	using SerializerFunc = std::function<void(nlohmann::json&, const std::any&)>;
 	using DeserializerFunc = std::function<void(const nlohmann::json&, std::any&)>;
 
 	class JsonSerializerRegistry {

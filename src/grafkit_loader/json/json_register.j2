@@ -1,0 +1,43 @@
+/**
+ * @file {{ output_file }}
+ * @brief Json serialization functions
+ *
+ * This file has been automatically generated and should not be modified.
+ *
+ * Generated at: {{ timestamp }}
+ * Source files:
+ {%- for input_file in input_files %}
+ *   - {{ input_file }}
+ {%- endfor %}
+ * Template file: {{ template_file }}
+ */
+
+#include "json_serializers.h"
+#include "json/json_registry.h"
+
+namespace Grafkit::Serialization
+{
+
+	inline void RegisterJsonDeserializers(JsonSerializerRegistry& registry)
+	{
+		{% for source in sources -%}
+		// MARK: {{ source.name }}{{ '\n' }}
+		{%- if source.types -%}
+		{%- for type in source.types %}
+		registry.Register<{{ source.namespace }}::{{ type.name }}>(
+			[](const nlohmann::json& json, std::any& object)
+			{
+				object = json.get<{{ source.namespace }}::{{ type.name }}>();
+			}
+		);
+		{{ '\n' if not loop.last }}
+
+		{%- endfor -%}
+		{%- endif %}
+
+		{{ '\n' if not loop.last }}
+		{%- endfor %}
+	}
+
+} // namespace Grafkit::Serialization
+{{ '\n' }}

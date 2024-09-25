@@ -1,16 +1,11 @@
 #include "stdafx.h"
 
+#include "generated/json_register_generated.h"
 #include "json_registry.h"
 
 using namespace Grafkit::Serialization;
 
-// MARK: JsonDeserializerRegistry
-JsonSerializerRegistry::JsonSerializerRegistry()
-{
-	// // TOOD: This will be a generated code
-	// RegisterDeserializer<Grafkit::Resource::MaterialDesc>(
-	// 	[](const nlohmann::json& json, std::any& object) { object = json.get<Grafkit::Resource::MaterialDesc>(); });
-}
+JsonSerializerRegistry::JsonSerializerRegistry() { Serialization::RegisterJsonDeserializers(*this); }
 
 void JsonSerializerRegistry::Register(std::type_index type, DeserializerFunc deserializer)
 {

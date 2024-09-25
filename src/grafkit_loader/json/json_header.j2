@@ -22,7 +22,7 @@
 {% for source in sources -%}
 
 {# NS #}
-/* {{ source.name }} */
+// MARK: {{ source.name }}
 {% if source.namespace -%} namespace {{ source.namespace }} { {%- endif -%}
 
 {%- if source.types -%}

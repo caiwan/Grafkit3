@@ -33,6 +33,16 @@ generate_code_from_yaml_files(
 	SUFFIX ".h"
 )
 
+generate_code_from_yaml_files(
+	GENETATE_SINGLE_FILE
+	SOURCES ${GEN_SERIALIZER_SOURCES}
+	TEMPLATE ${CMAKE_CURRENT_SOURCE_DIR}/json/json_register.j2
+	GENERATED_FILES_ARG "GENERATED_SOURCES"
+	TARGET_DIR ${CMAKE_CURRENT_SOURCE_DIR}/json/generated
+	TARGET_FILE "json_register_generated"
+	SUFFIX ".h"
+)
+
 add_custom_target(${PROJECT_NAME}_Generated DEPENDS ${GRAFKIT_GENERATED_HEADERS})
 
 # -- Loader library
@@ -65,7 +75,10 @@ target_include_directories(
 	${PROJECT_NAME}
 	PUBLIC
 		$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/>
-		$<INSTALL_INTERFACE:include>)
+		$<INSTALL_INTERFACE:include>
+	PRIVATE
+		${CMAKE_CURRENT_SOURCE_DIR}
+	)
 
 target_link_libraries(${PROJECT_NAME}
 	PRIVATE
