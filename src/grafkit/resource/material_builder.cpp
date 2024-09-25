@@ -28,7 +28,7 @@ bool Grafkit::Resource::MaterialBuilder::ResolveDependencies(const RefWrapper<Re
 		for (const auto& [bindId, textureName] : m_descriptor.textures) {
 			const auto image = resources->Get<Core::Image>(textureName);
 			if (image != nullptr) {
-				m_images[bindId] = image;
+				m_images[static_cast<uint32_t>(bindId)] = image;
 			} else {
 				result = false;
 			}

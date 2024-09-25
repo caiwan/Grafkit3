@@ -4,9 +4,9 @@
 #include <unordered_map>
 
 #include <grafkit/common.h>
+#include <grafkit/interface/resource.h>
 #include <grafkit/render/material.h>
 #include <grafkit/render/mesh.h>
-#include <grafkit/resource/resource.h>
 
 namespace Grafkit::Resource {
 

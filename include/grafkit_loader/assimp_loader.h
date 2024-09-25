@@ -2,9 +2,9 @@
 #define ASSIMP_H
 
 #include <grafkit/common.h>
-#include <grafkit/resource/resource.h>
+#include <grafkit/interface/resource.h>
 
-namespace Grafkit ::Asset {
+namespace Grafkit::Asset {
 
 	// TODO: This has to be an extension to asset/resource loader
 

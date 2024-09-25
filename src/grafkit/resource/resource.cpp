@@ -1,8 +1,9 @@
 #include "stdafx.h"
 #include <cstdio>
 #include <fstream>
-#include <grafkit/resource/resource.h>
 #include <string>
+
+#include <grafkit/interface/resource.h>
 
 using namespace Grafkit::Resource;
 

@@ -3,23 +3,13 @@
 
 #include <grafkit/common.h>
 
-#include <grafkit/resource/resource.h>
-
 #include <grafkit/core/image.h>
+#include <grafkit/descriptors/material_desc.h>
+#include <grafkit/interface/resource.h>
 #include <grafkit/render/material.h>
 #include <grafkit/render/texture.h>
-#include <grafkit/resource/resource.h>
-
-#include <unordered_map>
 
 namespace Grafkit::Resource {
-
-	struct MaterialDesc {
-		std::string name;
-
-		std::string pipeline;
-		std::unordered_map<uint32_t, std::string> textures;
-	};
 
 	class MaterialBuilder : public ResourceBuilder<MaterialDesc, Grafkit::Material> {
 	public:

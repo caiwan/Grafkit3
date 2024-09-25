@@ -16,7 +16,7 @@ void ImageBuilder::Build(const Core::DeviceRef& device)
 			1,
 		},
 		m_descriptor.channels,
-		VkFormat(m_descriptor.format),
+		static_cast<VkFormat>(m_descriptor.format),
 		VK_IMAGE_TYPE_2D,
 		m_descriptor.useMipmap,
 		VK_IMAGE_USAGE_SAMPLED_BIT,

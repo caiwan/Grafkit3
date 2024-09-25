@@ -23,25 +23,21 @@ namespace Grafkit::Asset {
 	class GKAPI IAssetSource {
 	public:
 		virtual ~IAssetSource() = default;
-		virtual void ReadData(std::type_index assetType, const std::string& assetName, std::vector<uint8_t>& data) const
-			= 0;
-
-		template <class T> void ReadData(const std::string& assetName, std::vector<uint8_t>& data) const
-		{
-			ReadData(typeid(T), assetName, data);
-		}
+		virtual void ReadData(const std::string& assetName, std::vector<uint8_t>& data) const = 0;
 	};
 
 	class GKAPI ISerializedAsset {
 	public:
 		virtual ~ISerializedAsset() = default;
 
-		virtual void Deserialize(std::any& object) = 0;
+		virtual void Deserialize(const std::type_index& assetType, std::any& object) = 0;
 
-		template <class T> void DeserializeAs()
+		virtual void ReadData(std::vector<uint8_t>& data) const = 0;
+
+		template <class T> T DeserializeAs()
 		{
 			std::any object = T();
-			Deserialize(object);
+			Deserialize(typeid(T), object);
 			return std::any_cast<T>(object);
 		}
 	};
@@ -54,18 +50,12 @@ namespace Grafkit::Asset {
 
 		virtual ~IAssetLoader() = default;
 
-		[[nodiscard]] virtual SerializedAssetPtr Load(std::type_index typeIndex, const std::string& assetName) const
-			= 0;
-
-		template <class T> SerializedAssetPtr LoadAsset(const std::string& assetName)
-		{
-			return Load(typeid(T), assetName);
-		}
+		[[nodiscard]] virtual SerializedAssetPtr Load(const std::string& assetName) const = 0;
 	};
 
 	// MARK: Asset loader implementation
 	template <class AssetSourceT, class SerializedAssetT>
-	class GKAPI AssetLoader : virtual public IAssetLoader, virtual public AssetSourceT {
+	class GKAPI AssetLoader : virtual public IAssetLoader, virtual protected AssetSourceT {
 	public:
 		using SerializedAssetType = SerializedAssetT;
 
@@ -75,21 +65,11 @@ namespace Grafkit::Asset {
 
 		~AssetLoader() override = default;
 
-		[[nodiscard]] SerializedAssetPtr Load(std::type_index typeIndex, const std::string& assetName) const override
+		[[nodiscard]] SerializedAssetPtr Load(const std::string& assetName) const override
 		{
 			std::vector<uint8_t> data;
-			AssetSourceT::ReadData(typeIndex, assetName, data);
-			return std::make_shared<SerializedAssetT>(typeIndex, data);
-		}
-
-		template <class T> [[nodiscard]] SerializedAssetPtr LoadAsset(const std::string& assetName) const
-		{
-			return Load(typeid(T), assetName);
-		}
-
-		template <class T> [[nodiscard]] T LoadAs(const std::string& assetName) const
-		{
-			return Load<T>(assetName)->template DeserializeAs<T>();
+			AssetSourceT::ReadData(assetName, data);
+			return std::make_shared<SerializedAssetT>(std::move(data));
 		}
 	};
 
