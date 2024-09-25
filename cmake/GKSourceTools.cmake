@@ -92,11 +92,13 @@ function(generate_code_from_yaml_files)
 
 			set(CODEGEN_COMMAND ${PYTHON_VENV_EXECUTABLE} -m grafkit_tools.codegen --template ${ARGS_TEMPLATE} --output ${GENERATED_FILE} --input-files ${SOURCE_FILE})
 
-			message(STATUS "Generating ${GENERATED_FILE}")
 
-			execute_process(
-				COMMAND ${CODEGEN_COMMAND}
-			)
+			if (NOT EXISTS ${GENERATED_FILE} OR ${SOURCE_FILE} IS_NEWER_THAN ${GENERATED_FILE})
+				message(STATUS "Generating ${GENERATED_FILE}")
+				execute_process(
+					COMMAND ${CODEGEN_COMMAND}
+				)
+			endif()
 
 			add_custom_command(
 				OUTPUT ${GENERATED_FILE}
@@ -121,11 +123,19 @@ function(generate_code_from_yaml_files)
 
 		set(CODEGEN_COMMAND ${PYTHON_VENV_EXECUTABLE} -m grafkit_tools.codegen --template ${ARGS_TEMPLATE} --output ${GENERATED_FILE} --input-files ${ARGS_SOURCES})
 
-		message(STATUS "Generating ${GENERATED_FILE}")
+		set(TO_GENERATE NOT EXISTS ${GENERATED_FILE})
+		foreach(SOURCE_FILE ${ARGS_SOURCES})
+			if (${SOURCE_FILE} IS_NEWER_THAN ${GENERATED_FILE})
+				set(TO_GENERATE TRUE)
+			endif()
+		endforeach(SOURCE_FILE)
 
-		execute_process(
-			COMMAND ${CODEGEN_COMMAND}
-		)
+		if (${TO_GENERATE})
+			message(STATUS "Generating ${GENERATED_FILE}")
+			execute_process(
+				COMMAND ${CODEGEN_COMMAND}
+			)
+		endif()
 
 		add_custom_command(
 			OUTPUT ${GENERATED_FILE}
