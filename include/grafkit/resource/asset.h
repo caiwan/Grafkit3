@@ -16,6 +16,10 @@ namespace Grafkit::Asset {
 	class ISerializedAsset;
 	using SerializedAssetPtr = std::shared_ptr<ISerializedAsset>;
 
+	class IAssetLoader;
+	using AssetLoaderPtr = std::unique_ptr<IAssetLoader>;
+	using AssetLoaderRef = Grafkit::RefWrapper<IAssetLoader>;
+
 	class GKAPI IAssetSource {
 	public:
 		virtual ~IAssetSource() = default;

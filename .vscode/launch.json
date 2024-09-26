@@ -6,7 +6,6 @@
       "type": "lldb-dap",
       "request": "launch",
       "args": [],
-      "cwd": "${fileDirname}",
       "windows": {
         "program": "${workspaceRoot}/build/src/player/player.exe",
         "cwd": "${workspaceRoot}"
@@ -14,6 +13,51 @@
       "linux": {
         "program": "${workspaceRoot}/build/src/player/player",
         "cwd": "${workspaceRoot}"
+      },
+      "preLaunchTask": "CMake: build player"
+    },
+    {
+      "name": "(gdb) Launch Player",
+      "type": "cppdbg",
+      "request": "launch",
+      "args": [],
+      "windows": {
+        "MIMode": "lldb",
+        "miDebuggerPath": "C:\\Program Files\\LLVM\bin\\lldb.exe",
+        "program": "${workspaceRoot}/build/src/player/player.exe",
+        "cwd": "${workspaceRoot}/build/src/player"
+      },
+      "linux": {
+        "MIMode": "lldb",
+        "miDebuggerPath": "/usr/bin/lldb",
+        "program": "${workspaceRoot}/build/src/player/player",
+        "cwd": "${workspaceRoot}/build/src/player"
+      },
+      "stopAtEntry": false,
+      "environment": [],
+      "externalConsole": false,
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ],
+      "preLaunchTask": "CMake: build player"
+    },
+    {
+      "name": "(lldb) Launch Tests",
+      "type": "lldb-dap",
+      "request": "launch",
+      "args": [],
+      "cwd": "${fileDirname}",
+      "windows": {
+        "program": "${workspaceRoot}/build/tests/UnitTests.exe",
+        "cwd": "${workspaceRoot}/build/tests"
+      },
+      "linux": {
+        "program": "${workspaceRoot}/build/tests/UnitTests.exe",
+        "cwd": "${workspaceRoot}/build/tests"
       },
       "preLaunchTask": "CMake: build all"
     }

@@ -18,12 +18,11 @@
 
 #include <grafkit_loader/asset_loader_system.h>
 
-#define GLM_ENABLE_EXPERIMENTAL
 #include <grafkit/resource/image_builder.h>
 #include <grafkit/resource/material_builder.h>
-#include <grafkit/resource/resource.h>
 #include <grafkit/resource/scenegraph_builder.h>
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
 #include <iostream>
@@ -43,7 +42,7 @@ private:
 	Grafkit::Core::DescriptorSetPtr m_modelviewDescriptor;
 	Grafkit::Core::PipelinePtr m_graphicsPipeline;
 
-	std::unique_ptr<Grafkit::Asset::JsonAssetLoader> m_assetLoader;
+	Grafkit::Asset::AssetLoaderPtr m_assetLoader;
 	Grafkit::Resource::ResourceManagerPtr m_resources;
 
 	Grafkit::ScenegraphPtr m_sceneGraph;
@@ -183,6 +182,7 @@ public:
 	}
 
 	void Compute([[maybe_unused]] const Grafkit::Core::CommandBufferRef& commandBuffer) override { }
+
 	void Render([[maybe_unused]] const Grafkit::Core::CommandBufferRef& commandBuffer) override
 	{
 		m_sceneGraph->Draw(commandBuffer);

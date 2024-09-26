@@ -40,6 +40,7 @@ target_link_libraries(${PROJECT_NAME}
   PRIVATE
 	Grafkit::Grafkit
 	nlohmann_json::nlohmann_json
+	assimp
 )
 
 # target_precompile_headers(${PROJECT_NAME} PRIVATE

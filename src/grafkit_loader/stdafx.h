@@ -3,6 +3,8 @@
 
 #include <any>
 #include <istream>
+#include <sstream>
+#include <string>
 #include <typeindex>
 #include <vector>
 

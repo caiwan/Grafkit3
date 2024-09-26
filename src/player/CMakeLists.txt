@@ -51,7 +51,6 @@ target_link_libraries(
   ${PROJECT_NAME}
   Grafkit::Grafkit
   Grafkit::GrafkitLoader
-  assimp
   )
 
 # Install?

@@ -94,36 +94,33 @@ namespace Grafkit::Resource {
 		}
 
 		// Template method to load different types of assets
-		template <typename T> std::shared_ptr<T> Load(const std::string& name)
+		template <typename T> std::shared_ptr<T> Load(const std::string& filename)
 		{
-			// std::shared_ptr<void> asset = std::make_shared<T>();
-			// ResourceLoaderRegistry::LoaderFunc loader = ResourceLoaderRegistry::Instance().GetLoader(typeid(T));
-			// if (loader && loader(asset, filename, *this)) {
-			// 	m_assets[typeid(T)][name] = asset;
-			// 	return std::static_pointer_cast<T>(asset);
-			// } else {
-			// 	// std::cerr << "Failed to load asset: " << filename << std::endl;
-			// 	return nullptr;
-			// }
+			std::shared_ptr<void> asset = std::make_shared<T>();
+			ResourceLoaderRegistry::LoaderFunc loader = ResourceLoaderRegistry::Instance().GetLoader(typeid(T));
+			if (loader && loader(asset, filename, *this)) {
+				m_resources[typeid(T)][filename] = asset;
+				return std::static_pointer_cast<T>(asset);
+			}
+			return nullptr;
 		}
 
 		// Template method to get different types of assets
 		template <typename T> std::shared_ptr<T> Get(const std::string& name) const
 		{
-			auto typeAssets = m_assets.find(typeid(T));
-			if (typeAssets != m_assets.end()) {
+			auto typeAssets = m_resources.find(typeid(T));
+			if (typeAssets != m_resources.end()) {
 				auto it = typeAssets->second.find(name);
 				if (it != typeAssets->second.end()) {
 					return std::static_pointer_cast<T>(it->second);
 				}
 			}
-			// std::cerr << "Asset not found: " << name << std::endl;
 			return nullptr;
 		}
 
 	private:
 		const Asset::IAssetLoaderRef m_loader;
-		std::unordered_map<std::type_index, std::unordered_map<std::string, std::shared_ptr<void>>> m_assets;
+		std::unordered_map<std::type_index, std::unordered_map<std::string, std::shared_ptr<void>>> m_resources;
 	};
 
 	// Mixins
