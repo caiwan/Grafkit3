@@ -15,6 +15,7 @@ project(
 option(GK_BUILD_TESTS "Build all tests" ON)
 option(GK_BUILD_EDITOR "Build Editor" OFF)
 option(GK_BUILD_PLAYER "Build Player" ON)
+option(GK_BUILD_SAMPLES "Build Samples" ON)
 option(GK_USE_CPACK "Pack project with CPack" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
