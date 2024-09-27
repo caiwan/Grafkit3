@@ -159,6 +159,7 @@ function(set_project_clang_format TARGET_NAME)
 			DEPENDS ${FORMATTED_SOURCES}
 			COMMENT "Checking if all source files are formatted."
 		)
+		set_target_properties(${TARGET_NAME}_format PROPERTIES FOLDER "Utilities")
 		add_dependencies(${TARGET_NAME} ${TARGET_NAME}_format)
 	endif()
 endfunction()
@@ -254,7 +255,7 @@ function(set_project_clang_tidy TARGET_NAME)
 		DEPENDS ${TIDIED_SOURCES}
 		COMMENT "Checking source files with clang-tidy."
 	)
-
+	set_target_properties(${TARGET_NAME}_tidy PROPERTIES FOLDER "Utilities")
 	add_dependencies(${TARGET_NAME} ${TARGET_NAME}_tidy)
 
 	endif()
