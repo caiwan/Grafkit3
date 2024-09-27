@@ -3,6 +3,7 @@
 
 include(CMakeParseArguments)
 include (PyEnv)
+find_package(Vulkan REQUIRED)
 
 # ---
 # Initialize code generator
@@ -148,4 +149,81 @@ function(generate_code_from_yaml_files)
 		set(${ARGS_GENERATED_FILES_ARG} "${${ARGS_GENERATED_FILES_ARG}}" ${GENERATED_FILE} PARENT_SCOPE)
 
 	endif()
+endfunction()
+
+function(spirv_compile_shaders)
+	cmake_parse_arguments(
+		ARGS # prefix
+		"" # flags
+		"SHADER_BINARY_DIR;SHADER_INCLUDE_DIR;GENERATED_FILES_ARG;TEMPLATE" # single-values
+		"SOURCES" # multi-values
+		${ARGN}
+	)
+
+	if (NOT ARGS_SOURCES)
+		message(FATAL_ERROR "You must provide a list of source files")
+	endif ()
+
+	if (NOT ARGS_SHADER_BINARY_DIR)
+		message(FATAL_ERROR "You must provide a binary directory")
+	endif ()
+
+	if (NOT ARGS_SHADER_INCLUDE_DIR)
+		message(FATAL_ERROR "You must provide an include directory")
+	endif ()
+
+	set(SPIRV_GENERATED_SOURCE_FILES "")
+
+	execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${ARGS_SHADER_INCLUDE_DIR})
+	execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${ARGS_SHADER_BINARY_DIR})
+
+	foreach(SOURCE ${ARGS_SOURCES})
+		get_filename_component(FILE_NAME ${SOURCE} NAME)
+
+		set(SPIRV "${ARGS_SHADER_BINARY_DIR}/${FILE_NAME}.spv")
+		set(SPIRV_COMMAND ${Vulkan_GLSLC_EXECUTABLE} ${SOURCE} -o ${SPIRV})
+
+		if (NOT EXISTS ${SPIRV} OR ${SOURCE} IS_NEWER_THAN ${SPIRV})
+			message(STATUS "Generating ${GENERATED_FILE}")
+			execute_process(COMMAND ${SPIRV_COMMAND})
+		endif()
+
+		add_custom_command(
+			OUTPUT ${SPIRV}
+			COMMAND ${SPIRV_COMMAND}
+			COMMENT "Compiling ${GLSL} to ${SPIRV}"
+			DEPENDS ${GLSL}
+		)
+
+		set(SPIRV_H "${ARGS_SHADER_INCLUDE_DIR}/${FILE_NAME}.h")
+		set(SPIRV_C "${ARGS_SHADER_BINARY_DIR}/${FILE_NAME}.c")
+
+		set(TEMPLATE "")
+		if (ARGS_TEMPLATE)
+			set(TEMPLATE -t ${ARGS_TEMPLATE})
+		endif()
+
+		set(PACK_H_COMMAND ${PYTHON_VENV_EXECUTABLE} -m grafkit_tools.hexdump -x -n ${FILE_NAME} -i ${SPIRV} -o ${SPIRV_H} ${TEMPLATE})
+		set(PACK_C_COMMAND ${PYTHON_VENV_EXECUTABLE} -m grafkit_tools.hexdump -n ${FILE_NAME} -i ${SPIRV} -o ${SPIRV_C} ${TEMPLATE})
+
+		if (NOT EXISTS ${SPIRV_H} OR ${SPIRV} IS_NEWER_THAN ${SPIRV_H})
+			message(STATUS "Generating ${SPIRV_H}")
+			execute_process(COMMAND ${PACK_C_COMMAND})
+			execute_process(COMMAND ${PACK_H_COMMAND})
+		endif()
+
+		add_custom_command(
+			OUTPUT ${SPIRV_H}
+			COMMAND ${PACK_H_COMMAND}
+			COMMAND ${PACK_C_COMMAND}
+			DEPENDS ${SPIRV}
+			COMMENT "Generating source file ${SPIRV_C}"
+			VERBATIM
+		)
+
+		list(APPEND SPIRV_GENERATED_SOURCE_FILES ${SPIRV_H} ${SPIRV_C})
+	endforeach()
+
+	set(${ARGS_GENERATED_FILES_ARG} "${SPIRV_GENERATED_SOURCE_FILES}" PARENT_SCOPE)
+
 endfunction()
