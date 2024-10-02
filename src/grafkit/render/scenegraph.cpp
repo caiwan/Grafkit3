@@ -1,17 +1,17 @@
 #include "stdafx.h"
 #include <stack>
 
-#include <grafkit/core/command_buffer.h>
-#include <grafkit/core/descriptor.h>
-#include <grafkit/core/pipeline.h>
-#include <grafkit/render/animation.h>
-#include <grafkit/render/material.h>
-#include <grafkit/render/mesh.h>
-#include <grafkit/render/scenegraph.h>
-
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
+
+#include "grafkit/core/command_buffer.h"
+#include "grafkit/core/descriptor.h"
+#include "grafkit/core/pipeline.h"
+#include "grafkit/render/animation.h"
+#include "grafkit/render/material.h"
+#include "grafkit/render/mesh.h"
+#include "grafkit/render/scenegraph.h"
 
 void Grafkit::Node::UpdateLocalMatrix()
 {
@@ -115,13 +115,8 @@ void Grafkit::Scenegraph::Draw(const Grafkit::Core::CommandBufferRef& commandBuf
 					sizeof(ModelView),
 					&currentNode->modelView);
 
-				// Bind vertex buffer
-				std::array<VkDeviceSize, 1> offsets = { primitive.vertexOffset };
-				vkCmdBindVertexBuffers(**commandBuffer, 0, 1, &mesh->m_vertexBuffer.buffer, offsets.data());
-				vkCmdBindIndexBuffer(**commandBuffer, mesh->m_indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-				//
-				vkCmdDrawIndexed(
-					**commandBuffer, primitive.indexCount, 1, primitive.indexOffset, primitive.vertexOffset, 0);
+				mesh->Bind(commandBuffer, primitive.vertexOffset);
+				primitive.Draw(commandBuffer);
 			}
 		}
 

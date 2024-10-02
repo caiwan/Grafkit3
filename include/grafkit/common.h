@@ -115,8 +115,8 @@ namespace Grafkit {
 		class SwapChain;
 		using SwapChainRef = RefWrapper<SwapChain>;
 
-		class FrameBuffer;
-		using FrameBufferRef = RefWrapper<FrameBuffer>;
+		class RenderTarget; // Framrbuffer + renderpass
+		using RenderTargetRef = RefWrapper<RenderTarget>;
 
 		class DescriptorPool;
 		using DescriptorPoolRef = RefWrapper<DescriptorPool>;

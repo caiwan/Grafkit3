@@ -1,7 +1,14 @@
 #include "stdafx.h"
-#include <grafkit/render/mesh.h>
+
+#include "grafkit/core/command_buffer.h"
+#include "grafkit/render/mesh.h"
 
 using namespace Grafkit;
+
+void Primitive::Draw(const Core::CommandBufferRef& commandBuffer) const
+{
+	vkCmdDrawIndexed(**commandBuffer, indexCount, 1, indexOffset, vertexOffset, 0);
+}
 
 Mesh::Mesh(const Core::DeviceRef& device)
 	: m_device(device)
@@ -23,6 +30,13 @@ void Mesh::Create(const std::vector<Vertex>& vertices, const std::vector<uint32_
 	m_indexBuffer = Core::Buffer::CreateBuffer(
 		m_device, sizeof(indices[0]) * indices.size(), VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
 	m_indexBuffer.Update(m_device, indices.data(), sizeof(indices[0]) * indices.size());
+}
+
+void Grafkit::Mesh::Bind(const Core::CommandBufferRef& commandBuffer, uint32_t vertexOffset) const
+{
+	std::array<VkDeviceSize, 1> offsets = { vertexOffset };
+	vkCmdBindVertexBuffers(**commandBuffer, 0, 1, &m_vertexBuffer.buffer, offsets.data());
+	vkCmdBindIndexBuffer(**commandBuffer, m_indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
 }
 
 void Grafkit::Mesh::Destroy(const Core::DeviceRef& device)

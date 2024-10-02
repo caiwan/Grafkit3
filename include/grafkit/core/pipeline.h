@@ -44,7 +44,7 @@ namespace Grafkit::Core {
 	class GKAPI GraphicsPipelineBuilder {
 	public:
 		explicit GraphicsPipelineBuilder(const DeviceRef& device,
-			const FrameBufferRef& renderPass,
+			const RenderTargetRef& renderTarget,
 			const std::optional<PipelineDescriptor>& descriptors = std::nullopt);
 
 		~GraphicsPipelineBuilder() = default;
@@ -73,7 +73,7 @@ namespace Grafkit::Core {
 
 	private:
 		const DeviceRef m_device;
-		const FrameBufferRef m_frameBuffer; // REPLACE !!!!
+		const RenderTargetRef m_renderTarget; // REPLACE !!!!
 
 		std::vector<VkPipelineShaderStageCreateInfo> m_shaderStages;
 		VkPipelineInputAssemblyStateCreateInfo m_inputAssembly {};
@@ -114,7 +114,7 @@ namespace Grafkit::Core {
 		}
 
 		[[nodiscard]] GraphicsPipelineBuilder CreateGraphicsPipelineBuilder(
-			const DeviceRef& device, const FrameBufferRef& renderPass, const uint32_t slot) const
+			const DeviceRef& device, const RenderTargetRef& renderPass, const uint32_t slot) const
 		{
 			const PipelineDescriptor descriptors = m_descriptors.at(slot);
 			return GraphicsPipelineBuilder(device, renderPass, descriptors);

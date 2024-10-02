@@ -1,11 +1,13 @@
 #ifndef GRAFKIT_MESH_H
 #define GRAFKIT_MESH_H
 
-#include <grafkit/common.h>
-#include <grafkit/core/buffer.h>
 #include <memory>
 #include <tuple>
 #include <vector>
+
+#include "grafkit/core/buffer.h"
+#include "grafkit/render/mesh.h"
+#include <grafkit/common.h>
 
 namespace Grafkit {
 	struct CameraView {
@@ -72,6 +74,8 @@ namespace Grafkit {
 		uint32_t vertexCount;
 
 		std::shared_ptr<Material> material;
+
+		void Draw(const Core::CommandBufferRef& commandBuffer) const;
 	};
 
 	// TOOD: Use Class + proper dtor
@@ -83,6 +87,8 @@ namespace Grafkit {
 
 		void Create(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 		void AddPrimitive(const Primitive& primitive) { m_primitives.push_back(primitive); }
+
+		void Bind(const Core::CommandBufferRef& commandBuffer, uint32_t vertexOffset) const;
 
 	private:
 		void Destroy(const Core::DeviceRef& device);

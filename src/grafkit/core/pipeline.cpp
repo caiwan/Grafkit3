@@ -1,10 +1,10 @@
 #include "stdafx.h"
 
-#include <grafkit/core/descriptor.h>
-#include <grafkit/core/device.h>
-#include <grafkit/core/framebuffer.h>
-#include <grafkit/core/initializers.h>
-#include <grafkit/core/pipeline.h>
+#include "grafkit/core/descriptor.h"
+#include "grafkit/core/device.h"
+#include "grafkit/core/initializers.h"
+#include "grafkit/core/pipeline.h"
+#include "grafkit/core/render_target.h"
 
 using namespace Grafkit::Core;
 
@@ -36,9 +36,9 @@ void Pipeline::Bind(VkCommandBuffer commandBuffer)
 // -----------------------------------------------------------------------------
 
 GraphicsPipelineBuilder::GraphicsPipelineBuilder(
-	const DeviceRef& device, const FrameBufferRef& frameBuffer, const std::optional<PipelineDescriptor>& descriptors)
+	const DeviceRef& device, const RenderTargetRef& renderTarget, const std::optional<PipelineDescriptor>& descriptors)
 	: m_device(device)
-	, m_frameBuffer(frameBuffer)
+	, m_renderTarget(renderTarget)
 {
 	// Setup defaults
 	SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_FALSE);
@@ -216,7 +216,7 @@ PipelinePtr GraphicsPipelineBuilder::Build()
 		= Initializers::PipelineVertexInputStateCreateInfo(m_vertexBindingDescriptions, m_vertexInputAttrDescriptions);
 
 	VkGraphicsPipelineCreateInfo pipelineInfo = Initializers::PipelineCreateInfo();
-	pipelineInfo.renderPass = m_frameBuffer->GetVkRenderPass();
+	pipelineInfo.renderPass = m_renderTarget->GetVkRenderPass();
 	pipelineInfo.layout = pipelineLayout;
 	pipelineInfo.subpass = 0;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;

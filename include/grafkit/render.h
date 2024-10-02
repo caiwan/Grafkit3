@@ -17,7 +17,7 @@ namespace Grafkit {
 		using InstancePtr = std::unique_ptr<Instance>;
 		using DevicePtr = std::unique_ptr<Device>;
 		using SwapChainPtr = std::unique_ptr<SwapChain>;
-		using FrameBufferPtr = std::unique_ptr<FrameBuffer>;
+		using RenderTargetPtr = std::unique_ptr<RenderTarget>;
 		using CommandBufferPtr = std::unique_ptr<CommandBuffer>;
 	} // namespace Core
 
@@ -27,7 +27,7 @@ namespace Grafkit {
 		virtual ~IRenderContext() = default;
 
 		[[nodiscard]] virtual const Core::DeviceRef GetDevice() const = 0;
-		[[nodiscard]] virtual const Core::FrameBufferRef GetFrameBuffer() const = 0;
+		[[nodiscard]] virtual const Core::RenderTargetRef GetFrameBuffer() const = 0;
 		[[nodiscard]] virtual Core::CommandBufferRef BeginCommandBuffer() = 0;
 		virtual void BeginFrame(const Core::CommandBufferRef& commandBuffer) = 0;
 		virtual void EndFrame(const Core::CommandBufferRef& commandBuffer) = 0;
@@ -40,11 +40,11 @@ namespace Grafkit {
 		explicit BaseRenderContext(const Core::WindowRef& window);
 		~BaseRenderContext() override;
 
-		// BaseRenderContext(const BaseRenderContext&) = delete;
-		// BaseRenderContext& operator=(const BaseRenderContext&) = delete;
-
 		[[nodiscard]] const Core::DeviceRef GetDevice() const final { return MakeReference(*m_device); }
-		[[nodiscard]] const Core::FrameBufferRef GetFrameBuffer() const final { return MakeReference(*m_frameBuffer); }
+		[[nodiscard]] const Core::RenderTargetRef GetFrameBuffer() const final
+		{
+			return MakeReference(*m_renderTarget);
+		}
 
 		[[nodiscard]] Core::CommandBufferRef BeginCommandBuffer() final;
 		void BeginFrame(const Core::CommandBufferRef& commandBuffer) final;
@@ -63,7 +63,7 @@ namespace Grafkit {
 		Core::DevicePtr m_device;
 		Core::SwapChainPtr m_swapChain;
 
-		Core::FrameBufferPtr m_frameBuffer;
+		Core::RenderTargetPtr m_renderTarget;
 
 		std::vector<Core::CommandBufferPtr> m_commandBuffers;
 

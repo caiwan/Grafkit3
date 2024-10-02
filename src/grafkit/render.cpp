@@ -1,15 +1,15 @@
 #include "stdafx.h"
 
-#include <grafkit/core/command_buffer.h>
-#include <grafkit/core/descriptor_pool.h>
-#include <grafkit/core/device.h>
-#include <grafkit/core/framebuffer.h>
-#include <grafkit/core/image.h>
-#include <grafkit/core/initializers.h>
-#include <grafkit/core/instance.h>
-#include <grafkit/core/swap_chain.h>
-#include <grafkit/core/window.h>
-#include <grafkit/render.h>
+#include "grafkit/core/command_buffer.h"
+#include "grafkit/core/descriptor_pool.h"
+#include "grafkit/core/device.h"
+#include "grafkit/core/image.h"
+#include "grafkit/core/initializers.h"
+#include "grafkit/core/instance.h"
+#include "grafkit/core/render_target.h"
+#include "grafkit/core/swap_chain.h"
+#include "grafkit/core/window.h"
+#include "grafkit/render.h"
 
 using namespace Grafkit;
 using namespace Grafkit::Core;
@@ -24,8 +24,10 @@ BaseRenderContext::BaseRenderContext(const Core::WindowRef& window)
 	m_device = std::make_unique<Core::Device>(MakeReference(*m_instance));
 	m_swapChain = std::make_unique<Core::SwapChain>(window, MakeReference(*m_instance), MakeReference((*m_device)));
 
-	m_frameBuffer = std::make_unique<Core::FrameBuffer>(
-		MakeReference(*m_device), MakeReference(*m_swapChain), std::vector<FrameBufferAttachmentInfo>({}));
+	m_renderTarget = RenderTargetBuilder(MakeReference(*m_device))
+						 .CreateAttachments(MakeReference(*m_swapChain))
+						 .AddAttachment(VK_FORMAT_D32_SFLOAT, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
+						 .Build();
 
 	InitializeCommandBuffers();
 	SetupViewport();
@@ -37,7 +39,7 @@ BaseRenderContext::~BaseRenderContext()
 
 	m_commandBuffers.clear();
 
-	m_frameBuffer.reset();
+	m_renderTarget.reset();
 	m_swapChain.reset();
 	m_device.reset();
 	m_instance.reset();
@@ -62,10 +64,7 @@ void BaseRenderContext::BeginFrame(const Core::CommandBufferRef& commandBuffer)
 
 	const auto swapChainExtent = m_swapChain->GetExtent();
 
-	// TOOD: Move to FrameBuffer + Use std::span
-	std::array<VkClearValue, 2> clearValues = { { { 0.0f, 0.0f, 0.2f, 1.0f }, { 1.0f, 0 } } };
-
-	m_frameBuffer->BeginRenderPass(commandBuffer, m_currentImageIndex, clearValues);
+	m_renderTarget->BeginRenderPass(commandBuffer, m_currentImageIndex);
 
 	vkCmdSetViewport(**commandBuffer, 0, 1, &m_viewport);
 	vkCmdSetScissor(**commandBuffer, 0, 1, &m_scissor);
