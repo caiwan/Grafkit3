@@ -1,6 +1,7 @@
 #ifndef RENDER_TARGET_H
 #define RENDER_TARGET_H
 
+#include <ranges>
 #include <vector>
 
 #include <grafkit/common.h>
