@@ -23,6 +23,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <stddef.h>
 
 extern const uint8_t {{ array_name }}[];
 extern const size_t {{ array_name }}_len;
@@ -37,6 +38,7 @@ extern const size_t {{ array_name }}_len;
 
 {% if not create_header %}
 #include <stdint.h>
+#include <stddef.h>
 const uint8_t {{ array_name }}[] = {
 {% for chunk in data | generate_chunks -%}
     /* {{ "%08x" % chunk.offset }} */ {{ chunk.bytes | join(", ") }},
