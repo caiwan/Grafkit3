@@ -54,11 +54,7 @@ void Grafkit::Application::Run()
 
 		if (!m_window->IsClosing()) {
 			Update(timeInfo);
-			const auto commandBuffer = m_renderContext->BeginCommandBuffer();
-			Compute(commandBuffer);
-			m_renderContext->BeginFrame(commandBuffer);
-			Render(commandBuffer);
-			m_renderContext->EndFrame(commandBuffer);
+			Render();
 		}
 
 		const auto endTime = std::chrono::steady_clock::now();

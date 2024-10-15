@@ -53,6 +53,7 @@ namespace Grafkit {
 		void Flush() final;
 
 		[[nodiscard]] float GetAspectRatio() const;
+		[[nodiscard]] VkExtent2D GetExtent() const;
 
 		[[nodiscard]] uint32_t GetNextFrameIndex() const { return m_nextFrameIndex; }
 
@@ -70,39 +71,19 @@ namespace Grafkit {
 		uint32_t m_currentImageIndex = 0;
 		uint32_t m_nextFrameIndex = 0;
 
-		VkViewport m_viewport {};
-		VkRect2D m_scissor {};
-
 		void InitializeCommandBuffers();
-		void SetupViewport();
 	};
 
 	// MARK: Render context
 
 	class GKAPI RenderContext : public BaseRenderContext {
 	public:
-		explicit RenderContext(const Core::WindowRef& window)
-			: BaseRenderContext(window)
-			, m_pipelineFactory(std::make_unique<Core::PipelineFactory>())
-			, m_descriptorFactory(std::make_unique<Core::DescriptorFactory>())
-		{
-		}
+		explicit RenderContext(const Core::WindowRef& window);
 
-		[[nodiscard]] Grafkit::Core::DescriptorBuilder DescriptorBuilder() const
-		{
-			return m_descriptorFactory->CreateDescriptorBuilder(this->GetDevice());
-		}
+		[[nodiscard]] Grafkit::Core::DescriptorBuilder DescriptorBuilder() const;
 
-		void AddStaticPipelineDescriptor(const uint32_t slot, const Core::PipelineDescriptor& descriptors)
-		{
-			m_pipelineFactory->AddStaticPipelineDescriptor(slot, descriptors);
-		}
-
-		[[nodiscard]] Grafkit::Core::GraphicsPipelineBuilder PipelineBuilder(uint32_t descriptorSlot) const
-		{
-			return m_pipelineFactory->CreateGraphicsPipelineBuilder(
-				this->GetDevice(), this->GetFrameBuffer(), descriptorSlot);
-		}
+		void AddStaticPipelineDescriptor(const uint32_t slot, const Core::PipelineDescriptor& descriptors);
+		[[nodiscard]] Grafkit::Core::GraphicsPipelineBuilder PipelineBuilder(uint32_t descriptorSlot) const;
 
 	private:
 		std::unique_ptr<Core::PipelineFactory> m_pipelineFactory;

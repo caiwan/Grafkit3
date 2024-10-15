@@ -17,8 +17,8 @@ namespace Grafkit {
 		virtual void Init() = 0;
 		virtual void Shutdown() = 0;
 		virtual void Update(const TimeInfo& timeInfo) = 0;
-		virtual void Compute(const Core::CommandBufferRef& commandBuffer) = 0;
-		virtual void Render(const Core::CommandBufferRef& commandBuffer) = 0;
+
+		virtual void Render() = 0;
 
 		std::unique_ptr<Grafkit::Core::IWindow> m_window;
 		std::unique_ptr<Grafkit::RenderContext> m_renderContext;
@@ -26,4 +26,3 @@ namespace Grafkit {
 } // namespace Grafkit
 
 #endif // __GRAFKIT_APPLICATION_H__
-\

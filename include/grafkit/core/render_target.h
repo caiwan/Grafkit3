@@ -52,6 +52,7 @@ namespace Grafkit::Core {
 		VkSampleCountFlagBits imageSampleCount = VK_SAMPLE_COUNT_1_BIT;
 	};
 
+	// MARK: RenderTarget
 	class RenderTarget {
 	public:
 		explicit RenderTarget(const DeviceRef& device,
@@ -69,20 +70,28 @@ namespace Grafkit::Core {
 		void SetClearColor(const uint32_t index, const VkClearColorValue& color);
 		void SetClearDepth(const uint32_t index, const VkClearDepthStencilValue& depthStencil);
 
-		void BeginRenderPass(const CommandBufferRef& commandBuffer, const uint32_t imageIndex) const;
+		void BeginRenderPass(const CommandBufferRef& commandBuffer, const uint32_t imageIndex = 0) const;
+		void EndRenderPass(const CommandBufferRef& commandBuffer) const;
 
 		[[nodiscard]] const VkRenderPass& GetVkRenderPass() const { return m_renderPass; }
 		[[nodiscard]] size_t GetFrameBufferCount() const { return m_frameBuffers.size(); }
 
 	private:
 		const DeviceRef m_device;
-		VkExtent2D m_extent = {};
-		std::vector<VkFramebuffer> m_frameBuffers;
 		VkSampler m_sampler = VK_NULL_HANDLE;
 		VkRenderPass m_renderPass = VK_NULL_HANDLE;
+
+		VkExtent2D m_extent = {};
+		VkViewport m_viewport {};
+		VkRect2D m_scissor {};
+
+		std::vector<VkFramebuffer> m_frameBuffers;
 		std::vector<RenderTargetAttachment> m_attachments;
+
+		void SetupViewport();
 	};
 
+	// MARK: RenderTargetBuilder
 	class RenderTargetBuilder {
 	public:
 		explicit RenderTargetBuilder(const DeviceRef& device);

@@ -16,6 +16,7 @@ using namespace Grafkit::Core;
 
 constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
+// MARK: BaseRenderContext
 BaseRenderContext::BaseRenderContext(const Core::WindowRef& window)
 	: m_window(window)
 {
@@ -30,7 +31,6 @@ BaseRenderContext::BaseRenderContext(const Core::WindowRef& window)
 						 .Build();
 
 	InitializeCommandBuffers();
-	SetupViewport();
 }
 
 BaseRenderContext::~BaseRenderContext()
@@ -50,24 +50,18 @@ Core::CommandBufferRef BaseRenderContext::BeginCommandBuffer()
 	m_currentImageIndex = m_swapChain->GetCurrentImageIndex();
 	m_nextFrameIndex = m_swapChain->AcquireNextFrame();
 
-	m_commandBuffers[m_currentImageIndex]->Reset();
-	return MakeReference(*m_commandBuffers[m_currentImageIndex]);
+	Core::CommandBufferPtr& commandBuffer = m_commandBuffers[m_currentImageIndex];
+	commandBuffer->Reset();
+
+	VkCommandBufferBeginInfo beginInfo = Core::Initializers::CommandBufferBeginInfo();
+	VK_CHECK_RESULT(vkBeginCommandBuffer(**commandBuffer, &beginInfo));
+
+	return MakeReference(*commandBuffer);
 }
 
 void BaseRenderContext::BeginFrame(const Core::CommandBufferRef& commandBuffer)
 {
-	VkCommandBufferBeginInfo beginInfo = Core::Initializers::CommandBufferBeginInfo();
-
-	if (vkBeginCommandBuffer(**commandBuffer, &beginInfo) != VK_SUCCESS) {
-		throw std::runtime_error("failed to begin recording command buffer!");
-	}
-
-	const auto swapChainExtent = m_swapChain->GetExtent();
-
 	m_renderTarget->BeginRenderPass(commandBuffer, m_currentImageIndex);
-
-	vkCmdSetViewport(**commandBuffer, 0, 1, &m_viewport);
-	vkCmdSetScissor(**commandBuffer, 0, 1, &m_scissor);
 }
 
 void BaseRenderContext::EndFrame(const Core::CommandBufferRef& commandBuffer)
@@ -93,22 +87,37 @@ void BaseRenderContext::InitializeCommandBuffers()
 	}
 }
 
-void BaseRenderContext::SetupViewport()
-{
-	const auto& swapChainExtent = m_swapChain->GetExtent();
-	m_viewport.x = 0.0f;
-	m_viewport.y = 0.0f;
-	m_viewport.width = static_cast<float>(m_swapChain->GetExtent().width);
-	m_viewport.height = static_cast<float>(m_swapChain->GetExtent().height);
-	m_viewport.minDepth = 0.0f;
-	m_viewport.maxDepth = 1.0f;
-
-	m_scissor.offset = { 0, 0 };
-	m_scissor.extent = swapChainExtent;
-}
-
 [[nodiscard]] float BaseRenderContext::GetAspectRatio() const
 {
 	const auto extent = m_swapChain->GetExtent();
 	return static_cast<float>(extent.width) / static_cast<float>(extent.height);
+}
+
+VkExtent2D Grafkit::BaseRenderContext::GetExtent() const { return m_swapChain->GetExtent(); }
+
+// ----------------------------------------------------------------------------
+// MARK: RenderContext
+
+Grafkit::RenderContext::RenderContext(const Core::WindowRef& window)
+
+	: BaseRenderContext(window)
+	, m_pipelineFactory(std::make_unique<Core::PipelineFactory>())
+	, m_descriptorFactory(std::make_unique<Core::DescriptorFactory>())
+{
+}
+
+Grafkit::Core::DescriptorBuilder Grafkit::RenderContext::DescriptorBuilder() const
+{
+	return m_descriptorFactory->CreateDescriptorBuilder(this->GetDevice());
+}
+
+void Grafkit::RenderContext::AddStaticPipelineDescriptor(
+	const uint32_t slot, const Core::PipelineDescriptor& descriptors)
+{
+	m_pipelineFactory->AddStaticPipelineDescriptor(slot, descriptors);
+}
+
+Grafkit::Core::GraphicsPipelineBuilder Grafkit::RenderContext::PipelineBuilder(uint32_t descriptorSlot) const
+{
+	return m_pipelineFactory->CreateGraphicsPipelineBuilder(this->GetDevice(), this->GetFrameBuffer(), descriptorSlot);
 }

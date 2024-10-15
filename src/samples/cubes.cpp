@@ -40,7 +40,7 @@ class HelloApplication : public Grafkit::Application {
 private:
 	Grafkit::Core::DescriptorSetPtr m_materialDescriptor;
 	Grafkit::Core::DescriptorSetPtr m_modelviewDescriptor;
-	Grafkit::Core::PipelinePtr m_graphicsPipeline;
+	Grafkit::Core::PipelinePtr m_forwardRender;
 
 	Grafkit::Asset::AssetLoaderPtr m_assetLoader;
 	Grafkit::Resource::ResourceManagerPtr m_resources;
@@ -91,10 +91,10 @@ public:
 				{ { VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Grafkit::ModelView) } },
 			});
 
-		m_graphicsPipeline = m_renderContext->PipelineBuilder(DEFAULT_PIPELINE_DESCRIPTOR)
-								 .AddVertexShader(triangle_vert, triangle_vert_len)
-								 .AddFragmentShader(triangle_frag, triangle_frag_len)
-								 .Build();
+		m_forwardRender = m_renderContext->PipelineBuilder(DEFAULT_PIPELINE_DESCRIPTOR)
+							  .AddVertexShader(triangle_vert, triangle_vert_len)
+							  .AddFragmentShader(triangle_frag, triangle_frag_len)
+							  .Build();
 
 		Grafkit::Core::ImagePtr image = Grafkit::Resource::CheckerImageBuilder({
 																				   { 256, 256, 1 },
@@ -105,7 +105,7 @@ public:
 											.BuildResource(device, resources);
 
 		Grafkit::MaterialPtr material = Grafkit::Resource::MaterialBuilder({})
-											.SetPipeline(m_graphicsPipeline)
+											.SetPipeline(m_forwardRender)
 											.AddDescriptorSet(m_materialDescriptor, Grafkit::TEXTURE_SET)
 											.AddDescriptorSet(m_modelviewDescriptor, Grafkit::CAMERA_VIEW_SET)
 											.AddTextureImage(Grafkit::DIFFUSE_TEXTURE_BINDING, image)
@@ -181,11 +181,12 @@ public:
 		m_sceneGraph->Update(timeInfo);
 	}
 
-	void Compute([[maybe_unused]] const Grafkit::Core::CommandBufferRef& commandBuffer) override { }
-
-	void Render([[maybe_unused]] const Grafkit::Core::CommandBufferRef& commandBuffer) override
+	void Render() override
 	{
+		const auto commandBuffer = m_renderContext->BeginCommandBuffer();
+		m_renderContext->BeginFrame(commandBuffer);
 		m_sceneGraph->Draw(commandBuffer);
+		m_renderContext->EndFrame(commandBuffer);
 	}
 
 	virtual void Shutdown() override
@@ -194,7 +195,7 @@ public:
 		m_materialDescriptor.reset();
 		m_modelviewDescriptor.reset();
 		m_ubo.Destroy(m_renderContext->GetDevice());
-		m_graphicsPipeline.reset();
+		m_forwardRender.reset();
 	}
 };
 

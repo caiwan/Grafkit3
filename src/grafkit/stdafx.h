@@ -16,6 +16,7 @@
 #include <optional>
 #include <set>
 #include <span>
+#include <sstream>
 #include <stdexcept>
 #include <tuple>
 #include <unordered_map>

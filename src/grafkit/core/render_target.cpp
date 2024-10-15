@@ -24,6 +24,7 @@ RenderTarget::RenderTarget(const DeviceRef& device,
 	, m_attachments(std::move(attachments))
 	, m_sampler(sample)
 {
+	SetupViewport();
 }
 
 RenderTarget::~RenderTarget()
@@ -70,7 +71,27 @@ void RenderTarget::BeginRenderPass(const CommandBufferRef& commandBuffer, const 
 	renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 	renderPassInfo.pClearValues = clearValues.data();
 
+	vkCmdSetViewport(**commandBuffer, 0, 1, &m_viewport);
+	vkCmdSetScissor(**commandBuffer, 0, 1, &m_scissor);
 	vkCmdBeginRenderPass(**commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+}
+
+void Grafkit::Core::RenderTarget::EndRenderPass(const CommandBufferRef& commandBuffer) const
+{
+	vkCmdEndRenderPass(**commandBuffer);
+}
+
+void Grafkit::Core::RenderTarget::SetupViewport()
+{
+	m_viewport.x = 0.0f;
+	m_viewport.y = 0.0f;
+	m_viewport.width = static_cast<float>(m_extent.width);
+	m_viewport.height = static_cast<float>(m_extent.height);
+	m_viewport.minDepth = 0.0f;
+	m_viewport.maxDepth = 1.0f;
+
+	m_scissor.offset = { 0, 0 };
+	m_scissor.extent = m_extent;
 }
 
 // MARK: RenderTargetBuilder
@@ -227,14 +248,14 @@ RenderTargetPtr RenderTargetBuilder::Build() const
 			attachmentViews.emplace_back(m_swapChainAttachments[index].image->GetImageView());
 		}
 
-		// Then add the rest of the attachments
+		// Then, add the rest of the attachments
 		for (const auto& attachment : renderTargetAttachments) {
-			if (attachment.image != nullptr && attachment.image != m_swapChainAttachments[index].image) {
+			if (attachment.image != nullptr) {
 				attachmentViews.emplace_back(attachment.image->GetImageView());
 			}
 		}
 
-		// Find. max number of layers across attachments
+		// Find max number of layers across attachments
 		uint32_t maxLayers = 1;
 		for (const auto& attachment : renderTargetAttachments) {
 			if (attachment.subresourceRange.layerCount > maxLayers) {
@@ -308,6 +329,11 @@ RenderTargetAttachment RenderTargetBuilder::CreateAttachment(const RenderTargetA
 	// TOOD: Add image attachment creation to the image utility functions
 	const bool isCreatedImage = info.image != nullptr;
 	if (info.image == nullptr) {
+
+		assert(info.format != VK_FORMAT_UNDEFINED);
+		assert(info.usage != 0);
+		assert(m_extent.width > 0 && m_extent.height > 0);
+
 		const VkExtent3D extent = { m_extent.width, m_extent.height, 1 };
 
 		VkImageCreateInfo imageInfo = Initializers::ImageCreateInfo(VK_IMAGE_TYPE_2D, extent, info.format, info.usage);
@@ -321,10 +347,8 @@ RenderTargetAttachment RenderTargetBuilder::CreateAttachment(const RenderTargetA
 		VkImage image = VK_NULL_HANDLE;
 		VmaAllocation allocation = VK_NULL_HANDLE;
 
-		if (vmaCreateImage(m_device->GetVmaAllocator(), &imageInfo, &allocInfo, &image, &allocation, nullptr)
-			!= VK_SUCCESS) {
-			throw std::runtime_error("failed to create image");
-		}
+		VK_CHECK_RESULT(
+			vmaCreateImage(m_device->GetVmaAllocator(), &imageInfo, &allocInfo, &image, &allocation, nullptr));
 
 		VkImageView imageView = VK_NULL_HANDLE;
 
@@ -336,9 +360,7 @@ RenderTargetAttachment RenderTargetBuilder::CreateAttachment(const RenderTargetA
 		viewInfo.subresourceRange.aspectMask = (attachment.HasDepth()) ? VK_IMAGE_ASPECT_DEPTH_BIT : aspectMask;
 		viewInfo.image = image;
 
-		if (vkCreateImageView(m_device->GetVkDevice(), &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create image view");
-		}
+		VK_CHECK_RESULT(vkCreateImageView(m_device->GetVkDevice(), &viewInfo, nullptr, &imageView));
 
 		attachment.image = std::make_shared<Image>(m_device, image, imageView, VK_IMAGE_LAYOUT_UNDEFINED, allocation);
 	} else {

@@ -7,6 +7,7 @@
 #include <grafkit/core/buffer.h>
 #include <grafkit/core/command_buffer.h>
 #include <grafkit/core/pipeline.h>
+#include <grafkit/core/render_target.h>
 #include <grafkit/core/window.h>
 #include <grafkit/render.h>
 #include <grafkit/render/material.h>
@@ -40,12 +41,17 @@ class HelloApplication : public Grafkit::Application {
 private:
 	Grafkit::Core::DescriptorSetPtr m_materialDescriptor;
 	Grafkit::Core::DescriptorSetPtr m_modelviewDescriptor;
-	Grafkit::Core::PipelinePtr m_graphicsPipeline;
+	Grafkit::Core::PipelinePtr m_forwardRender;
+	Grafkit::Core::PipelinePtr m_verticalBloom;
+	Grafkit::Core::PipelinePtr m_horizontalBloom;
+	Grafkit::Core::PipelinePtr m_present;
 
 	Grafkit::Asset::AssetLoaderPtr m_assetLoader;
 	Grafkit::Resource::ResourceManagerPtr m_resources;
 
 	Grafkit::ScenegraphPtr m_sceneGraph;
+
+	Grafkit::Core::RenderTargetPtr m_bloomRenderTarget;
 
 	struct {
 		Grafkit::NodePtr rootNode;
@@ -91,10 +97,10 @@ public:
 				{ { VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Grafkit::ModelView) } },
 			});
 
-		m_graphicsPipeline = m_renderContext->PipelineBuilder(DEFAULT_PIPELINE_DESCRIPTOR)
-								 .AddVertexShader(triangle_vert, triangle_vert_len)
-								 .AddFragmentShader(triangle_frag, triangle_frag_len)
-								 .Build();
+		m_forwardRender = m_renderContext->PipelineBuilder(DEFAULT_PIPELINE_DESCRIPTOR)
+							  .AddVertexShader(triangle_vert, triangle_vert_len)
+							  .AddFragmentShader(triangle_frag, triangle_frag_len)
+							  .Build();
 
 		Grafkit::Core::ImagePtr image = Grafkit::Resource::CheckerImageBuilder({
 																				   { 256, 256, 1 },
@@ -105,7 +111,7 @@ public:
 											.BuildResource(device, resources);
 
 		Grafkit::MaterialPtr material = Grafkit::Resource::MaterialBuilder({})
-											.SetPipeline(m_graphicsPipeline)
+											.SetPipeline(m_forwardRender)
 											.AddDescriptorSet(m_materialDescriptor, Grafkit::TEXTURE_SET)
 											.AddDescriptorSet(m_modelviewDescriptor, Grafkit::CAMERA_VIEW_SET)
 											.AddTextureImage(Grafkit::DIFFUSE_TEXTURE_BINDING, image)
@@ -132,6 +138,13 @@ public:
 		m_nodes.rearNode = m_sceneGraph->CreateNode(m_nodes.centerNode, mesh);
 		m_nodes.topNode = m_sceneGraph->CreateNode(m_nodes.centerNode, mesh);
 		m_nodes.bottomNode = m_sceneGraph->CreateNode(m_nodes.centerNode, mesh);
+
+		// PostFx setup
+		m_bloomRenderTarget = Grafkit::Core::RenderTargetBuilder(m_renderContext->GetDevice())
+								  .SetSize(m_renderContext->GetExtent())
+								  .AddAttachment(VK_FORMAT_R8G8B8A8_UNORM,
+									  VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
+								  .Build();
 	}
 
 	void Update([[maybe_unused]] const Grafkit::TimeInfo& timeInfo) override
@@ -181,11 +194,19 @@ public:
 		m_sceneGraph->Update(timeInfo);
 	}
 
-	void Compute([[maybe_unused]] const Grafkit::Core::CommandBufferRef& commandBuffer) override { }
-
-	void Render([[maybe_unused]] const Grafkit::Core::CommandBufferRef& commandBuffer) override
+	void Render() override
 	{
+		const auto commandBuffer = m_renderContext->BeginCommandBuffer();
+
+		m_bloomRenderTarget->BeginRenderPass(commandBuffer);
 		m_sceneGraph->Draw(commandBuffer);
+		m_bloomRenderTarget->EndRenderPass(commandBuffer);
+
+		// ... and present
+		// + add VBlur + HBlur + Present
+
+		m_renderContext->BeginFrame(commandBuffer);
+		m_renderContext->EndFrame(commandBuffer);
 	}
 
 	void Shutdown() override
@@ -194,7 +215,7 @@ public:
 		m_materialDescriptor.reset();
 		m_modelviewDescriptor.reset();
 		m_ubo.Destroy(m_renderContext->GetDevice());
-		m_graphicsPipeline.reset();
+		m_forwardRender.reset();
 	}
 };
 
