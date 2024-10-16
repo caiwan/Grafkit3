@@ -29,29 +29,31 @@
 #include <iostream>
 
 #include "cube_mesh.h"
-#include "shaders/triangle.frag.h"
-#include "shaders/triangle.vert.h"
+#include "shaders/forward_render.frag.h"
+#include "shaders/forward_render.vert.h"
+#include "shaders/gaussblur.frag.h"
+#include "shaders/quad.vert.h"
 
 constexpr int WIDTH = 1024;
 constexpr int HEIGHT = 768;
 
-constexpr uint32_t DEFAULT_PIPELINE_DESCRIPTOR = 0;
+constexpr uint32_t FORWARD_PIPELINE_DESCRIPTOR = 0;
+constexpr uint32_t GUAUSS_BLUR_PIPELINE_DESCRIPTOR = 1;
 
 class HelloApplication : public Grafkit::Application {
 private:
 	Grafkit::Core::DescriptorSetPtr m_materialDescriptor;
 	Grafkit::Core::DescriptorSetPtr m_modelviewDescriptor;
 	Grafkit::Core::PipelinePtr m_forwardRender;
-	Grafkit::Core::PipelinePtr m_verticalBloom;
-	Grafkit::Core::PipelinePtr m_horizontalBloom;
-	Grafkit::Core::PipelinePtr m_present;
+	Grafkit::Core::PipelinePtr m_gaussBlur;
 
 	Grafkit::Asset::AssetLoaderPtr m_assetLoader;
 	Grafkit::Resource::ResourceManagerPtr m_resources;
 
 	Grafkit::ScenegraphPtr m_sceneGraph;
 
-	Grafkit::Core::RenderTargetPtr m_bloomRenderTarget;
+	Grafkit::Core::RenderTargetPtr m_forwardRenderTarget;
+	Grafkit::Core::RenderTargetPtr m_gaussBlurTarget;
 
 	struct {
 		Grafkit::NodePtr rootNode;
@@ -82,6 +84,20 @@ public:
 		const auto& device = m_renderContext->GetDevice();
 		const auto resources = Grafkit::MakeReference(*m_resources);
 
+		// PostFx setup
+		m_forwardRenderTarget = Grafkit::Core::RenderTargetBuilder(m_renderContext->GetDevice())
+									.SetSize(m_renderContext->GetExtent())
+									.AddAttachment(VK_FORMAT_R8G8B8A8_UNORM,
+										VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
+									.Build();
+
+		m_gaussBlurTarget = Grafkit::Core::RenderTargetBuilder(m_renderContext->GetDevice())
+								.SetSize(m_renderContext->GetExtent())
+								.AddAttachment(VK_FORMAT_R8G8B8A8_UNORM,
+									VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
+								.Build();
+
+		// Descriptor setup
 		m_materialDescriptor = m_renderContext->DescriptorBuilder()
 								   .AddLayoutBindings(Grafkit::Material::GetLayoutBindings()[Grafkit::TEXTURE_SET])
 								   .Build();
@@ -90,17 +106,25 @@ public:
 									.AddLayoutBindings(Grafkit::Material::GetLayoutBindings()[Grafkit::CAMERA_VIEW_SET])
 									.Build();
 
-		m_renderContext->AddStaticPipelineDescriptor(DEFAULT_PIPELINE_DESCRIPTOR,
+		m_renderContext->AddStaticPipelineDescriptor(FORWARD_PIPELINE_DESCRIPTOR,
 			Grafkit::Core::PipelineDescriptor {
 				Grafkit::Vertex::GetVertexDescription(),
 				Grafkit::Material::GetLayoutBindings(),
 				{ { VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Grafkit::ModelView) } },
 			});
 
-		m_forwardRender = m_renderContext->PipelineBuilder(DEFAULT_PIPELINE_DESCRIPTOR)
-							  .AddVertexShader(triangle_vert, triangle_vert_len)
-							  .AddFragmentShader(triangle_frag, triangle_frag_len)
-							  .Build();
+		// Pipelines
+		m_forwardRender
+			= m_renderContext
+				  ->PipelineBuilder(FORWARD_PIPELINE_DESCRIPTOR, Grafkit::MakeReference(*m_forwardRenderTarget))
+				  .AddVertexShader(forward_render_vert, forward_render_vert_len)
+				  .AddFragmentShader(forward_render_frag, forward_render_frag_len)
+				  .Build();
+
+		m_gaussBlur = m_renderContext->PipelineBuilder(FORWARD_PIPELINE_DESCRIPTOR)
+						  .AddVertexShader(quad_vert, quad_vert_len)
+						  .AddFragmentShader(gaussblur_frag, gaussblur_frag_len)
+						  .Build();
 
 		Grafkit::Core::ImagePtr image = Grafkit::Resource::CheckerImageBuilder({
 																				   { 256, 256, 1 },
@@ -138,13 +162,6 @@ public:
 		m_nodes.rearNode = m_sceneGraph->CreateNode(m_nodes.centerNode, mesh);
 		m_nodes.topNode = m_sceneGraph->CreateNode(m_nodes.centerNode, mesh);
 		m_nodes.bottomNode = m_sceneGraph->CreateNode(m_nodes.centerNode, mesh);
-
-		// PostFx setup
-		m_bloomRenderTarget = Grafkit::Core::RenderTargetBuilder(m_renderContext->GetDevice())
-								  .SetSize(m_renderContext->GetExtent())
-								  .AddAttachment(VK_FORMAT_R8G8B8A8_UNORM,
-									  VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
-								  .Build();
 	}
 
 	void Update([[maybe_unused]] const Grafkit::TimeInfo& timeInfo) override
@@ -198,9 +215,9 @@ public:
 	{
 		const auto commandBuffer = m_renderContext->BeginCommandBuffer();
 
-		m_bloomRenderTarget->BeginRenderPass(commandBuffer);
+		m_forwardRenderTarget->BeginRenderPass(commandBuffer);
 		m_sceneGraph->Draw(commandBuffer);
-		m_bloomRenderTarget->EndRenderPass(commandBuffer);
+		m_forwardRenderTarget->EndRenderPass(commandBuffer);
 
 		// ... and present
 		// + add VBlur + HBlur + Present

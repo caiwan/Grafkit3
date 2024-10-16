@@ -1,0 +1,58 @@
+---
+Language: Cpp
+BasedOnStyle: WebKit
+Standard: Latest
+
+ColumnLimit: '120'
+LineEnding: 'CRLF'
+TabWidth: '4'
+UseTab: Always
+
+AlignAfterOpenBracket: DontAlign
+AllowAllArgumentsOnNextLine: true
+AlignOperands: AlignAfterOperator
+
+AllowShortBlocksOnASingleLine: Never
+
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel:  false
+  AfterClass:      true
+  AfterControlStatement: Always
+  AfterEnum:       true
+  AfterFunction:   true
+  AfterNamespace:  true
+  AfterObjCDeclaration: true
+  AfterStruct:     true
+  AfterUnion:      true
+  AfterExternBlock: true
+  BeforeCatch:     true
+  BeforeElse:      true
+  BeforeLambdaBody: true
+  BeforeWhile:     false
+  IndentBraces:    false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
+
+BinPackArguments: false
+BinPackParameters: false
+
+AllowAllParametersOfDeclarationOnNextLine: false
+
+ContinuationIndentWidth: '0'
+
+FixNamespaceComments: true
+
+ForEachMacros:
+  - foreach
+  - Q_FOREACH
+  - BOOST_FOREACH
+
+IfMacros:
+  - KJ_IF_MAYBE
+
+IncludeBlocks: Preserve
+NamespaceIndentation: All
+
+...

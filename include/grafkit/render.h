@@ -80,10 +80,12 @@ namespace Grafkit {
 	public:
 		explicit RenderContext(const Core::WindowRef& window);
 
-		[[nodiscard]] Grafkit::Core::DescriptorBuilder DescriptorBuilder() const;
+		[[nodiscard]] Core::DescriptorBuilder DescriptorBuilder() const;
 
 		void AddStaticPipelineDescriptor(const uint32_t slot, const Core::PipelineDescriptor& descriptors);
-		[[nodiscard]] Grafkit::Core::GraphicsPipelineBuilder PipelineBuilder(uint32_t descriptorSlot) const;
+		[[nodiscard]] Core::GraphicsPipelineBuilder PipelineBuilder(uint32_t descriptorSlot) const;
+		[[nodiscard]] Core::GraphicsPipelineBuilder PipelineBuilder(
+			uint32_t descriptorSlot, const Core::RenderTargetRef renderPass) const;
 
 	private:
 		std::unique_ptr<Core::PipelineFactory> m_pipelineFactory;

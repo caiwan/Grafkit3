@@ -8,6 +8,7 @@
 #include "grafkit/core/instance.h"
 #include "grafkit/core/render_target.h"
 #include "grafkit/core/swap_chain.h"
+#include "grafkit/core/vulkan_utils.h"
 #include "grafkit/core/window.h"
 #include "grafkit/render.h"
 
@@ -120,4 +121,10 @@ void Grafkit::RenderContext::AddStaticPipelineDescriptor(
 Grafkit::Core::GraphicsPipelineBuilder Grafkit::RenderContext::PipelineBuilder(uint32_t descriptorSlot) const
 {
 	return m_pipelineFactory->CreateGraphicsPipelineBuilder(this->GetDevice(), this->GetFrameBuffer(), descriptorSlot);
+}
+
+Grafkit::Core::GraphicsPipelineBuilder Grafkit::RenderContext::PipelineBuilder(
+	uint32_t descriptorSlot, const RenderTargetRef renderPass) const
+{
+	return m_pipelineFactory->CreateGraphicsPipelineBuilder(this->GetDevice(), renderPass, descriptorSlot);
 }

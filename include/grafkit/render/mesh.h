@@ -78,7 +78,6 @@ namespace Grafkit {
 		void Draw(const Core::CommandBufferRef& commandBuffer) const;
 	};
 
-	// TOOD: Use Class + proper dtor
 	class Mesh {
 	public:
 		friend class Scenegraph;

@@ -7,6 +7,7 @@
 #include "grafkit/core/image.h"
 #include "grafkit/core/render_target.h"
 #include "grafkit/core/swap_chain.h"
+#include "grafkit/core/vulkan_utils.h"
 
 using namespace Grafkit::Core;
 

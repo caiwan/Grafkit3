@@ -34,7 +34,7 @@
 constexpr int WIDTH = 1024;
 constexpr int HEIGHT = 768;
 
-constexpr uint32_t DEFAULT_PIPELINE_DESCRIPTOR = 0;
+constexpr uint32_t FORWARD_PIPELINE_DESCRIPTOR = 0;
 
 class HelloApplication : public Grafkit::Application {
 private:
@@ -84,14 +84,14 @@ public:
 									.AddLayoutBindings(Grafkit::Material::GetLayoutBindings()[Grafkit::CAMERA_VIEW_SET])
 									.Build();
 
-		m_renderContext->AddStaticPipelineDescriptor(DEFAULT_PIPELINE_DESCRIPTOR,
+		m_renderContext->AddStaticPipelineDescriptor(FORWARD_PIPELINE_DESCRIPTOR,
 			Grafkit::Core::PipelineDescriptor {
 				Grafkit::Vertex::GetVertexDescription(),
 				Grafkit::Material::GetLayoutBindings(),
 				{ { VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Grafkit::ModelView) } },
 			});
 
-		m_graphicsPipeline = m_renderContext->PipelineBuilder(DEFAULT_PIPELINE_DESCRIPTOR)
+		m_graphicsPipeline = m_renderContext->PipelineBuilder(FORWARD_PIPELINE_DESCRIPTOR)
 								 .AddVertexShader(triangle_vert, triangle_vert_len)
 								 .AddFragmentShader(triangle_frag, triangle_frag_len)
 								 .Build();
@@ -181,11 +181,10 @@ public:
 		m_sceneGraph->Update(timeInfo);
 	}
 
-	void Compute([[maybe_unused]] const Grafkit::Core::CommandBufferRef& commandBuffer) override { }
-
-	void Render([[maybe_unused]] const Grafkit::Core::CommandBufferRef& commandBuffer) override
+	void Render() override
 	{
-		m_sceneGraph->Draw(commandBuffer);
+		// TODO:
+		// m_sceneGraph->Draw(commandBuffer);
 	}
 
 	virtual void Shutdown() override

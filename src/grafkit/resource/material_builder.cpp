@@ -1,12 +1,12 @@
+#include "grafkit/resource/material_builder.h"
+#include "grafkit/core/descriptor.h"
+#include "grafkit/core/device.h"
+#include "grafkit/core/image.h"
+#include "grafkit/core/initializers.h"
+#include "grafkit/core/pipeline.h"
+#include "grafkit/render/material.h"
+#include "grafkit/render/texture.h"
 #include "stdafx.h"
-#include <grafkit/core/descriptor.h>
-#include <grafkit/core/device.h>
-#include <grafkit/core/image.h>
-#include <grafkit/core/initializers.h>
-#include <grafkit/core/pipeline.h>
-#include <grafkit/render/material.h>
-#include <grafkit/render/texture.h>
-#include <grafkit/resource/material_builder.h>
 
 using namespace Grafkit::Resource;
 using Grafkit::Texture;

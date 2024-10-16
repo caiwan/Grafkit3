@@ -1,7 +1,7 @@
 #include "stdafx.h"
 
-#include <grafkit/core/image.h>
-#include <grafkit/resource/image_builder.h>
+#include "grafkit/core/image.h"
+#include "grafkit/resource/image_builder.h"
 
 using namespace Grafkit::Resource;
 using Grafkit::Core::Image;

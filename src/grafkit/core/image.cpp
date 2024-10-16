@@ -1,8 +1,10 @@
 #include "stdafx.h"
-#include <grafkit/core/buffer.h>
-#include <grafkit/core/device.h>
-#include <grafkit/core/image.h>
-#include <grafkit/core/initializers.h>
+
+#include "grafkit/core/buffer.h"
+#include "grafkit/core/device.h"
+#include "grafkit/core/image.h"
+#include "grafkit/core/initializers.h"
+#include "grafkit/core/vulkan_utils.h"
 
 using namespace Grafkit::Core;
 
@@ -54,9 +56,7 @@ ImagePtr Image::CreateImage(const DeviceRef& device,
 	allocInfo.requiredFlags = static_cast<VkMemoryPropertyFlags>(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 	// allocate and create the image
-	if (vmaCreateImage(device->GetVmaAllocator(), &imageInfo, &allocInfo, &image, &allocation, nullptr) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create image");
-	}
+	VK_CHECK_RESULT(vmaCreateImage(device->GetVmaAllocator(), &imageInfo, &allocInfo, &image, &allocation, nullptr));
 
 	// if the format is a depth format, we will need to have it use the correct
 	// aspect flag
@@ -90,9 +90,7 @@ ImagePtr Image::CreateImage(const DeviceRef& device,
 	imageViewInfo.subresourceRange.levelCount = imageInfo.mipLevels;
 	imageViewInfo.subresourceRange.aspectMask = aspectFlag;
 
-	if (vkCreateImageView(**device, &imageViewInfo, nullptr, &imageView) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create image view");
-	}
+	VK_CHECK_RESULT(vkCreateImageView(**device, &imageViewInfo, nullptr, &imageView));
 
 	return std::make_shared<Image>(device, image, imageView, layout, allocation);
 }

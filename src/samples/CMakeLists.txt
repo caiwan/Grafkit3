@@ -23,8 +23,6 @@ spirv_compile_shaders(
 	GENERATED_FILES_ARG SPIRV_EMBED_SOURCE_FILES
 )
 
-message(STATUS "SPIRV_BINARY_FILES: ${SPIRV_EMBED_SOURCE_FILES}")
-
 add_library(${PROJECT_NAME}-Shaders STATIC ${GLSL_SOURCE_FILES} ${SPIRV_EMBED_SOURCE_FILES})
 target_include_directories(${PROJECT_NAME}-Shaders PUBLIC ${SHADER_INCLUDE_DIR})
 set_target_properties(${PROJECT_NAME}-Shaders PROPERTIES FOLDER "Samples")

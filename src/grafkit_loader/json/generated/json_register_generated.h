@@ -4,7 +4,7 @@
  *
  * This file has been automatically generated and should not be modified.
  *
- * Generated at: 2024-09-25 14:36:15
+ * Generated at: 2024-10-15 14:03:08
  * Source files:
  *   - animation_desc.gen.yaml
  *   - image_desc.gen.yaml
@@ -19,7 +19,7 @@
 
 namespace Grafkit::Serialization {
 
-	void RegisterJsonDeserializers(JsonSerializerRegistry& registry)
+	inline void RegisterJsonDeserializers(JsonSerializerRegistry& registry)
 	{
 		// MARK: animation_desc
 
