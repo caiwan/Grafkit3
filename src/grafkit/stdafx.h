@@ -28,5 +28,6 @@
 #include "grafkit/common.h"
 #include "grafkit/core/initializers.h"
 #include "grafkit/core/log.h"
+#include "grafkit/core/vulkan_utils.h"
 
 #endif // STDAFX_H

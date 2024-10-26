@@ -150,6 +150,20 @@ namespace Grafkit::Core {
 
 } // namespace Grafkit::Core
 
+namespace Grafkit {
+	struct Material; // Material "Shader + Texture + UBOs"
+	using MaterialPtr = std::shared_ptr<Material>;
+
+	class Texture; // Texture
+	using TexturePtr = std::shared_ptr<Texture>;
+
+	class Mesh; // Mesh "Model"
+	using MeshPtr = std::shared_ptr<Mesh>;
+
+	class Scenegraph;
+	using ScenegraphPtr = std::shared_ptr<Scenegraph>;
+} // namespace Grafkit
+
 namespace Grafkit::Resource {
 	class ResoureManger;
 	using ResoureMangerRef = RefWrapper<ResoureManger>;
@@ -158,18 +172,6 @@ namespace Grafkit::Resource {
 	template <typename ParamT, typename ResourceT> class ResourceBuilder;
 
 } // namespace Grafkit::Resource
-
-struct Material; // Material "Shader + Texture + UBOs"
-using MaterialPtr = std::shared_ptr<Material>;
-
-class Texture; // Texture
-using TexturePtr = std::shared_ptr<Texture>;
-
-class Mesh; // Mesh "Model"
-using MeshPtr = std::shared_ptr<Mesh>;
-
-class Scenegraph;
-using ScenegraphPtr = std::shared_ptr<Scenegraph>;
 
 namespace Grafkit::Animation {
 	struct Channel;
@@ -182,70 +184,5 @@ namespace Grafkit::Animation {
 	using AnimationPtr = std::shared_ptr<Animation>;
 
 } // namespace Grafkit::Animation
-
-// MARK: Helper functions
-namespace Grafkit::Core {
-	std::string VkResultAsString(VkResult errorCode)
-	{
-		switch (errorCode) {
-
-#define VK_ENUM_AS_STR(r) \
-	case VK_##r:          \
-		return #r
-			VK_ENUM_AS_STR(NOT_READY);
-			VK_ENUM_AS_STR(TIMEOUT);
-			VK_ENUM_AS_STR(EVENT_SET);
-			VK_ENUM_AS_STR(EVENT_RESET);
-			VK_ENUM_AS_STR(INCOMPLETE);
-			VK_ENUM_AS_STR(ERROR_OUT_OF_HOST_MEMORY);
-			VK_ENUM_AS_STR(ERROR_OUT_OF_DEVICE_MEMORY);
-			VK_ENUM_AS_STR(ERROR_INITIALIZATION_FAILED);
-			VK_ENUM_AS_STR(ERROR_DEVICE_LOST);
-			VK_ENUM_AS_STR(ERROR_MEMORY_MAP_FAILED);
-			VK_ENUM_AS_STR(ERROR_LAYER_NOT_PRESENT);
-			VK_ENUM_AS_STR(ERROR_EXTENSION_NOT_PRESENT);
-			VK_ENUM_AS_STR(ERROR_FEATURE_NOT_PRESENT);
-			VK_ENUM_AS_STR(ERROR_INCOMPATIBLE_DRIVER);
-			VK_ENUM_AS_STR(ERROR_TOO_MANY_OBJECTS);
-			VK_ENUM_AS_STR(ERROR_FORMAT_NOT_SUPPORTED);
-			VK_ENUM_AS_STR(ERROR_SURFACE_LOST_KHR);
-			VK_ENUM_AS_STR(ERROR_NATIVE_WINDOW_IN_USE_KHR);
-			VK_ENUM_AS_STR(SUBOPTIMAL_KHR);
-			VK_ENUM_AS_STR(ERROR_OUT_OF_DATE_KHR);
-			VK_ENUM_AS_STR(ERROR_INCOMPATIBLE_DISPLAY_KHR);
-			VK_ENUM_AS_STR(ERROR_VALIDATION_FAILED_EXT);
-			VK_ENUM_AS_STR(ERROR_INVALID_SHADER_NV);
-			VK_ENUM_AS_STR(ERROR_INCOMPATIBLE_SHADER_BINARY_EXT);
-#undef VK_ENUM_AS_STR
-
-		default:
-			return "UNKNOWN_ERROR";
-		}
-	}
-} // namespace Grafkit::Core
-
-// MARK: Macros
-#ifdef _DEBUG
-#define VK_CHECK_RESULT(f)                                                                                         \
-	{                                                                                                              \
-		VkResult result = (f);                                                                                     \
-		if (result != VK_SUCCESS) {                                                                                \
-			std::stringstream errorMessage;                                                                        \
-			errorMessage << "Fatal: VkResult is " << Grafkit::Core::VkResultAsString(result) << " in " << __FILE__ \
-						 << " at line " << std::to_string(__LINE__);                                               \
-			throw std::runtime_error(errorMessage.str());                                                          \
-		}                                                                                                          \
-	}
-#else
-#define VK_CHECK_RESULT(f)                                                                     \
-	{                                                                                          \
-		VkResult result = (f);                                                                 \
-		if (result != VK_SUCCESS) {                                                            \
-			std::stringstream errorMessage;                                                    \
-			errorMessage << "Fatal: VkResult is " << Grafkit::Core::VkResultAsString(result)); \
-			throw std::runtime_error(errorMessage.str());                                      \
-		}                                                                                      \
-	}
-#endif // _DEBUG
 
 #endif // __GRAFKIT__API_COMMON_H__
