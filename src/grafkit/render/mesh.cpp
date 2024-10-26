@@ -10,6 +10,7 @@ void Primitive::Draw(const Core::CommandBufferRef& commandBuffer) const
 	vkCmdDrawIndexed(**commandBuffer, indexCount, 1, indexOffset, vertexOffset, 0);
 }
 
+// MARK: Mesh
 Mesh::Mesh(const Core::DeviceRef& device)
 	: m_device(device)
 {
@@ -46,6 +47,34 @@ void Grafkit::Mesh::Destroy(const Core::DeviceRef& device)
 	}
 
 	m_primitives.clear();
-	m_vertexBuffer.Destroy(device);
-	m_indexBuffer.Destroy(device);
+}
+
+// MARK: FullScreenQuad
+FullScreenQuad::FullScreenQuad(const Core::DeviceRef& device)
+	: m_device(device)
+{
+}
+
+FullScreenQuad::~FullScreenQuad() { m_vertexBuffer.Destroy(m_device); }
+
+void FullScreenQuad::Create()
+{
+
+	std::vector<FullScreenQuad::Vertex> vertices = { {}, {}, {} };
+	m_vertexBuffer = Core::Buffer::CreateBuffer(m_device,
+		sizeof(vertices[0]) * sizeof(vertices),
+		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+		VMA_MEMORY_USAGE_CPU_TO_GPU);
+	m_vertexBuffer.Update(m_device, vertices.data(), sizeof(vertices[0]) * sizeof(vertices));
+}
+
+void Grafkit::FullScreenQuad::Bind(const Core::CommandBufferRef& commandBuffer) const
+{
+	std::array<VkDeviceSize, 1> offsets = { 0 };
+	vkCmdBindVertexBuffers(**commandBuffer, 0, 1, &m_vertexBuffer.buffer, offsets.data());
+}
+
+void Grafkit::FullScreenQuad::Draw(const Core::CommandBufferRef& commandBuffer) const
+{
+	vkCmdDraw(**commandBuffer, 3, 1, 0, 0);
 }

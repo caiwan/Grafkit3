@@ -62,8 +62,6 @@ namespace Grafkit {
 				},
 			} };
 		}
-
-		// TODO: Serialize / Deserialize
 	};
 
 	struct Primitive {
@@ -78,7 +76,6 @@ namespace Grafkit {
 		void Draw(const Core::CommandBufferRef& commandBuffer) const;
 	};
 
-	// TOOD: Use Class + proper dtor
 	class Mesh {
 	public:
 		friend class Scenegraph;
@@ -100,6 +97,45 @@ namespace Grafkit {
 		Core::Buffer m_vertexBuffer {};
 		Core::Buffer m_indexBuffer {};
 	};
+
+	class FullScreenQuad {
+	public:
+		FullScreenQuad(const Core::DeviceRef& device);
+		~FullScreenQuad();
+
+		void Create();
+		void Bind(const Core::CommandBufferRef& commandBuffer) const;
+		void Draw(const Core::CommandBufferRef& commandBuffer) const;
+
+		struct Vertex {
+			glm::vec3 position {};
+
+			static inline Core::VertexDescription GetVertexDescription(
+				const uint32_t inputBinding = 0, const uint32_t vertexbinding = 0)
+			{
+				return { .bindings = {
+					{
+						inputBinding,
+						sizeof(Vertex), // stride
+						VK_VERTEX_INPUT_RATE_VERTEX // inputRate
+					},
+				}, .attributes = {
+					{
+						0, // position
+						vertexbinding,
+						VK_FORMAT_R32G32_SFLOAT, // format
+						offsetof(Vertex, position), // offset
+					},
+				} };
+			}
+		};
+
+	private:
+		const Core::DeviceRef m_device;
+		Core::Buffer m_vertexBuffer {};
+	};
+
+	using FullScreenQuadPtr = std::shared_ptr<FullScreenQuad>;
 
 } // namespace Grafkit
 
