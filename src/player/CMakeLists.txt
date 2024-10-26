@@ -39,7 +39,6 @@ file(GLOB_RECURSE HEADER_FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/*.hxx
 )
 
-
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
 set_project_warnings(${PROJECT_NAME})

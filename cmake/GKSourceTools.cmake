@@ -76,23 +76,26 @@ function(generate_code_from_yaml_files)
 		endif ()
 	endforeach(SOURCE_FILE)
 
+	set(GENERATED_FILES "")
+
 	if (NOT ARGS_GENETATE_SINGLE_FILE) # Render each file separately
 		foreach(SOURCE_FILE ${ARGS_SOURCES})
 			if (NOT ARGS_FLATTEN_DIR_STRUCTURE)
 				file(RELATIVE_PATH GEN_REL_FILE ${CMAKE_CURRENT_SOURCE_DIR} ${SOURCE_FILE})
 			else()
-				get_filename_component(GEN_REL_FILE ${SOURCE_FILE} NAME_WE)
+				get_filename_component(${SOURCE_FILE} NAME_WE)
 			endif()
 
-			string(REPLACE ".gen.yaml" "" GEN_REL_FILE ${GEN_REL_FILE})
-
-			set(GENERATED_FILE ${ARGS_TARGET_DIR}/${ARGS_PREFIX}${GEN_REL_FILE}${ARGS_SUFFIX}${GENERATED_SUFFIX})
+			set(GENERATED_FILE ${ARGS_TARGET_DIR}/${GEN_REL_FILE})
+			get_filename_component(GENERATED_DIR ${GENERATED_FILE} DIRECTORY)
+			get_filename_component(GENERATED_NAME ${GENERATED_FILE} NAME)
+			string(REPLACE ".gen.yaml" "" GENERATED_NAME ${GENERATED_NAME})
+			set(GENERATED_FILE ${GENERATED_DIR}/${ARGS_PREFIX}${GENERATED_NAME}${ARGS_SUFFIX}${GENERATED_SUFFIX})
 			file(TO_CMAKE_PATH ${GENERATED_FILE} GENERATED_FILE)
 
-			file(MAKE_DIRECTORY ${ARGS_TARGET_DIR})
+			file(MAKE_DIRECTORY ${GENERATED_DIR})
 
 			set(CODEGEN_COMMAND ${PYTHON_VENV_EXECUTABLE} -m grafkit_tools.codegen --template ${ARGS_TEMPLATE} --output ${GENERATED_FILE} --input-files ${SOURCE_FILE})
-
 
 			if (NOT EXISTS ${GENERATED_FILE} OR ${SOURCE_FILE} IS_NEWER_THAN ${GENERATED_FILE})
 				message(STATUS "Generating ${GENERATED_FILE}")
@@ -108,8 +111,8 @@ function(generate_code_from_yaml_files)
 				COMMENT "Generating ${GENERATED_FILE}"
 				VERBATIM
 			)
+			list(APPEND GENERATED_FILES ${GENERATED_FILE})
 
-			set(${ARGS_GENERATED_FILES_ARG} "${${ARGS_GENERATED_FILES_ARG}}" ${GENERATED_FILE} PARENT_SCOPE)
 		endforeach(SOURCE_FILE)
 
 	else() # Render all files in one
@@ -146,9 +149,11 @@ function(generate_code_from_yaml_files)
 			VERBATIM
 		)
 
-		set(${ARGS_GENERATED_FILES_ARG} "${${ARGS_GENERATED_FILES_ARG}}" ${GENERATED_FILE} PARENT_SCOPE)
-
+		list(APPEND GENERATED_FILES ${GENERATED_FILE})
 	endif()
+
+	set(${ARGS_GENERATED_FILES_ARG} ${GENERATED_FILES} PARENT_SCOPE)
+
 endfunction()
 
 function(spirv_compile_shaders)
@@ -183,6 +188,7 @@ function(spirv_compile_shaders)
 		set(SPIRV "${ARGS_SHADER_BINARY_DIR}/${FILE_NAME}.spv")
 		set(SPIRV_COMMAND ${Vulkan_GLSLC_EXECUTABLE} ${SOURCE} -o ${SPIRV})
 
+		message(STATUS "Compiling ${GLSL} to ${SPIRV}")
 		if (NOT EXISTS ${SPIRV} OR ${SOURCE} IS_NEWER_THAN ${SPIRV})
 			message(STATUS "Generating ${GENERATED_FILE}")
 			execute_process(COMMAND ${SPIRV_COMMAND})
@@ -206,6 +212,7 @@ function(spirv_compile_shaders)
 		set(PACK_H_COMMAND ${PYTHON_VENV_EXECUTABLE} -m grafkit_tools.hexdump -x -n ${FILE_NAME} -i ${SPIRV} -o ${SPIRV_H} ${TEMPLATE})
 		set(PACK_C_COMMAND ${PYTHON_VENV_EXECUTABLE} -m grafkit_tools.hexdump -n ${FILE_NAME} -i ${SPIRV} -o ${SPIRV_C} ${TEMPLATE})
 
+		message(STATUS "Generating ${SPIRV_C}")
 		if (NOT EXISTS ${SPIRV_H} OR ${SPIRV} IS_NEWER_THAN ${SPIRV_H})
 			message(STATUS "Generating ${SPIRV_H}")
 			execute_process(COMMAND ${PACK_C_COMMAND})
@@ -220,6 +227,7 @@ function(spirv_compile_shaders)
 			COMMENT "Generating source file ${SPIRV_C}"
 			VERBATIM
 		)
+
 
 		list(APPEND SPIRV_GENERATED_SOURCE_FILES ${SPIRV_H} ${SPIRV_C})
 	endforeach()

@@ -240,7 +240,7 @@ function(set_project_clang_tidy TARGET_NAME)
 
 		add_custom_command(
 			OUTPUT ${TIDIED_SOURCE_FLAG}
-			COMMAND ${CLANG_TIDY_EXECUTABLE} ${SOURCE} ${CLANG_TIDY_CMD} --extra-arg=${INCLUDE_FLAGS} -p ${CMAKE_CURRENT_BINARY_DIR}
+			COMMAND ${CLANG_TIDY_EXECUTABLE} ${SOURCE} ${CLANG_TIDY_CMD} --extra-arg=${INCLUDE_FLAGS} -p ${CMAKE_BINARY_DIR}
 			COMMAND ${TOUCH_COMMAND}
 			DEPENDS "${SOURCE}"
 			COMMENT "Running clang-tidy with fix-ups on ${SOURCE}"
