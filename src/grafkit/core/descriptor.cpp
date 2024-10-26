@@ -26,6 +26,7 @@ void DescriptorSet::Bind(const Core::CommandBufferRef& commandBuffer,
 	const VkPipelineLayout& pipelineLayout,
 	const uint32_t frame) const noexcept
 {
+	assert(frame < m_descriptorSets.size());
 	vkCmdBindDescriptorSets(**commandBuffer,
 		VK_PIPELINE_BIND_POINT_GRAPHICS,
 		pipelineLayout,
@@ -121,8 +122,8 @@ DescriptorSetPtr DescriptorBuilder::Build()
 		throw std::runtime_error("Failed to create descriptor set layout!");
 	}
 
-	std::vector<VkDescriptorSet> descriptorSets
-		= m_device->GetDescriptorPool()->AllocateDescriptorSets(descriptorSetLayout, m_device->GetMaxFramesInFlight());
+	std::vector<VkDescriptorSet> descriptorSets = m_device->GetDescriptorPool()->AllocateDescriptorSets(
+		descriptorSetLayout, m_device->GetMaxConcurrentFrames());
 
 	return std::make_shared<DescriptorSet>(m_device, descriptorSetLayout, std::move(descriptorSets), m_descriptorSet);
 }

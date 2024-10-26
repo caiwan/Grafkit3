@@ -8,6 +8,7 @@
 #include "grafkit/core/instance.h"
 #include "grafkit/core/render_target.h"
 #include "grafkit/core/swap_chain.h"
+#include "grafkit/core/vulkan_utils.h"
 #include "grafkit/core/window.h"
 #include "grafkit/render.h"
 
@@ -47,10 +48,14 @@ BaseRenderContext::~BaseRenderContext()
 
 Core::CommandBufferRef BaseRenderContext::BeginCommandBuffer()
 {
-	m_currentImageIndex = m_swapChain->GetCurrentImageIndex();
-	m_nextFrameIndex = m_swapChain->AcquireNextFrame();
+	if (!m_swapChain->AcquireNextFrame()) {
+		// TOOD: Recreate swap chain
+		throw std::runtime_error("swap chain out of date!");
+	}
 
-	Core::CommandBufferPtr& commandBuffer = m_commandBuffers[m_currentImageIndex];
+	m_frameIndex = m_swapChain->GetCurrentFrameIndex();
+
+	Core::CommandBufferPtr& commandBuffer = m_commandBuffers[m_frameIndex];
 	commandBuffer->Reset();
 
 	VkCommandBufferBeginInfo beginInfo = Core::Initializers::CommandBufferBeginInfo();
@@ -61,7 +66,7 @@ Core::CommandBufferRef BaseRenderContext::BeginCommandBuffer()
 
 void BaseRenderContext::BeginFrame(const Core::CommandBufferRef& commandBuffer)
 {
-	m_renderTarget->BeginRenderPass(commandBuffer, m_currentImageIndex);
+	m_renderTarget->BeginRenderPass(commandBuffer, m_frameIndex);
 }
 
 void BaseRenderContext::EndFrame(const Core::CommandBufferRef& commandBuffer)
@@ -120,4 +125,10 @@ void Grafkit::RenderContext::AddStaticPipelineDescriptor(
 Grafkit::Core::GraphicsPipelineBuilder Grafkit::RenderContext::PipelineBuilder(uint32_t descriptorSlot) const
 {
 	return m_pipelineFactory->CreateGraphicsPipelineBuilder(this->GetDevice(), this->GetFrameBuffer(), descriptorSlot);
+}
+
+Grafkit::Core::GraphicsPipelineBuilder Grafkit::RenderContext::PipelineBuilder(
+	uint32_t descriptorSlot, const RenderTargetRef renderPass) const
+{
+	return m_pipelineFactory->CreateGraphicsPipelineBuilder(this->GetDevice(), renderPass, descriptorSlot);
 }

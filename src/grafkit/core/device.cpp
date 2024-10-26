@@ -11,13 +11,7 @@
 using namespace Grafkit::Core;
 
 constexpr uint32_t INITIAL_DESCRIPTOR_SET_SIZE = 128;
-
-constexpr std::array<VkFormat, 4> DEPTH_FORMATS = {
-	VK_FORMAT_D32_SFLOAT_S8_UINT,
-	VK_FORMAT_D32_SFLOAT,
-	VK_FORMAT_D24_UNORM_S8_UINT,
-	VK_FORMAT_D16_UNORM_S8_UINT,
-};
+constexpr uint32_t INITIAL_DESCRIPTOR_MAX_SETS = 8;
 
 Device::Device(const Core::InstanceRef& instance)
 	: m_instance(instance)
@@ -38,7 +32,7 @@ Device::Device(const Core::InstanceRef& instance)
 	InitializeAllocator();
 
 	m_descriptorPool = std::make_unique<Core::DescriptorPool>(MakeReference(*this),
-		m_deviceProperties.limits.maxPerStageDescriptorUniformBuffers,
+		INITIAL_DESCRIPTOR_MAX_SETS,
 		std::vector<DescriptorPool::PoolSet>({
 			{ VK_DESCRIPTOR_TYPE_SAMPLER, INITIAL_DESCRIPTOR_SET_SIZE },
 			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, INITIAL_DESCRIPTOR_SET_SIZE },
@@ -63,6 +57,7 @@ Device::~Device()
 	vkDestroyDevice(m_device, nullptr);
 }
 
+// MARK: Public methods
 void Device::WaitIdle() const { vkDeviceWaitIdle(m_device); }
 
 VkCommandBuffer Device::BeginSingleTimeCommands() const
@@ -103,6 +98,7 @@ void Device::EndSingleTimeCommands(const VkCommandBuffer& commandBuffer) const
 [[nodiscard]] DescriptorPoolRef Device::GetDescriptorPool() const { return MakeReference(*m_descriptorPool); }
 
 // -----------------------------------------------------------------------------------------------------------------------------------
+// MARK: Auxiliary methods
 
 void Device::PickPhysicalDevice()
 {
@@ -214,7 +210,7 @@ bool Device::IsDeviceSuitable(const VkPhysicalDevice& device) const
 
 	bool swapChainAdequate = false;
 	if (extensionsSupported) {
-		SwapChainSupportDetails swapChainSupport = QueryPhisicalDeviceSurfaceProperties(device);
+		SurfaceProperties swapChainSupport = QueryPhisicalDeviceSurfaceProperties(device);
 		swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
 	}
 
@@ -254,28 +250,32 @@ QueueFamilyIndices Device::FindQueueFamilies(const VkPhysicalDevice& physicalDev
 	return indices;
 }
 
-SwapChainSupportDetails Device::QueryPhisicalDeviceSurfaceProperties(const VkPhysicalDevice& physicalDevice) const
+// TODO -> Swap chain
+SurfaceProperties Device::QueryPhisicalDeviceSurfaceProperties(const VkPhysicalDevice& physicalDevice) const
 {
-	SwapChainSupportDetails details {};
+	SurfaceProperties details {};
 
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_instance->GetVkSurface(), &details.capabilities);
+	VK_CHECK_RESULT(
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_instance->GetVkSurface(), &details.capabilities));
 
 	uint32_t formatCount = 0;
-	vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_instance->GetVkSurface(), &formatCount, nullptr);
+	VK_CHECK_RESULT(
+		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_instance->GetVkSurface(), &formatCount, nullptr));
 
 	if (formatCount != 0) {
 		details.formats.resize(formatCount);
-		vkGetPhysicalDeviceSurfaceFormatsKHR(
-			physicalDevice, m_instance->GetVkSurface(), &formatCount, details.formats.data());
+		VK_CHECK_RESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(
+			physicalDevice, m_instance->GetVkSurface(), &formatCount, details.formats.data()));
 	}
 
 	uint32_t presentModeCount = 0;
-	vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_instance->GetVkSurface(), &presentModeCount, nullptr);
+	VK_CHECK_RESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(
+		physicalDevice, m_instance->GetVkSurface(), &presentModeCount, nullptr));
 
 	if (presentModeCount != 0) {
 		details.presentModes.resize(presentModeCount);
-		vkGetPhysicalDeviceSurfacePresentModesKHR(
-			physicalDevice, m_instance->GetVkSurface(), &presentModeCount, details.presentModes.data());
+		VK_CHECK_RESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(
+			physicalDevice, m_instance->GetVkSurface(), &presentModeCount, details.presentModes.data()));
 	}
 
 	return details;
@@ -284,10 +284,10 @@ SwapChainSupportDetails Device::QueryPhisicalDeviceSurfaceProperties(const VkPhy
 bool Device::CheckDeviceExtensionSupport(const VkPhysicalDevice& device) const
 {
 	uint32_t extensionCount;
-	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
+	VK_CHECK_RESULT(vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr));
 
 	std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
+	VK_CHECK_RESULT(vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data()));
 
 	std::set<std::string> requiredExtensions(Instance::DEVICE_EXTENSIONS.begin(), Instance::DEVICE_EXTENSIONS.end());
 
@@ -308,8 +308,10 @@ void Device::InitializeAllocator()
 }
 
 // ----------------------------------------------------------------------------
+// MARK: Device Properties
 
-QueueFamilyIndices Device::GetQueueFamilies() const
+// TOOD -> Swap chain
+[[nodiscard]] QueueFamilyIndices Device::GetQueueFamilies() const
 {
 	if (!m_queueFamilyIndices.has_value()) {
 		m_queueFamilyIndices = FindQueueFamilies(m_physicalDevice);
@@ -317,88 +319,51 @@ QueueFamilyIndices Device::GetQueueFamilies() const
 	return m_queueFamilyIndices.value();
 }
 
-[[nodiscard]] SwapChainSupportDetails Device::GetSwapChainSupportDetails() const
+SurfaceProperties Device::GetSurfaceProperties() const
 {
-	if (!m_swapChainSupportDetails.has_value()) {
-		m_swapChainSupportDetails = QueryPhisicalDeviceSurfaceProperties(m_physicalDevice);
+	if (!m_surfaceProperties.has_value()) {
+		m_surfaceProperties = QueryPhisicalDeviceSurfaceProperties(m_physicalDevice);
 	}
-	return m_swapChainSupportDetails.value();
+	return m_surfaceProperties.value();
 }
 
-VkSurfaceFormatKHR Device::ChooseSwapSurfaceFormat() const
+uint32_t Device::GetMaxConcurrentFrames() const
 {
-	const SwapChainSupportDetails swapChainSupport = GetSwapChainSupportDetails();
-	const std::vector<VkSurfaceFormatKHR>& availableFormats = swapChainSupport.formats;
+	// TODO: This should ba updated when the swap chain is recreated with the actual image count
+	if (!m_framesInFligtCount.has_value()) {
+		const SurfaceProperties& swapChainSupport = GetSurfaceProperties();
 
-	for (const auto& availableFormat : availableFormats) {
-		if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB
-			&& availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
-			return availableFormat;
-		}
-	}
-
-	return availableFormats[0];
-}
-
-VkPresentModeKHR Device::ChooseSwapPresentMode() const
-{
-	const SwapChainSupportDetails swapChainSupport = GetSwapChainSupportDetails();
-	const std::vector<VkPresentModeKHR>& availablePresentModes = swapChainSupport.presentModes;
-
-	for (const auto& availablePresentMode : availablePresentModes) {
-		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
-			return availablePresentMode;
-		}
-	}
-
-	return VK_PRESENT_MODE_FIFO_KHR;
-}
-
-VkFormat Device::ChooseDepthFormat() const
-{
-	VkFormatProperties props {};
-	for (VkFormat format : DEPTH_FORMATS) {
-		vkGetPhysicalDeviceFormatProperties(m_physicalDevice, format, &props);
-
-		if (props.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) {
-			return format;
-		}
-	}
-
-	throw std::runtime_error("failed to find supported format!");
-}
-
-uint32_t Device::GetMaxFramesInFlight() const
-{
-	if (!m_maxImageCount.has_value()) {
-		const SwapChainSupportDetails swapChainSupport = GetSwapChainSupportDetails();
+		// Use one more than the minimum if possible (assume double buffering at least)
 		uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
 		if (swapChainSupport.capabilities.maxImageCount > 0
 			&& imageCount > swapChainSupport.capabilities.maxImageCount) {
 			imageCount = swapChainSupport.capabilities.maxImageCount;
 		}
-		m_maxImageCount = imageCount;
+
+		m_framesInFligtCount = imageCount;
 	}
 
-	return m_maxImageCount.value();
+	return m_framesInFligtCount.value();
 }
 
-#ifdef _DEBUG
+// ----------------------------------------------------------------------------
+// MARK: Debug methods
 // TODO: Should be moved to a separate file
+#ifdef _DEBUG
 namespace {
-	// NOLINTNEXTLINE modernize-avoid-c-arrays - Keep C array for fixed size for Vulkan API
+	// NOLINTBEGIN modernize-avoid-c-arrays - Keep C array for fixed size for Vulkan API
 	template <size_t UUID_SIZE> inline std::string PrintUUID(const uint8_t (&uuid)[UUID_SIZE])
 	{
 		std::stringstream ss;
 		for (int i = 0; i < UUID_SIZE; ++i) {
 			ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(uuid[i]);
-			// Add dashes to format as UUID: 8-4-4-4-12 format
 			if (i == 3 || i == 5 || i == 7 || i == 9) {
 				ss << "-";
 			}
 		}
 		return ss.str();
 	}
+	// NOLINTEND modernize-avoid-c-arrays
 
 } // namespace
 

@@ -69,9 +69,9 @@ public:
 			Grafkit::MakeReferenceAs<Grafkit::Asset::IAssetLoader>(*m_assetLoader));
 	}
 
-	virtual ~HelloApplication() = default;
+	~HelloApplication() override = default;
 
-	virtual void Init() override
+	void Init() override
 	{
 		const auto& device = m_renderContext->GetDevice();
 		const auto resources = Grafkit::MakeReference(*m_resources);
@@ -189,7 +189,7 @@ public:
 		m_renderContext->EndFrame(commandBuffer);
 	}
 
-	virtual void Shutdown() override
+	void Shutdown() override
 	{
 		m_sceneGraph.reset();
 		m_materialDescriptor.reset();

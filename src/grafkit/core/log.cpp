@@ -1,5 +1,5 @@
+#include "grafkit/core/log.h"
 #include "stdafx.h"
-#include <grafkit/core/log.h>
 #include <iostream>
 
 using namespace Grafkit::Core;
@@ -7,6 +7,7 @@ using namespace Grafkit::Core;
 std::mutex Log::GMutex;
 std::unique_ptr<Logger> Log::GLogger;
 
+constexpr std::string_view TRACE_COLOR_CODE = "\033[1;90m";
 constexpr std::string_view DEBUG_COLOR_CODE = "\033[1;30m";
 constexpr std::string_view WARNING_COLOR_CODE = "\033[1;33m";
 constexpr std::string_view ERROR_COLOR_CODE = "\033[1;31m";
@@ -18,6 +19,9 @@ void Grafkit::Core::DefaultLogger::Log(const LogLevel level, const std::string& 
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	switch (level) {
+	case LogLevel::Trace:
+		std::cout << TRACE_COLOR_CODE << "TRACE: " << message << RESET_COLOR_CODE << std::endl;
+		break;
 	case LogLevel::Debug:
 		std::cout << DEBUG_COLOR_CODE << "DEBUG: " << message << RESET_COLOR_CODE << std::endl;
 		break;

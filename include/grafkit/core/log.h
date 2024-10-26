@@ -15,9 +15,14 @@ namespace Grafkit::Core {
 
 	class Logger {
 	public:
-		enum class LogLevel { Debug, Info, Warning, Error };
+		enum class LogLevel { Trace, Debug, Info, Warning, Error };
 
 		virtual ~Logger() = default;
+
+		template <typename... Args> void Trace(const std::string& message, Args&&... args) const
+		{
+			LogMessage(LogLevel::Trace, message, std::forward<Args>(args)...);
+		};
 
 		template <typename... Args> void Debug(const std::string& message, Args&&... args) const
 		{

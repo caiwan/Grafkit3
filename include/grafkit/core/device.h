@@ -20,7 +20,7 @@ namespace Grafkit::Core {
 		bool IsComplete() const { return graphicsFamily.has_value() && presentFamily.has_value(); }
 	};
 
-	struct SwapChainSupportDetails {
+	struct SurfaceProperties {
 		VkSurfaceCapabilitiesKHR capabilities;
 		std::vector<VkSurfaceFormatKHR> formats;
 		std::vector<VkPresentModeKHR> presentModes;
@@ -36,21 +36,25 @@ namespace Grafkit::Core {
 		void EndSingleTimeCommands(const VkCommandBuffer& commandBuffer) const;
 
 		[[nodiscard]] const VkDevice& operator*() const { return m_device; }
+
 		[[nodiscard]] const VkDevice& GetVkDevice() const { return m_device; }
 
 		// TODO: This is not quite neccessary - Only used during rendering
 		[[nodiscard]] const VkPhysicalDevice& GetVkPhysicalDevice() const { return m_physicalDevice; }
+
 		[[nodiscard]] const VkQueue& GetVkGraphicsQueue() const { return m_graphicsQueue; }
+
 		[[nodiscard]] const VkQueue& GetVkPresentQueue() const { return m_presentQueue; }
 
 		[[nodiscard]] const VkCommandPool& GetVkCommandPool() const { return m_commandPool; }
+
 		[[nodiscard]] const VmaAllocator& GetVmaAllocator() const { return m_allocator; }
 
 		[[nodiscard]] DescriptorPoolRef GetDescriptorPool() const;
 
 		// TODO: This is not quite neccessary - Only used during initialization
-		[[nodiscard]] QueueFamilyIndices GetQueueFamilies() const;
-		[[nodiscard]] SwapChainSupportDetails GetSwapChainSupportDetails() const;
+		[[nodiscard]] QueueFamilyIndices GetQueueFamilies() const; // TODO -> SwapChain
+		[[nodiscard]] SurfaceProperties GetSurfaceProperties() const; // TODO -> SwapChain
 
 		[[nodiscard]] bool CheckDeviceExtensionSupport() const
 		{
@@ -58,14 +62,11 @@ namespace Grafkit::Core {
 			return CheckDeviceExtensionSupport(m_physicalDevice);
 		}
 
-		[[nodiscard]] VkSurfaceFormatKHR ChooseSwapSurfaceFormat() const;
-		[[nodiscard]] VkPresentModeKHR ChooseSwapPresentMode() const;
-		[[nodiscard]] VkFormat ChooseDepthFormat() const;
-
-		[[nodiscard]] uint32_t GetMaxFramesInFlight() const;
-
 		[[nodiscard]] const VkPhysicalDeviceProperties& GetDeviceProperties() { return m_deviceProperties; }
+
 		[[nodiscard]] const VkPhysicalDeviceLimits& GetDeviceLimits() { return m_deviceProperties.limits; }
+
+		[[nodiscard]] uint32_t GetMaxConcurrentFrames() const;
 
 	private:
 		void PickPhysicalDevice();
@@ -73,20 +74,19 @@ namespace Grafkit::Core {
 		void CreateGraphicsQueue();
 		void CreatePresentQueue();
 		void CreateCommandPool();
-
-#ifdef _DEBUG
-		void PrintVulkanDeviceLimits() const;
-#endif
-
 		void InitializeAllocator();
 
 		[[nodiscard]] QueueFamilyIndices FindQueueFamilies(const VkPhysicalDevice& physicalDevice) const;
 
-		[[nodiscard]] SwapChainSupportDetails QueryPhisicalDeviceSurfaceProperties(
-			const VkPhysicalDevice& physicalDevice) const; // TODO -> Instance
+		[[nodiscard]] SurfaceProperties QueryPhisicalDeviceSurfaceProperties(
+			const VkPhysicalDevice& physicalDevice) const; // TODO -> SwapChain
 
-		[[nodiscard]] bool IsDeviceSuitable(const VkPhysicalDevice& m_device) const; // TODO -> Instance
-		[[nodiscard]] bool CheckDeviceExtensionSupport(const VkPhysicalDevice& m_device) const; // TODO -> Instance
+		[[nodiscard]] bool IsDeviceSuitable(const VkPhysicalDevice& m_device) const;
+		[[nodiscard]] bool CheckDeviceExtensionSupport(const VkPhysicalDevice& m_device) const;
+
+#ifdef _DEBUG
+		void PrintVulkanDeviceLimits() const;
+#endif
 
 		const Core::InstanceRef m_instance;
 
@@ -104,8 +104,8 @@ namespace Grafkit::Core {
 		// Cache for expensive queries
 		// TOOD: Move to a separate class/struct if needed
 		mutable std::optional<QueueFamilyIndices> m_queueFamilyIndices = std::nullopt;
-		mutable std::optional<SwapChainSupportDetails> m_swapChainSupportDetails = std::nullopt;
-		mutable std::optional<uint32_t> m_maxImageCount = std::nullopt;
+		mutable std::optional<SurfaceProperties> m_surfaceProperties = std::nullopt;
+		mutable std::optional<uint32_t> m_framesInFligtCount = std::nullopt;
 
 		VkPhysicalDeviceProperties m_deviceProperties {};
 	};

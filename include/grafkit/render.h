@@ -41,6 +41,7 @@ namespace Grafkit {
 		~BaseRenderContext() override;
 
 		[[nodiscard]] const Core::DeviceRef GetDevice() const final { return MakeReference(*m_device); }
+
 		[[nodiscard]] const Core::RenderTargetRef GetFrameBuffer() const final
 		{
 			return MakeReference(*m_renderTarget);
@@ -55,7 +56,7 @@ namespace Grafkit {
 		[[nodiscard]] float GetAspectRatio() const;
 		[[nodiscard]] VkExtent2D GetExtent() const;
 
-		[[nodiscard]] uint32_t GetNextFrameIndex() const { return m_nextFrameIndex; }
+		[[nodiscard]] uint32_t GetNextFrameIndex() const { return m_frameIndex; }
 
 	private:
 		const Core::WindowRef m_window;
@@ -68,8 +69,8 @@ namespace Grafkit {
 
 		std::vector<Core::CommandBufferPtr> m_commandBuffers;
 
-		uint32_t m_currentImageIndex = 0;
-		uint32_t m_nextFrameIndex = 0;
+		// uint32_t m_currentImageIndex = 0;
+		uint32_t m_frameIndex = 0;
 
 		void InitializeCommandBuffers();
 	};
@@ -80,10 +81,12 @@ namespace Grafkit {
 	public:
 		explicit RenderContext(const Core::WindowRef& window);
 
-		[[nodiscard]] Grafkit::Core::DescriptorBuilder DescriptorBuilder() const;
+		[[nodiscard]] Core::DescriptorBuilder DescriptorBuilder() const;
 
 		void AddStaticPipelineDescriptor(const uint32_t slot, const Core::PipelineDescriptor& descriptors);
-		[[nodiscard]] Grafkit::Core::GraphicsPipelineBuilder PipelineBuilder(uint32_t descriptorSlot) const;
+		[[nodiscard]] Core::GraphicsPipelineBuilder PipelineBuilder(uint32_t descriptorSlot) const;
+		[[nodiscard]] Core::GraphicsPipelineBuilder PipelineBuilder(
+			uint32_t descriptorSlot, const Core::RenderTargetRef renderPass) const;
 
 	private:
 		std::unique_ptr<Core::PipelineFactory> m_pipelineFactory;

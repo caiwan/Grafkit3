@@ -16,7 +16,11 @@ Mesh::Mesh(const Core::DeviceRef& device)
 {
 }
 
-Mesh::~Mesh() { Destroy(m_device); }
+Mesh::~Mesh()
+{
+	m_indexBuffer.Destroy(m_device);
+	m_vertexBuffer.Destroy(m_device);
+}
 
 void Mesh::Create(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
 {
@@ -38,15 +42,6 @@ void Grafkit::Mesh::Bind(const Core::CommandBufferRef& commandBuffer, uint32_t v
 	std::array<VkDeviceSize, 1> offsets = { vertexOffset };
 	vkCmdBindVertexBuffers(**commandBuffer, 0, 1, &m_vertexBuffer.buffer, offsets.data());
 	vkCmdBindIndexBuffer(**commandBuffer, m_indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-}
-
-void Grafkit::Mesh::Destroy(const Core::DeviceRef& device)
-{
-	for (auto& primitive : m_primitives) {
-		primitive.material.reset();
-	}
-
-	m_primitives.clear();
 }
 
 // MARK: FullScreenQuad

@@ -1,7 +1,7 @@
+#include "grafkit/core/buffer.h"
+#include "grafkit/core/device.h"
+#include "grafkit/core/initializers.h"
 #include "stdafx.h"
-#include <grafkit/core/buffer.h>
-#include <grafkit/core/device.h>
-#include <grafkit/core/initializers.h>
 
 using namespace Grafkit::Core;
 
@@ -52,6 +52,7 @@ void Grafkit::Core::RingBuffer::Destroy(const DeviceRef& device)
 	for (auto& buffer : buffers) {
 		vmaDestroyBuffer(device->GetVmaAllocator(), buffer.buffer, buffer.allocation);
 	}
+	buffers.clear();
 }
 
 RingBuffer RingBuffer::CreateBuffer(
@@ -59,7 +60,7 @@ RingBuffer RingBuffer::CreateBuffer(
 {
 	RingBuffer ringBuffer = {};
 
-	for (size_t i = 0; i < device->GetMaxFramesInFlight(); i++) {
+	for (size_t i = 0; i < device->GetMaxConcurrentFrames(); i++) {
 		VkBufferCreateInfo bufferInfo = Initializers::BufferCreateInfo(usage, size);
 
 		VmaAllocationCreateInfo vmaAllocInfo = {};
@@ -89,5 +90,6 @@ RingBuffer RingBuffer::CreateBuffer(
 void Grafkit::Core::RingBuffer::Update(
 	[[maybe_unused]] const DeviceRef& device, const void* data, const size_t size, const uint32_t frameIndex)
 {
+	assert(frameIndex < buffers.size());
 	memcpy(mappedData[frameIndex], data, size);
 }

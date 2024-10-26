@@ -80,7 +80,7 @@ namespace Grafkit {
 	public:
 		friend class Scenegraph;
 		Mesh(const Core::DeviceRef& device);
-		~Mesh();
+		virtual ~Mesh();
 
 		void Create(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 		void AddPrimitive(const Primitive& primitive) { m_primitives.push_back(primitive); }
@@ -88,8 +88,6 @@ namespace Grafkit {
 		void Bind(const Core::CommandBufferRef& commandBuffer, uint32_t vertexOffset) const;
 
 	private:
-		void Destroy(const Core::DeviceRef& device);
-
 		const Core::DeviceRef m_device;
 
 		uint32_t m_id;
