@@ -2,7 +2,6 @@
   "version": "2.0.0",
   "tasks": [
     {
-      // https://github.com/microsoft/vscode-cmake-tools/blob/main/docs/tasks.md
       "type": "cmake",
       "label": "CMake: build player",
       "command": "build",
@@ -11,7 +10,7 @@
       ],
       "group": "build",
       "problemMatcher": [],
-      "detail": "CMake template build task"
+      "detail": "CMake build task"
     },
     {
       "type": "cmake",
@@ -22,7 +21,7 @@
       ],
       "group": "build",
       "problemMatcher": [],
-      "detail": "CMake template build task"
-    },
+      "detail": "CMake build task"
+    }
   ]
 }
