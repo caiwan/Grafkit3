@@ -17,29 +17,28 @@
 #include "json_serializers.h"
 #include "json/json_registry.h"
 
-namespace Grafkit::Serialization {
+namespace Grafkit::Serialization
+{
 
-	void RegisterJsonDeserializers(JsonSerializerRegistry& registry)
+	void RegisterJsonDeserializers(JsonSerializerRegistry &registry)
 	{
 		// MARK: animation_desc
 
 		// MARK: image_desc
 
 		registry.Register<Grafkit::Resource::ImageDesc>(
-			[](const nlohmann::json& json, std::any& object) { object = json.get<Grafkit::Resource::ImageDesc>(); });
+			[](const nlohmann::json &json, std::any &object) { object = json.get<Grafkit::Resource::ImageDesc>(); });
 
-		registry.Register<Grafkit::Resource::SolidImageDesc>([](const nlohmann::json& json, std::any& object) {
-			object = json.get<Grafkit::Resource::SolidImageDesc>();
-		});
+		registry.Register<Grafkit::Resource::SolidImageDesc>([](const nlohmann::json &json, std::any &object)
+			{ object = json.get<Grafkit::Resource::SolidImageDesc>(); });
 
-		registry.Register<Grafkit::Resource::CheckerImageDesc>([](const nlohmann::json& json, std::any& object) {
-			object = json.get<Grafkit::Resource::CheckerImageDesc>();
-		});
+		registry.Register<Grafkit::Resource::CheckerImageDesc>([](const nlohmann::json &json, std::any &object)
+			{ object = json.get<Grafkit::Resource::CheckerImageDesc>(); });
 
 		// MARK: material_desc
 
 		registry.Register<Grafkit::Resource::MaterialDesc>(
-			[](const nlohmann::json& json, std::any& object) { object = json.get<Grafkit::Resource::MaterialDesc>(); });
+			[](const nlohmann::json &json, std::any &object) { object = json.get<Grafkit::Resource::MaterialDesc>(); });
 
 		// MARK: mesh_desc
 

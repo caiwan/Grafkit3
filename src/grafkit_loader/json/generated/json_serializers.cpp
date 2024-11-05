@@ -28,12 +28,14 @@
 // NOLINTBEGIN(readability-identifier-naming) The naming has to match with nlohmann_json
 
 /* animation_desc */
-namespace Grafkit::Resource {
+namespace Grafkit::Resource
+{
 } // namespace Grafkit::Resource
 
 /* image_desc */
-namespace Grafkit::Resource {
-	void to_json(nlohmann::json& j, const ImageDesc& obj)
+namespace Grafkit::Resource
+{
+	void to_json(nlohmann::json &j, const ImageDesc &obj)
 	{
 		j["image"] = obj.image;
 		j["size"] = obj.size;
@@ -42,7 +44,7 @@ namespace Grafkit::Resource {
 		j["useMipmap"] = obj.useMipmap;
 	}
 
-	void from_json(const nlohmann::json& j, ImageDesc& obj)
+	void from_json(const nlohmann::json &j, ImageDesc &obj)
 	{
 		obj.image = j["image"].get<std::vector<uint8_t>>();
 		obj.size = j["size"].get<glm::uvec3>();
@@ -51,11 +53,17 @@ namespace Grafkit::Resource {
 		obj.useMipmap = j["useMipmap"].get<bool>();
 	}
 
-	void to_json(nlohmann::json& j, const SolidImageDesc& obj) { j["color"] = obj.color; }
+	void to_json(nlohmann::json &j, const SolidImageDesc &obj)
+	{
+		j["color"] = obj.color;
+	}
 
-	void from_json(const nlohmann::json& j, SolidImageDesc& obj) { obj.color = j["color"].get<glm::u8vec4>(); }
+	void from_json(const nlohmann::json &j, SolidImageDesc &obj)
+	{
+		obj.color = j["color"].get<glm::u8vec4>();
+	}
 
-	void to_json(nlohmann::json& j, const CheckerImageDesc& obj)
+	void to_json(nlohmann::json &j, const CheckerImageDesc &obj)
 	{
 		j["size"] = obj.size;
 		j["divisions"] = obj.divisions;
@@ -64,7 +72,7 @@ namespace Grafkit::Resource {
 		j["useMipmap"] = obj.useMipmap;
 	}
 
-	void from_json(const nlohmann::json& j, CheckerImageDesc& obj)
+	void from_json(const nlohmann::json &j, CheckerImageDesc &obj)
 	{
 		obj.size = j["size"].get<glm::uvec3>();
 		obj.divisions = j["divisions"].get<glm::uvec2>();
@@ -75,8 +83,9 @@ namespace Grafkit::Resource {
 } // namespace Grafkit::Resource
 
 /* material_desc */
-namespace Grafkit::Resource {
-	void to_json(nlohmann::json& j, const MaterialDesc& obj)
+namespace Grafkit::Resource
+{
+	void to_json(nlohmann::json &j, const MaterialDesc &obj)
 	{
 		j["name"] = obj.name;
 		j["type"] = obj.type;
@@ -84,7 +93,7 @@ namespace Grafkit::Resource {
 		j["textures"] = obj.textures;
 	}
 
-	void from_json(const nlohmann::json& j, MaterialDesc& obj)
+	void from_json(const nlohmann::json &j, MaterialDesc &obj)
 	{
 		obj.name = j["name"].get<std::string>();
 		obj.type = j["type"].get<uint32_t>();
@@ -94,11 +103,13 @@ namespace Grafkit::Resource {
 } // namespace Grafkit::Resource
 
 /* mesh_desc */
-namespace Grafkit::Resource {
+namespace Grafkit::Resource
+{
 } // namespace Grafkit::Resource
 
 /* scene_desc */
-namespace Grafkit::Resource {
+namespace Grafkit::Resource
+{
 } // namespace Grafkit::Resource
 
 // NOLINTEND(readability-identifier-naming)

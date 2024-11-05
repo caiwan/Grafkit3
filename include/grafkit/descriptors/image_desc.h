@@ -17,14 +17,17 @@
 #include <vector>
 
 /* image_desc */
-namespace Grafkit::Resource {
-	enum class ImageFormat {
+namespace Grafkit::Resource
+{
+	enum class ImageFormat
+	{
 		RGB = 1,
 		RGBA = 2,
 		Grayscale = 3,
 	};
 
-	struct ImageDesc {
+	struct ImageDesc
+	{
 		std::vector<uint8_t> image;
 		glm::uvec3 size;
 		ImageFormat format;
@@ -32,11 +35,13 @@ namespace Grafkit::Resource {
 		bool useMipmap = false;
 	};
 
-	struct SolidImageDesc {
+	struct SolidImageDesc
+	{
 		glm::u8vec4 color;
 	};
 
-	struct CheckerImageDesc {
+	struct CheckerImageDesc
+	{
 		glm::uvec3 size;
 		glm::uvec2 divisions;
 		glm::u8vec4 color1;

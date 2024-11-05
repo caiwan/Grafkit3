@@ -7,22 +7,19 @@
 #include "grafkit/core/image.h"
 #include "grafkit/core/render_target.h"
 #include "grafkit/core/swap_chain.h"
+#include "grafkit/core/vulkan_utils.h"
 
 using namespace Grafkit::Core;
 
 // MARK: RenderTarget
-RenderTarget::RenderTarget(const DeviceRef& device,
+RenderTarget::RenderTarget(const DeviceRef &device,
 	const VkRenderPass renderPass,
 	const VkExtent2D extent,
 	std::vector<VkFramebuffer> frameBuffers,
 	const VkSampler sample,
 	std::vector<RenderTargetAttachment> attachments)
-	: m_device(device)
-	, m_renderPass(renderPass)
-	, m_extent(extent)
-	, m_frameBuffers(std::move(frameBuffers))
-	, m_attachments(std::move(attachments))
-	, m_sampler(sample)
+	: m_device(device), m_renderPass(renderPass), m_extent(extent), m_frameBuffers(std::move(frameBuffers)),
+	  m_attachments(std::move(attachments)), m_sampler(sample)
 {
 	SetupViewport();
 }
@@ -31,40 +28,45 @@ RenderTarget::~RenderTarget()
 {
 	vkDestroySampler(m_device->GetVkDevice(), m_sampler, nullptr);
 	vkDestroyRenderPass(m_device->GetVkDevice(), m_renderPass, nullptr);
-	for (auto& frameBuffer : m_frameBuffers) {
+	for (auto &frameBuffer : m_frameBuffers)
+	{
 		vkDestroyFramebuffer(m_device->GetVkDevice(), frameBuffer, nullptr);
 	}
-	for (auto& attachment : m_attachments) {
-		if (attachment.image) {
+
+	for (auto &attachment : m_attachments)
+	{
+		if (attachment.image)
+		{
 			attachment.image.reset();
 		}
 	}
 }
 
-void RenderTarget::SetClearColor(const uint32_t index, const VkClearColorValue& color)
+void RenderTarget::SetClearColor(const uint32_t index, const VkClearColorValue &color)
 {
 	assert(index < m_attachments.size());
 	m_attachments[index].clearValue.color = color;
 }
 
-void RenderTarget::SetClearDepth(const uint32_t index, const VkClearDepthStencilValue& depthStencil)
+void RenderTarget::SetClearDepth(const uint32_t index, const VkClearDepthStencilValue &depthStencil)
 {
 	assert(index < m_attachments.size());
 	m_attachments[index].clearValue.depthStencil = depthStencil;
 }
 
-void RenderTarget::BeginRenderPass(const CommandBufferRef& commandBuffer, const uint32_t imageIndex) const
+void RenderTarget::BeginRenderPass(const CommandBufferRef &commandBuffer, const uint32_t imageIndex) const
 {
 	VkRenderPassBeginInfo renderPassInfo = Core::Initializers::RenderPassBeginInfo();
 	renderPassInfo.pNext = nullptr;
 	renderPassInfo.renderPass = m_renderPass;
-	renderPassInfo.renderArea.offset = { 0, 0 };
+	renderPassInfo.renderArea.offset = {0, 0};
 	renderPassInfo.renderArea.extent = m_extent;
 	renderPassInfo.framebuffer = m_frameBuffers[imageIndex];
 
 	std::vector<VkClearValue> clearValues;
 	clearValues.reserve(m_attachments.size());
-	for (const auto& attachment : m_attachments) {
+	for (const auto &attachment : m_attachments)
+	{
 		clearValues.push_back(attachment.clearValue);
 	}
 
@@ -76,7 +78,7 @@ void RenderTarget::BeginRenderPass(const CommandBufferRef& commandBuffer, const 
 	vkCmdBeginRenderPass(**commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
-void Grafkit::Core::RenderTarget::EndRenderPass(const CommandBufferRef& commandBuffer) const
+void Grafkit::Core::RenderTarget::EndRenderPass(const CommandBufferRef &commandBuffer) const
 {
 	vkCmdEndRenderPass(**commandBuffer);
 }
@@ -90,23 +92,23 @@ void Grafkit::Core::RenderTarget::SetupViewport()
 	m_viewport.minDepth = 0.0f;
 	m_viewport.maxDepth = 1.0f;
 
-	m_scissor.offset = { 0, 0 };
+	m_scissor.offset = {0, 0};
 	m_scissor.extent = m_extent;
 }
 
 // MARK: RenderTargetBuilder
 
-RenderTargetBuilder::RenderTargetBuilder(const DeviceRef& device)
-	: m_device(device)
+RenderTargetBuilder::RenderTargetBuilder(const DeviceRef &device) : m_device(device)
 {
 }
 
-RenderTargetBuilder& RenderTargetBuilder::CreateAttachments(const SwapChainRef& swapChain)
+RenderTargetBuilder &RenderTargetBuilder::CreateAttachments(const SwapChainRef &swapChain)
 {
 	m_swapChainAttachments.clear();
 	m_swapChainAttachments.reserve(swapChain->GetImageCount());
-	for (uint32_t index = 0; index < swapChain->GetImageCount(); ++index) {
-		RenderTargetAttachmentInfo& info = m_swapChainAttachments.emplace_back();
+	for (uint32_t index = 0; index < swapChain->GetImageCount(); ++index)
+	{
+		RenderTargetAttachmentInfo &info = m_swapChainAttachments.emplace_back();
 
 		info.image = swapChain->GetImage(index);
 		info.format = swapChain->GetFormat();
@@ -119,25 +121,25 @@ RenderTargetBuilder& RenderTargetBuilder::CreateAttachments(const SwapChainRef& 
 	return *this;
 }
 
-RenderTargetBuilder& RenderTargetBuilder::AddAttachments(const std::vector<RenderTargetAttachmentInfo>& attachments)
+RenderTargetBuilder &RenderTargetBuilder::AddAttachments(const std::vector<RenderTargetAttachmentInfo> &attachments)
 {
 	m_attachments.insert(m_attachments.end(), attachments.begin(), attachments.end());
 	return *this;
 }
 
-RenderTargetBuilder& RenderTargetBuilder::AddAttachment(const RenderTargetAttachmentInfo& attachments)
+RenderTargetBuilder &RenderTargetBuilder::AddAttachment(const RenderTargetAttachmentInfo &attachments)
 {
 	m_attachments.push_back(attachments);
 	return *this;
 }
 
-RenderTargetBuilder& Grafkit::Core::RenderTargetBuilder::AddAttachment(
+RenderTargetBuilder &Grafkit::Core::RenderTargetBuilder::AddAttachment(
 	const VkFormat format, const VkImageUsageFlags usage, const VkSampleCountFlagBits sampleCount)
 {
-	m_attachments.push_back({ nullptr, 1, format, usage, sampleCount });
+	m_attachments.push_back({nullptr, 1, format, usage, sampleCount});
 	return *this;
 }
-RenderTargetBuilder& RenderTargetBuilder::SetSize(const VkExtent2D& size)
+RenderTargetBuilder &RenderTargetBuilder::SetSize(const VkExtent2D &size)
 {
 	m_extent = size;
 	return *this;
@@ -150,10 +152,11 @@ RenderTargetPtr RenderTargetBuilder::Build() const
 	renderTargetAttachments.reserve(m_attachments.size() + (m_swapChainAttachments.empty() ? 0 : 1));
 
 	// Create swap chain attachment if needed
-	if (!m_swapChainAttachments.empty()) {
+	if (!m_swapChainAttachments.empty())
+	{
 		RenderTargetAttachment swapChainAttachment = {};
 
-		const auto& swapChain = m_swapChainAttachments.front();
+		const auto &swapChain = m_swapChainAttachments.front();
 		swapChainAttachment.format = swapChain.format;
 		swapChainAttachment.description.format = swapChain.format;
 		swapChainAttachment.description.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -168,7 +171,8 @@ RenderTargetPtr RenderTargetBuilder::Build() const
 		renderTargetAttachments.push_back(swapChainAttachment);
 	}
 
-	for (const auto& attachment : m_attachments) {
+	for (const auto &attachment : m_attachments)
+	{
 		renderTargetAttachments.push_back(CreateAttachment(attachment));
 	}
 
@@ -176,12 +180,16 @@ RenderTargetPtr RenderTargetBuilder::Build() const
 	std::vector<VkAttachmentReference> colorAttachmentRefs;
 	std::optional<VkAttachmentReference> depthAttachmentRef;
 	std::vector<VkAttachmentDescription> attachments;
-	for (const auto& attachment : renderTargetAttachments) {
+	for (const auto &attachment : renderTargetAttachments)
+	{
 		attachments.push_back(attachment.description);
-		if (attachment.IsDepthStencil() && !depthAttachmentRef.has_value()) {
-			depthAttachmentRef = { static_cast<uint32_t>(attachments.size() - 1), attachment.layout };
-		} else {
-			colorAttachmentRefs.push_back({ static_cast<uint32_t>(attachments.size() - 1), attachment.layout });
+		if (attachment.IsDepthStencil() && !depthAttachmentRef.has_value())
+		{
+			depthAttachmentRef = {static_cast<uint32_t>(attachments.size() - 1), attachment.layout};
+		}
+		else
+		{
+			colorAttachmentRefs.push_back({static_cast<uint32_t>(attachments.size() - 1), attachment.layout});
 		}
 	}
 
@@ -202,13 +210,13 @@ RenderTargetPtr RenderTargetBuilder::Build() const
 
 	dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
 	dependencies[0].dstSubpass = 0;
-	dependencies[0].srcStageMask
-		= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-	dependencies[0].dstStageMask
-		= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+	dependencies[0].srcStageMask =
+		VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+	dependencies[0].dstStageMask =
+		VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
 	dependencies[0].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-	dependencies[0].dstAccessMask
-		= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+	dependencies[0].dstAccessMask =
+		VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
 	dependencies[0].dependencyFlags = 0;
 
 	dependencies[1].srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -230,7 +238,8 @@ RenderTargetPtr RenderTargetBuilder::Build() const
 
 	VkRenderPass renderPass = VK_NULL_HANDLE;
 
-	if (vkCreateRenderPass(m_device->GetVkDevice(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
+	if (vkCreateRenderPass(m_device->GetVkDevice(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
+	{
 		throw std::runtime_error("failed to create render pass!");
 	}
 
@@ -238,27 +247,33 @@ RenderTargetPtr RenderTargetBuilder::Build() const
 	const size_t frameBufferCount = m_swapChainAttachments.empty() ? 1 : m_swapChainAttachments.size();
 	std::vector<VkFramebuffer> frameBuffers;
 	frameBuffers.reserve(frameBufferCount);
-	for (size_t index = 0; index < frameBufferCount; index++) {
+	for (size_t index = 0; index < frameBufferCount; index++)
+	{
 		frameBuffers.emplace_back();
 
 		std::vector<VkImageView> attachmentViews;
 		attachmentViews.reserve(renderTargetAttachments.size());
 
-		if (!m_swapChainAttachments.empty()) {
+		if (!m_swapChainAttachments.empty())
+		{
 			attachmentViews.emplace_back(m_swapChainAttachments[index].image->GetImageView());
 		}
 
 		// Then, add the rest of the attachments
-		for (const auto& attachment : renderTargetAttachments) {
-			if (attachment.image != nullptr) {
+		for (const auto &attachment : renderTargetAttachments)
+		{
+			if (attachment.image != nullptr)
+			{
 				attachmentViews.emplace_back(attachment.image->GetImageView());
 			}
 		}
 
 		// Find max number of layers across attachments
 		uint32_t maxLayers = 1;
-		for (const auto& attachment : renderTargetAttachments) {
-			if (attachment.subresourceRange.layerCount > maxLayers) {
+		for (const auto &attachment : renderTargetAttachments)
+		{
+			if (attachment.subresourceRange.layerCount > maxLayers)
+			{
 				maxLayers = attachment.subresourceRange.layerCount;
 			}
 		}
@@ -271,8 +286,8 @@ RenderTargetPtr RenderTargetBuilder::Build() const
 		framebufferInfo.width = m_extent.width;
 		framebufferInfo.height = m_extent.height;
 		framebufferInfo.layers = maxLayers;
-		if (vkCreateFramebuffer(m_device->GetVkDevice(), &framebufferInfo, nullptr, &frameBuffers.back())
-			!= VK_SUCCESS) {
+		if (vkCreateFramebuffer(m_device->GetVkDevice(), &framebufferInfo, nullptr, &frameBuffers.back()) != VK_SUCCESS)
+		{
 			throw std::runtime_error("failed to create framebuffer!");
 		}
 	}
@@ -280,7 +295,8 @@ RenderTargetPtr RenderTargetBuilder::Build() const
 	// Create sampler
 	VkSampler sampler = VK_NULL_HANDLE;
 	const VkSamplerCreateInfo samplerInfo = Initializers::SamplerCreateInfo(VK_FILTER_LINEAR, VK_FILTER_LINEAR);
-	if (vkCreateSampler(m_device->GetVkDevice(), &samplerInfo, nullptr, &sampler) != VK_SUCCESS) {
+	if (vkCreateSampler(m_device->GetVkDevice(), &samplerInfo, nullptr, &sampler) != VK_SUCCESS)
+	{
 		throw std::runtime_error("failed to create sampler!");
 	}
 
@@ -289,7 +305,7 @@ RenderTargetPtr RenderTargetBuilder::Build() const
 		m_device, renderPass, m_extent, std::move(frameBuffers), sampler, std::move(renderTargetAttachments));
 }
 
-RenderTargetAttachment RenderTargetBuilder::CreateAttachment(const RenderTargetAttachmentInfo& info) const
+RenderTargetAttachment RenderTargetBuilder::CreateAttachment(const RenderTargetAttachmentInfo &info) const
 {
 	RenderTargetAttachment attachment;
 	attachment.format = info.format;
@@ -299,16 +315,20 @@ RenderTargetAttachment RenderTargetBuilder::CreateAttachment(const RenderTargetA
 
 	// Select aspect mask and layout depending on usage
 	// Color attachment
-	if (info.usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) {
+	if (info.usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+	{
 		aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 	}
 
 	// Depth (and/or stencil) attachment
-	if (info.usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) {
-		if (attachment.HasDepth()) {
+	if (info.usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
+	{
+		if (attachment.HasDepth())
+		{
 			aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 		}
-		if (attachment.HasStencil()) {
+		if (attachment.HasStencil())
+		{
 			aspectMask = aspectMask | VK_IMAGE_ASPECT_STENCIL_BIT;
 		}
 	}
@@ -328,13 +348,14 @@ RenderTargetAttachment RenderTargetBuilder::CreateAttachment(const RenderTargetA
 	// Create image
 	// TOOD: Add image attachment creation to the image utility functions
 	const bool isCreatedImage = info.image != nullptr;
-	if (info.image == nullptr) {
+	if (info.image == nullptr)
+	{
 
 		assert(info.format != VK_FORMAT_UNDEFINED);
 		assert(info.usage != 0);
 		assert(m_extent.width > 0 && m_extent.height > 0);
 
-		const VkExtent3D extent = { m_extent.width, m_extent.height, 1 };
+		const VkExtent3D extent = {m_extent.width, m_extent.height, 1};
 
 		VkImageCreateInfo imageInfo = Initializers::ImageCreateInfo(VK_IMAGE_TYPE_2D, extent, info.format, info.usage);
 		imageInfo.arrayLayers = info.layerCount;
@@ -363,7 +384,9 @@ RenderTargetAttachment RenderTargetBuilder::CreateAttachment(const RenderTargetA
 		VK_CHECK_RESULT(vkCreateImageView(m_device->GetVkDevice(), &viewInfo, nullptr, &imageView));
 
 		attachment.image = std::make_shared<Image>(m_device, image, imageView, VK_IMAGE_LAYOUT_UNDEFINED, allocation);
-	} else {
+	}
+	else
+	{
 		attachment.image = info.image;
 	}
 
@@ -371,8 +394,8 @@ RenderTargetAttachment RenderTargetBuilder::CreateAttachment(const RenderTargetA
 	attachment.description = {};
 	attachment.description.samples = info.imageSampleCount;
 	attachment.description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	attachment.description.storeOp
-		= (info.usage & VK_IMAGE_USAGE_SAMPLED_BIT) ? VK_ATTACHMENT_STORE_OP_STORE : VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	attachment.description.storeOp =
+		(info.usage & VK_IMAGE_USAGE_SAMPLED_BIT) ? VK_ATTACHMENT_STORE_OP_STORE : VK_ATTACHMENT_STORE_OP_DONT_CARE;
 	attachment.description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 	attachment.description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 	attachment.description.format = info.format;
@@ -380,15 +403,17 @@ RenderTargetAttachment RenderTargetBuilder::CreateAttachment(const RenderTargetA
 
 	// Final layout
 	// If not, final layout depends on attachment type
-	if (attachment.IsDepthStencil()) {
+	if (attachment.IsDepthStencil())
+	{
 		attachment.description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 		attachment.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-		attachment.clearValue.depthStencil = { 1.0f, 0 };
-
-	} else {
+		attachment.clearValue.depthStencil = {1.0f, 0};
+	}
+	else
+	{
 		attachment.description.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		attachment.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		attachment.clearValue.color = { 0.0f, 0.0f, 0.0f, 1.0f };
+		attachment.clearValue.color = {0.0f, 0.0f, 0.0f, 1.0f};
 	}
 
 	return attachment;

@@ -17,8 +17,10 @@
 #include <vector>
 
 /* material_desc */
-namespace Grafkit::Resource {
-	enum class TextureType {
+namespace Grafkit::Resource
+{
+	enum class TextureType
+	{
 		Diffuse = 0,
 		Normal = 1,
 		Roughness = 2,
@@ -27,7 +29,8 @@ namespace Grafkit::Resource {
 		Emissive = 5,
 	};
 
-	struct MaterialDesc {
+	struct MaterialDesc
+	{
 		std::string name;
 		uint32_t type;
 		std::string pipeline;

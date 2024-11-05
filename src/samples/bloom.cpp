@@ -29,31 +29,64 @@
 #include <iostream>
 
 #include "cube_mesh.h"
-#include "shaders/triangle.frag.h"
-#include "shaders/triangle.vert.h"
+#include "shaders/forward_render.frag.h"
+#include "shaders/forward_render.vert.h"
+#include "shaders/gaussblur.frag.h"
+#include "shaders/quad.vert.h"
+#include "shaders/red.frag.h"
 
 constexpr int WIDTH = 1024;
 constexpr int HEIGHT = 768;
 
-constexpr uint32_t DEFAULT_PIPELINE_DESCRIPTOR = 0;
+constexpr uint32_t FORWARD_PIPELINE_DESCRIPTOR = 0;
+constexpr uint32_t GUAUSS_BLUR_PIPELINE_DESCRIPTOR = 1;
 
-class HelloApplication : public Grafkit::Application {
+// constexpr uint32_t INPUT_SAMPLER_SET = 0;
+// constexpr uint32_t IMAGE_SAMPLER_BINDING = 0;
+
+struct BlurParams
+{
+	float blurScale;
+	float blurStrength;
+
+	static std::vector<Grafkit::Core::DescriptorSetLayoutBinding> GetLayoutBindings()
+	{
+		return {
+			{
+				// INPUT_SAMPLER_SET,
+				// {
+				// 	{
+				// 		IMAGE_SAMPLER_BINDING,
+				// 		VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+				// 		VK_SHADER_STAGE_FRAGMENT_BIT,
+				// 	},
+				// },
+			},
+		};
+	}
+};
+
+class HelloApplication : public Grafkit::Application
+{
+
+public:
 private:
 	Grafkit::Core::DescriptorSetPtr m_materialDescriptor;
 	Grafkit::Core::DescriptorSetPtr m_modelviewDescriptor;
 	Grafkit::Core::PipelinePtr m_forwardRender;
-	Grafkit::Core::PipelinePtr m_verticalBloom;
-	Grafkit::Core::PipelinePtr m_horizontalBloom;
-	Grafkit::Core::PipelinePtr m_present;
+	Grafkit::Core::PipelinePtr m_gaussBlur;
 
 	Grafkit::Asset::AssetLoaderPtr m_assetLoader;
 	Grafkit::Resource::ResourceManagerPtr m_resources;
 
 	Grafkit::ScenegraphPtr m_sceneGraph;
 
-	Grafkit::Core::RenderTargetPtr m_bloomRenderTarget;
+	Grafkit::FullScreenQuadPtr m_fullscreenQuad;
+	Grafkit::Core::RenderTargetPtr m_forwardRenderTarget;
+	Grafkit::Core::RenderTargetPtr m_gaussBlurTarget;
 
-	struct {
+	struct
+	{
 		Grafkit::NodePtr rootNode;
 		Grafkit::NodePtr centerNode;
 		Grafkit::NodePtr leftNode;
@@ -64,11 +97,12 @@ private:
 		Grafkit::NodePtr bottomNode;
 	} m_nodes;
 
+	// BlurParams m_blurParams;
+
 	Grafkit::Core::UniformBuffer<Grafkit::CameraView> m_ubo;
 
 public:
-	HelloApplication()
-		: Grafkit::Application(WIDTH, HEIGHT, "Test application")
+	HelloApplication() : Grafkit::Application(WIDTH, HEIGHT, "Test application")
 	{
 		m_assetLoader = std::make_unique<Grafkit::Asset::JsonAssetLoader>();
 		m_resources = std::make_unique<Grafkit::Resource::ResourceManager>(
@@ -79,9 +113,28 @@ public:
 
 	void Init() override
 	{
-		const auto& device = m_renderContext->GetDevice();
+		const auto &device = m_renderContext->GetDevice();
 		const auto resources = Grafkit::MakeReference(*m_resources);
 
+		// MARK: Fullscreen quad setup
+		m_fullscreenQuad = std::make_shared<Grafkit::FullScreenQuad>(device);
+		m_fullscreenQuad->Create();
+
+		// MARK: PostFx setup
+		m_forwardRenderTarget = Grafkit::Core::RenderTargetBuilder(m_renderContext->GetDevice())
+									.SetSize(m_renderContext->GetExtent())
+									.AddAttachment(VK_FORMAT_R8G8B8A8_UNORM,
+										VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
+									.AddAttachment(VK_FORMAT_D32_SFLOAT, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
+									.Build();
+
+		m_gaussBlurTarget = Grafkit::Core::RenderTargetBuilder(m_renderContext->GetDevice())
+								.SetSize(m_renderContext->GetExtent())
+								.AddAttachment(VK_FORMAT_R8G8B8A8_UNORM,
+									VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
+								.Build();
+
+		// Descriptor setup
 		m_materialDescriptor = m_renderContext->DescriptorBuilder()
 								   .AddLayoutBindings(Grafkit::Material::GetLayoutBindings()[Grafkit::TEXTURE_SET])
 								   .Build();
@@ -90,23 +143,43 @@ public:
 									.AddLayoutBindings(Grafkit::Material::GetLayoutBindings()[Grafkit::CAMERA_VIEW_SET])
 									.Build();
 
-		m_renderContext->AddStaticPipelineDescriptor(DEFAULT_PIPELINE_DESCRIPTOR,
-			Grafkit::Core::PipelineDescriptor {
-				Grafkit::Vertex::GetVertexDescription(),
-				Grafkit::Material::GetLayoutBindings(),
-				{ { VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Grafkit::ModelView) } },
+		m_renderContext->AddStaticPipelineDescriptor(GUAUSS_BLUR_PIPELINE_DESCRIPTOR,
+			Grafkit::Core::PipelineDescriptor{
+				Grafkit::FullScreenQuad::Vertex::GetVertexDescription(),
+				BlurParams::GetLayoutBindings(),
+				{
+					// { VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(m_blurParams) },
+				},
 			});
 
-		m_forwardRender = m_renderContext->PipelineBuilder(DEFAULT_PIPELINE_DESCRIPTOR)
-							  .AddVertexShader(triangle_vert, triangle_vert_len)
-							  .AddFragmentShader(triangle_frag, triangle_frag_len)
-							  .Build();
+		m_renderContext->AddStaticPipelineDescriptor(FORWARD_PIPELINE_DESCRIPTOR,
+			Grafkit::Core::PipelineDescriptor{
+				Grafkit::Vertex::GetVertexDescription(),
+				Grafkit::Material::GetLayoutBindings(),
+				{
+					{VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Grafkit::ModelView)},
+				},
+			});
+
+		// Pipelines
+		m_forwardRender =
+			m_renderContext->PipelineBuilder(
+							   FORWARD_PIPELINE_DESCRIPTOR, Grafkit::MakeReference(*m_forwardRenderTarget))
+				.AddVertexShader(forward_render_vert, forward_render_vert_len)
+				.AddFragmentShader(forward_render_frag, forward_render_frag_len)
+				.Build();
+
+		m_gaussBlur = m_renderContext->PipelineBuilder(FORWARD_PIPELINE_DESCRIPTOR)
+						  .AddVertexShader(quad_vert, quad_vert_len)
+						  //   .AddFragmentShader(gaussblur_frag, gaussblur_frag_len)
+						  .AddFragmentShader(red_frag, red_frag_len)
+						  .Build();
 
 		Grafkit::Core::ImagePtr image = Grafkit::Resource::CheckerImageBuilder({
-																				   { 256, 256, 1 },
-																				   { 16, 16 },
-																				   { 65, 105, 225, 255 },
-																				   { 255, 165, 79, 255 },
+																				   .size = {256, 256, 1},
+																				   .divisions = {16, 16},
+																				   .color1 = {65, 105, 225, 255},
+																				   .color2 = {255, 165, 79, 255},
 																			   })
 											.BuildResource(device, resources);
 
@@ -138,16 +211,9 @@ public:
 		m_nodes.rearNode = m_sceneGraph->CreateNode(m_nodes.centerNode, mesh);
 		m_nodes.topNode = m_sceneGraph->CreateNode(m_nodes.centerNode, mesh);
 		m_nodes.bottomNode = m_sceneGraph->CreateNode(m_nodes.centerNode, mesh);
-
-		// PostFx setup
-		m_bloomRenderTarget = Grafkit::Core::RenderTargetBuilder(m_renderContext->GetDevice())
-								  .SetSize(m_renderContext->GetExtent())
-								  .AddAttachment(VK_FORMAT_R8G8B8A8_UNORM,
-									  VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
-								  .Build();
 	}
 
-	void Update([[maybe_unused]] const Grafkit::TimeInfo& timeInfo) override
+	void Update([[maybe_unused]] const Grafkit::TimeInfo &timeInfo) override
 	{
 		m_ubo.data.projection = glm::perspective(glm::radians(45.0f), m_renderContext->GetAspectRatio(), 0.1f, 100.0f);
 		m_ubo.data.camera = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -10.0f));
@@ -198,33 +264,43 @@ public:
 	{
 		const auto commandBuffer = m_renderContext->BeginCommandBuffer();
 
-		m_bloomRenderTarget->BeginRenderPass(commandBuffer);
+		m_forwardRenderTarget->BeginRenderPass(commandBuffer);
 		m_sceneGraph->Draw(commandBuffer);
-		m_bloomRenderTarget->EndRenderPass(commandBuffer);
+		m_forwardRenderTarget->EndRenderPass(commandBuffer);
 
 		// ... and present
 		// + add VBlur + HBlur + Present
 
 		m_renderContext->BeginFrame(commandBuffer);
+		m_gaussBlur->Bind(**commandBuffer);
+		m_fullscreenQuad->Bind(commandBuffer);
+		m_fullscreenQuad->Draw(commandBuffer);
 		m_renderContext->EndFrame(commandBuffer);
 	}
 
 	void Shutdown() override
 	{
+		m_fullscreenQuad.reset();
 		m_sceneGraph.reset();
 		m_materialDescriptor.reset();
 		m_modelviewDescriptor.reset();
 		m_ubo.Destroy(m_renderContext->GetDevice());
 		m_forwardRender.reset();
+		m_gaussBlur.reset();
+		m_forwardRenderTarget.reset();
+		m_gaussBlurTarget.reset();
 	}
 };
 
 int main()
 {
 	HelloApplication app;
-	try {
+	try
+	{
 		app.Run();
-	} catch (const std::exception& e) {
+	}
+	catch (const std::exception &e)
+	{
 		Grafkit::Core::Log::Instance().Error("Exception: %s", e.what());
 		return EXIT_FAILURE;
 	}

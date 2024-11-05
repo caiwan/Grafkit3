@@ -44,6 +44,7 @@ const std::vector<const char*> Instance::DEVICE_EXTENSIONS = {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 	VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
 	VK_KHR_MAINTENANCE_4_EXTENSION_NAME,
+	VK_EXT_GRAPHICS_PIPELINE_LIBRARY_EXTENSION_NAME
 };
 
 // ----------------------------------------------------------------------------

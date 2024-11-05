@@ -36,7 +36,8 @@ constexpr int HEIGHT = 768;
 
 constexpr uint32_t DEFAULT_PIPELINE_DESCRIPTOR = 0;
 
-class HelloApplication : public Grafkit::Application {
+class HelloApplication : public Grafkit::Application
+{
 private:
 	Grafkit::Core::DescriptorSetPtr m_materialDescriptor;
 	Grafkit::Core::DescriptorSetPtr m_modelviewDescriptor;
@@ -47,7 +48,8 @@ private:
 
 	Grafkit::ScenegraphPtr m_sceneGraph;
 
-	struct {
+	struct
+	{
 		Grafkit::NodePtr rootNode;
 		Grafkit::NodePtr centerNode;
 		Grafkit::NodePtr leftNode;
@@ -61,8 +63,7 @@ private:
 	Grafkit::Core::UniformBuffer<Grafkit::CameraView> m_ubo;
 
 public:
-	HelloApplication()
-		: Grafkit::Application(WIDTH, HEIGHT, "Test application")
+	HelloApplication() : Grafkit::Application(WIDTH, HEIGHT, "Test application")
 	{
 		m_assetLoader = std::make_unique<Grafkit::Asset::JsonAssetLoader>();
 		m_resources = std::make_unique<Grafkit::Resource::ResourceManager>(
@@ -73,7 +74,7 @@ public:
 
 	void Init() override
 	{
-		const auto& device = m_renderContext->GetDevice();
+		const auto &device = m_renderContext->GetDevice();
 		const auto resources = Grafkit::MakeReference(*m_resources);
 
 		m_materialDescriptor = m_renderContext->DescriptorBuilder()
@@ -85,10 +86,10 @@ public:
 									.Build();
 
 		m_renderContext->AddStaticPipelineDescriptor(DEFAULT_PIPELINE_DESCRIPTOR,
-			Grafkit::Core::PipelineDescriptor {
+			Grafkit::Core::PipelineDescriptor{
 				Grafkit::Vertex::GetVertexDescription(),
 				Grafkit::Material::GetLayoutBindings(),
-				{ { VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Grafkit::ModelView) } },
+				{{VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Grafkit::ModelView)}},
 			});
 
 		m_forwardRender = m_renderContext->PipelineBuilder(DEFAULT_PIPELINE_DESCRIPTOR)
@@ -97,10 +98,10 @@ public:
 							  .Build();
 
 		Grafkit::Core::ImagePtr image = Grafkit::Resource::CheckerImageBuilder({
-																				   { 256, 256, 1 },
-																				   { 16, 16 },
-																				   { 65, 105, 225, 255 },
-																				   { 255, 165, 79, 255 },
+																				   {256, 256, 1},
+																				   {16, 16},
+																				   {65, 105, 225, 255},
+																				   {255, 165, 79, 255},
 																			   })
 											.BuildResource(device, resources);
 
@@ -110,7 +111,6 @@ public:
 											.AddDescriptorSet(m_modelviewDescriptor, Grafkit::CAMERA_VIEW_SET)
 											.AddTextureImage(Grafkit::DIFFUSE_TEXTURE_BINDING, image)
 											.BuildResource(device, resources);
-
 		m_ubo = Grafkit::Core::UniformBuffer<Grafkit::CameraView>::CreateBuffer(device);
 		m_modelviewDescriptor->Update(m_ubo.buffer, Grafkit::MODEL_VIEW_BINDING);
 
@@ -134,7 +134,7 @@ public:
 		m_nodes.bottomNode = m_sceneGraph->CreateNode(m_nodes.centerNode, mesh);
 	}
 
-	void Update([[maybe_unused]] const Grafkit::TimeInfo& timeInfo) override
+	void Update([[maybe_unused]] const Grafkit::TimeInfo &timeInfo) override
 	{
 		m_ubo.data.projection = glm::perspective(glm::radians(45.0f), m_renderContext->GetAspectRatio(), 0.1f, 100.0f);
 		m_ubo.data.camera = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -10.0f));
@@ -191,20 +191,19 @@ public:
 
 	void Shutdown() override
 	{
-		m_sceneGraph.reset();
-		m_materialDescriptor.reset();
-		m_modelviewDescriptor.reset();
 		m_ubo.Destroy(m_renderContext->GetDevice());
-		m_forwardRender.reset();
 	}
 };
 
 int main()
 {
 	HelloApplication app;
-	try {
+	try
+	{
 		app.Run();
-	} catch (const std::exception& e) {
+	}
+	catch (const std::exception &e)
+	{
 		Grafkit::Core::Log::Instance().Error("Exception: %s", e.what());
 		return EXIT_FAILURE;
 	}

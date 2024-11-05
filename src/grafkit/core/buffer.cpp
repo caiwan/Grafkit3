@@ -5,10 +5,13 @@
 
 using namespace Grafkit::Core;
 
-void Buffer::Destroy(const DeviceRef& device) { vmaDestroyBuffer(device->GetVmaAllocator(), buffer, allocation); }
+void Buffer::Destroy(const DeviceRef &device)
+{
+	vmaDestroyBuffer(device->GetVmaAllocator(), buffer, allocation);
+}
 
 Buffer Buffer::CreateBuffer(
-	const DeviceRef& device, const size_t size, const VkBufferUsageFlags usage, const VmaMemoryUsage memoryUsage)
+	const DeviceRef &device, const size_t size, const VkBufferUsageFlags usage, const VmaMemoryUsage memoryUsage)
 {
 	VkBufferCreateInfo bufferInfo = Initializers::BufferCreateInfo(usage, size);
 
@@ -23,44 +26,48 @@ Buffer Buffer::CreateBuffer(
 			&vmaAllocInfo,
 			&buffer.buffer,
 			&buffer.allocation,
-			&buffer.allocationInfo)
-		!= VK_SUCCESS) {
+			&buffer.allocationInfo) != VK_SUCCESS)
+	{
 		throw std::runtime_error("failed to create buffer");
 	}
 
 	return buffer;
 }
 
-void Buffer::Update(const DeviceRef& device, const void* data, const size_t size)
+void Buffer::Update(const DeviceRef &device, const void *data, const size_t size)
 {
-	void* mappedData = nullptr;
+	void *mappedData = nullptr;
 
-	if (vmaMapMemory(device->GetVmaAllocator(), allocation, &mappedData) != VK_SUCCESS) {
+	if (vmaMapMemory(device->GetVmaAllocator(), allocation, &mappedData) != VK_SUCCESS)
+	{
 		throw std::runtime_error("Failed to map memory");
 	}
 
 	memcpy(mappedData, data, size);
 	vmaUnmapMemory(device->GetVmaAllocator(), allocation);
 
-	if (vmaFlushAllocation(device->GetVmaAllocator(), allocation, 0, size) != VK_SUCCESS) {
+	if (vmaFlushAllocation(device->GetVmaAllocator(), allocation, 0, size) != VK_SUCCESS)
+	{
 		throw std::runtime_error("Failed to flush memory");
 	}
 }
 
-void Grafkit::Core::RingBuffer::Destroy(const DeviceRef& device)
+void Grafkit::Core::RingBuffer::Destroy(const DeviceRef &device)
 {
-	for (auto& buffer : buffers) {
+	for (auto &buffer : buffers)
+	{
 		vmaDestroyBuffer(device->GetVmaAllocator(), buffer.buffer, buffer.allocation);
 	}
 	buffers.clear();
 }
 
 RingBuffer RingBuffer::CreateBuffer(
-	const DeviceRef& device, const size_t size, const VkBufferUsageFlags usage, const VmaMemoryUsage memoryUsage)
+	const DeviceRef &device, const size_t size, const VkBufferUsageFlags usage, const VmaMemoryUsage memoryUsage)
 {
 	RingBuffer ringBuffer = {};
 
-	for (size_t i = 0; i < device->GetMaxConcurrentFrames(); i++) {
+	for (size_t i = 0; i < device->GetMaxConcurrentFrames(); i++)
+	{
 		VkBufferCreateInfo bufferInfo = Initializers::BufferCreateInfo(usage, size);
 
 		VmaAllocationCreateInfo vmaAllocInfo = {};
@@ -75,8 +82,8 @@ RingBuffer RingBuffer::CreateBuffer(
 				&vmaAllocInfo,
 				&buffer.buffer,
 				&buffer.allocation,
-				&buffer.allocationInfo)
-			!= VK_SUCCESS) {
+				&buffer.allocationInfo) != VK_SUCCESS)
+		{
 			throw std::runtime_error("failed to create buffer");
 		}
 
@@ -88,7 +95,7 @@ RingBuffer RingBuffer::CreateBuffer(
 }
 
 void Grafkit::Core::RingBuffer::Update(
-	[[maybe_unused]] const DeviceRef& device, const void* data, const size_t size, const uint32_t frameIndex)
+	[[maybe_unused]] const DeviceRef &device, const void *data, const size_t size, const uint32_t frameIndex)
 {
 	assert(frameIndex < buffers.size());
 	memcpy(mappedData[frameIndex], data, size);

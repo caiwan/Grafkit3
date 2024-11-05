@@ -17,8 +17,10 @@
 #include <vector>
 
 /* mesh_desc */
-namespace Grafkit::Resource {
-	enum class MeshType {
+namespace Grafkit::Resource
+{
+	enum class MeshType
+	{
 		Static = 1,
 		Skinned = 2,
 	};

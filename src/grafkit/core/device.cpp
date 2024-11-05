@@ -13,8 +13,7 @@ using namespace Grafkit::Core;
 constexpr uint32_t INITIAL_DESCRIPTOR_SET_SIZE = 128;
 constexpr uint32_t INITIAL_DESCRIPTOR_MAX_SETS = 8;
 
-Device::Device(const Core::InstanceRef& instance)
-	: m_instance(instance)
+Device::Device(const Core::InstanceRef &instance) : m_instance(instance)
 
 {
 	PickPhysicalDevice();
@@ -34,15 +33,15 @@ Device::Device(const Core::InstanceRef& instance)
 	m_descriptorPool = std::make_unique<Core::DescriptorPool>(MakeReference(*this),
 		INITIAL_DESCRIPTOR_MAX_SETS,
 		std::vector<DescriptorPool::PoolSet>({
-			{ VK_DESCRIPTOR_TYPE_SAMPLER, INITIAL_DESCRIPTOR_SET_SIZE },
-			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, INITIAL_DESCRIPTOR_SET_SIZE },
-			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, INITIAL_DESCRIPTOR_SET_SIZE },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, INITIAL_DESCRIPTOR_SET_SIZE },
-			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, INITIAL_DESCRIPTOR_SET_SIZE },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, INITIAL_DESCRIPTOR_SET_SIZE },
-			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, INITIAL_DESCRIPTOR_SET_SIZE },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, INITIAL_DESCRIPTOR_SET_SIZE },
-			{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, INITIAL_DESCRIPTOR_SET_SIZE },
+			{VK_DESCRIPTOR_TYPE_SAMPLER, INITIAL_DESCRIPTOR_SET_SIZE},
+			{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, INITIAL_DESCRIPTOR_SET_SIZE},
+			{VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, INITIAL_DESCRIPTOR_SET_SIZE},
+			{VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, INITIAL_DESCRIPTOR_SET_SIZE},
+			{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, INITIAL_DESCRIPTOR_SET_SIZE},
+			{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, INITIAL_DESCRIPTOR_SET_SIZE},
+			{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, INITIAL_DESCRIPTOR_SET_SIZE},
+			{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, INITIAL_DESCRIPTOR_SET_SIZE},
+			{VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, INITIAL_DESCRIPTOR_SET_SIZE},
 		}));
 }
 
@@ -58,7 +57,10 @@ Device::~Device()
 }
 
 // MARK: Public methods
-void Device::WaitIdle() const { vkDeviceWaitIdle(m_device); }
+void Device::WaitIdle() const
+{
+	vkDeviceWaitIdle(m_device);
+}
 
 VkCommandBuffer Device::BeginSingleTimeCommands() const
 {
@@ -80,7 +82,7 @@ VkCommandBuffer Device::BeginSingleTimeCommands() const
 	return commandBuffer;
 }
 
-void Device::EndSingleTimeCommands(const VkCommandBuffer& commandBuffer) const
+void Device::EndSingleTimeCommands(const VkCommandBuffer &commandBuffer) const
 {
 	vkEndCommandBuffer(commandBuffer);
 
@@ -95,7 +97,10 @@ void Device::EndSingleTimeCommands(const VkCommandBuffer& commandBuffer) const
 	vkFreeCommandBuffers(m_device, m_commandPool, 1, &commandBuffer);
 }
 
-[[nodiscard]] DescriptorPoolRef Device::GetDescriptorPool() const { return MakeReference(*m_descriptorPool); }
+[[nodiscard]] DescriptorPoolRef Device::GetDescriptorPool() const
+{
+	return MakeReference(*m_descriptorPool);
+}
 
 // -----------------------------------------------------------------------------------------------------------------------------------
 // MARK: Auxiliary methods
@@ -108,21 +113,25 @@ void Device::PickPhysicalDevice()
 	uint32_t deviceCount = 0;
 	vkEnumeratePhysicalDevices(m_instance->GetVkInstance(), &deviceCount, nullptr);
 
-	if (deviceCount == 0) {
+	if (deviceCount == 0)
+	{
 		throw std::runtime_error("failed to find GPUs with Vulkan support!");
 	}
 
 	std::vector<VkPhysicalDevice> devices(deviceCount);
 	vkEnumeratePhysicalDevices(m_instance->GetVkInstance(), &deviceCount, devices.data());
 
-	for (const auto& device : devices) {
-		if (IsDeviceSuitable(device)) {
+	for (const auto &device : devices)
+	{
+		if (IsDeviceSuitable(device))
+		{
 			m_physicalDevice = device;
 			break;
 		}
 	}
 
-	if (m_physicalDevice == VK_NULL_HANDLE) {
+	if (m_physicalDevice == VK_NULL_HANDLE)
+	{
 		throw std::runtime_error("failed to find a suitable GPU!");
 	}
 }
@@ -131,12 +140,13 @@ void Device::CreateLogicalDevice()
 {
 	const auto indices = GetQueueFamilies();
 
-	const std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
+	const std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(), indices.presentFamily.value()};
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 
 	float queuePriority = 1.0f;
-	for (uint32_t queueFamily : uniqueQueueFamilies) {
-		VkDeviceQueueCreateInfo queueCreateInfo {};
+	for (uint32_t queueFamily : uniqueQueueFamilies)
+	{
+		VkDeviceQueueCreateInfo queueCreateInfo{};
 		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 		queueCreateInfo.queueFamilyIndex = queueFamily;
 		queueCreateInfo.queueCount = 1;
@@ -144,9 +154,9 @@ void Device::CreateLogicalDevice()
 		queueCreateInfos.push_back(queueCreateInfo);
 	}
 
-	VkPhysicalDeviceFeatures deviceFeatures {};
+	VkPhysicalDeviceFeatures deviceFeatures{};
 
-	VkDeviceCreateInfo createInfo {};
+	VkDeviceCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 
 	createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
@@ -157,21 +167,26 @@ void Device::CreateLogicalDevice()
 	createInfo.enabledExtensionCount = static_cast<uint32_t>(Instance::DEVICE_EXTENSIONS.size());
 	createInfo.ppEnabledExtensionNames = Instance::DEVICE_EXTENSIONS.data();
 
-	std::stringstream logExtList {};
+	std::stringstream logExtList{};
 	logExtList << "Device extensions: ";
-	for (const auto& extension : Instance::DEVICE_EXTENSIONS) {
+	for (const auto &extension : Instance::DEVICE_EXTENSIONS)
+	{
 		logExtList << extension << " ";
 	}
 	Log::Instance().Info(logExtList.str());
 
-	if (Instance::ENABLE_VALIDATION_LAYERS) {
+	if (Instance::ENABLE_VALIDATION_LAYERS)
+	{
 		createInfo.enabledLayerCount = static_cast<uint32_t>(Instance::VALIDATION_LAYERS.size());
 		createInfo.ppEnabledLayerNames = Instance::VALIDATION_LAYERS.data();
-	} else {
+	}
+	else
+	{
 		createInfo.enabledLayerCount = 0;
 	}
 
-	if (vkCreateDevice(m_physicalDevice, &createInfo, nullptr, &m_device) != VK_SUCCESS) {
+	if (vkCreateDevice(m_physicalDevice, &createInfo, nullptr, &m_device) != VK_SUCCESS)
+	{
 		throw std::runtime_error("failed to create logical device!");
 	}
 }
@@ -192,24 +207,26 @@ void Device::CreateCommandPool()
 {
 	QueueFamilyIndices indices = GetQueueFamilies();
 
-	VkCommandPoolCreateInfo poolInfo {};
+	VkCommandPoolCreateInfo poolInfo{};
 	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 	poolInfo.queueFamilyIndex = indices.graphicsFamily.value();
 
-	if (vkCreateCommandPool(m_device, &poolInfo, nullptr, &m_commandPool) != VK_SUCCESS) {
+	if (vkCreateCommandPool(m_device, &poolInfo, nullptr, &m_commandPool) != VK_SUCCESS)
+	{
 		throw std::runtime_error("failed to create command pool!");
 	}
 }
 
-bool Device::IsDeviceSuitable(const VkPhysicalDevice& device) const
+bool Device::IsDeviceSuitable(const VkPhysicalDevice &device) const
 {
 	QueueFamilyIndices indices = FindQueueFamilies(device);
 
 	bool extensionsSupported = CheckDeviceExtensionSupport(device);
 
 	bool swapChainAdequate = false;
-	if (extensionsSupported) {
+	if (extensionsSupported)
+	{
 		SurfaceProperties swapChainSupport = QueryPhisicalDeviceSurfaceProperties(device);
 		swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
 	}
@@ -217,7 +234,7 @@ bool Device::IsDeviceSuitable(const VkPhysicalDevice& device) const
 	return indices.IsComplete() && extensionsSupported && swapChainAdequate;
 }
 
-QueueFamilyIndices Device::FindQueueFamilies(const VkPhysicalDevice& physicalDevice) const
+QueueFamilyIndices Device::FindQueueFamilies(const VkPhysicalDevice &physicalDevice) const
 {
 	QueueFamilyIndices indices;
 
@@ -228,19 +245,23 @@ QueueFamilyIndices Device::FindQueueFamilies(const VkPhysicalDevice& physicalDev
 	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilies.data());
 
 	uint32_t index = 0;
-	for (const auto& queueFamily : queueFamilies) {
-		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+	for (const auto &queueFamily : queueFamilies)
+	{
+		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+		{
 			indices.graphicsFamily = index;
 		}
 
 		VkBool32 presentSupport = false;
 		vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, index, m_instance->GetVkSurface(), &presentSupport);
 
-		if (presentSupport) {
+		if (presentSupport)
+		{
 			indices.presentFamily = index;
 		}
 
-		if (indices.IsComplete()) {
+		if (indices.IsComplete())
+		{
 			break;
 		}
 
@@ -251,9 +272,9 @@ QueueFamilyIndices Device::FindQueueFamilies(const VkPhysicalDevice& physicalDev
 }
 
 // TODO -> Swap chain
-SurfaceProperties Device::QueryPhisicalDeviceSurfaceProperties(const VkPhysicalDevice& physicalDevice) const
+SurfaceProperties Device::QueryPhisicalDeviceSurfaceProperties(const VkPhysicalDevice &physicalDevice) const
 {
-	SurfaceProperties details {};
+	SurfaceProperties details{};
 
 	VK_CHECK_RESULT(
 		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_instance->GetVkSurface(), &details.capabilities));
@@ -262,7 +283,8 @@ SurfaceProperties Device::QueryPhisicalDeviceSurfaceProperties(const VkPhysicalD
 	VK_CHECK_RESULT(
 		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_instance->GetVkSurface(), &formatCount, nullptr));
 
-	if (formatCount != 0) {
+	if (formatCount != 0)
+	{
 		details.formats.resize(formatCount);
 		VK_CHECK_RESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(
 			physicalDevice, m_instance->GetVkSurface(), &formatCount, details.formats.data()));
@@ -272,7 +294,8 @@ SurfaceProperties Device::QueryPhisicalDeviceSurfaceProperties(const VkPhysicalD
 	VK_CHECK_RESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(
 		physicalDevice, m_instance->GetVkSurface(), &presentModeCount, nullptr));
 
-	if (presentModeCount != 0) {
+	if (presentModeCount != 0)
+	{
 		details.presentModes.resize(presentModeCount);
 		VK_CHECK_RESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(
 			physicalDevice, m_instance->GetVkSurface(), &presentModeCount, details.presentModes.data()));
@@ -281,7 +304,7 @@ SurfaceProperties Device::QueryPhisicalDeviceSurfaceProperties(const VkPhysicalD
 	return details;
 }
 
-bool Device::CheckDeviceExtensionSupport(const VkPhysicalDevice& device) const
+bool Device::CheckDeviceExtensionSupport(const VkPhysicalDevice &device) const
 {
 	uint32_t extensionCount;
 	VK_CHECK_RESULT(vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr));
@@ -291,7 +314,8 @@ bool Device::CheckDeviceExtensionSupport(const VkPhysicalDevice& device) const
 
 	std::set<std::string> requiredExtensions(Instance::DEVICE_EXTENSIONS.begin(), Instance::DEVICE_EXTENSIONS.end());
 
-	for (const auto& extension : availableExtensions) {
+	for (const auto &extension : availableExtensions)
+	{
 		requiredExtensions.erase(extension.extensionName);
 	}
 
@@ -313,7 +337,8 @@ void Device::InitializeAllocator()
 // TOOD -> Swap chain
 [[nodiscard]] QueueFamilyIndices Device::GetQueueFamilies() const
 {
-	if (!m_queueFamilyIndices.has_value()) {
+	if (!m_queueFamilyIndices.has_value())
+	{
 		m_queueFamilyIndices = FindQueueFamilies(m_physicalDevice);
 	}
 	return m_queueFamilyIndices.value();
@@ -321,7 +346,8 @@ void Device::InitializeAllocator()
 
 SurfaceProperties Device::GetSurfaceProperties() const
 {
-	if (!m_surfaceProperties.has_value()) {
+	if (!m_surfaceProperties.has_value())
+	{
 		m_surfaceProperties = QueryPhisicalDeviceSurfaceProperties(m_physicalDevice);
 	}
 	return m_surfaceProperties.value();
@@ -330,13 +356,14 @@ SurfaceProperties Device::GetSurfaceProperties() const
 uint32_t Device::GetMaxConcurrentFrames() const
 {
 	// TODO: This should ba updated when the swap chain is recreated with the actual image count
-	if (!m_framesInFligtCount.has_value()) {
-		const SurfaceProperties& swapChainSupport = GetSurfaceProperties();
+	if (!m_framesInFligtCount.has_value())
+	{
+		const SurfaceProperties &swapChainSupport = GetSurfaceProperties();
 
 		// Use one more than the minimum if possible (assume double buffering at least)
 		uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
-		if (swapChainSupport.capabilities.maxImageCount > 0
-			&& imageCount > swapChainSupport.capabilities.maxImageCount) {
+		if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount)
+		{
 			imageCount = swapChainSupport.capabilities.maxImageCount;
 		}
 
@@ -350,14 +377,18 @@ uint32_t Device::GetMaxConcurrentFrames() const
 // MARK: Debug methods
 // TODO: Should be moved to a separate file
 #ifdef _DEBUG
-namespace {
+namespace
+{
 	// NOLINTBEGIN modernize-avoid-c-arrays - Keep C array for fixed size for Vulkan API
-	template <size_t UUID_SIZE> inline std::string PrintUUID(const uint8_t (&uuid)[UUID_SIZE])
+	template <size_t UUID_SIZE>
+	inline std::string PrintUUID(const uint8_t (&uuid)[UUID_SIZE])
 	{
 		std::stringstream ss;
-		for (int i = 0; i < UUID_SIZE; ++i) {
+		for (int i = 0; i < UUID_SIZE; ++i)
+		{
 			ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(uuid[i]);
-			if (i == 3 || i == 5 || i == 7 || i == 9) {
+			if (i == 3 || i == 5 || i == 7 || i == 9)
+			{
 				ss << "-";
 			}
 		}
@@ -371,7 +402,7 @@ void Device::PrintVulkanDeviceLimits() const
 {
 	std::stringstream ss;
 
-	const VkPhysicalDeviceLimits& limits = m_deviceProperties.limits;
+	const VkPhysicalDeviceLimits &limits = m_deviceProperties.limits;
 	ss << std::endl;
 	ss << "Vulkan Device Properties:" << std::endl;
 	ss << "--------------------------" << std::endl;

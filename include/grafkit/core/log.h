@@ -11,42 +11,56 @@
 // #define USE_STD_FORMAT
 // #endif
 
-namespace Grafkit::Core {
+namespace Grafkit::Core
+{
 
-	class Logger {
+	class Logger
+	{
 	public:
-		enum class LogLevel { Trace, Debug, Info, Warning, Error };
+		enum class LogLevel
+		{
+			Trace,
+			Debug,
+			Info,
+			Warning,
+			Error
+		};
 
 		virtual ~Logger() = default;
 
-		template <typename... Args> void Trace(const std::string& message, Args&&... args) const
+		template <typename... Args>
+		void Trace(const std::string &message, Args &&...args) const
 		{
 			LogMessage(LogLevel::Trace, message, std::forward<Args>(args)...);
 		};
 
-		template <typename... Args> void Debug(const std::string& message, Args&&... args) const
+		template <typename... Args>
+		void Debug(const std::string &message, Args &&...args) const
 		{
 			LogMessage(LogLevel::Debug, message, std::forward<Args>(args)...);
 		};
 
-		template <typename... Args> void Info(const std::string& message, Args&&... args) const
+		template <typename... Args>
+		void Info(const std::string &message, Args &&...args) const
 		{
 			LogMessage(LogLevel::Info, message, std::forward<Args>(args)...);
 		};
 
-		template <typename... Args> void Warning(const std::string& message, Args&&... args) const
+		template <typename... Args>
+		void Warning(const std::string &message, Args &&...args) const
 		{
 			LogMessage(LogLevel::Warning, message, std::forward<Args>(args)...);
 		};
 
-		template <typename... Args> void Error(const std::string& message, Args&&... args) const
+		template <typename... Args>
+		void Error(const std::string &message, Args &&...args) const
 		{
 			LogMessage(LogLevel::Error, message, std::forward<Args>(args)...);
 		};
 
 	protected:
 		template <typename... Args>
-		void LogMessage(const LogLevel level, const std::string& format, Args&&... args) const
+		void LogMessage(const LogLevel level, const std::string &format, Args &&...args) const
 		{
 #if USE_STD_FORMAT
 			std::string message = std::vformat(format, std::make_format_args(args)...);
@@ -56,35 +70,38 @@ namespace Grafkit::Core {
 			Log(level, message);
 		}
 #if !USE_STD_FORMAT
-		static std::string FormatString(const char* format, ...);
+		static std::string FormatString(const char *format, ...);
 #endif
 
-		virtual void Log(const LogLevel level, const std::string& message) const = 0;
+		virtual void Log(const LogLevel level, const std::string &message) const = 0;
 	};
 
-	class DefaultLogger : public Logger {
+	class DefaultLogger : public Logger
+	{
 	protected:
-		void Log(const LogLevel level, const std::string& message) const override;
+		void Log(const LogLevel level, const std::string &message) const override;
 
 	private:
 		mutable std::mutex m_mutex;
 	};
 
-	class Log {
+	class Log
+	{
 	public:
-		Log(const Log&) = delete;
-		Log& operator=(const Log&) = delete;
+		Log(const Log &) = delete;
+		Log &operator=(const Log &) = delete;
 
-		static Logger& Instance()
+		static Logger &Instance()
 		{
 			std::lock_guard<std::mutex> lock(GMutex);
-			if (!GLogger) {
+			if (!GLogger)
+			{
 				GLogger = std::make_unique<DefaultLogger>();
 			}
 			return *GLogger;
 		}
 
-		static void SetLogger(Logger* newLogger)
+		static void SetLogger(Logger *newLogger)
 		{
 			std::lock_guard<std::mutex> lock(GMutex);
 			GLogger.reset(newLogger);

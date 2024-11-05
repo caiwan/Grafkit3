@@ -17,6 +17,7 @@
 #include <vector>
 
 /* scene_desc */
-namespace Grafkit::Resource {
+namespace Grafkit::Resource
+{
 } // namespace Grafkit::Resource
 #endif // __SCENE_DESC_GENERATED_H__

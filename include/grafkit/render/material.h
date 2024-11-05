@@ -3,11 +3,12 @@
 
 #include <grafkit/common.h>
 
-namespace Grafkit {
+namespace Grafkit
+{
 
 	// TOOD: Add extra options for binds here for other paprms such as vertex params [camera], skin, etc.
-	struct MaterialData {
-		// AlphaMode m_alphaMode = AlphaMode::Opaque;
+	struct MaterialData
+	{
 		float alphaCutoff = 1.0f;
 		float metallicFactor = 1.0f;
 	};
@@ -25,9 +26,8 @@ namespace Grafkit {
 
 	constexpr uint32_t MODEL_VIEW_BINDING = 0;
 
-	struct GKAPI Material {
-		// enum class AlphaMode : uint32_t { Opaque, Mask, Blend };
-
+	struct GKAPI Material
+	{
 		Core::PipelinePtr pipeline;
 		std::vector<Core::DescriptorSetPtr> descriptorSets;
 		std::vector<TexturePtr> textures;

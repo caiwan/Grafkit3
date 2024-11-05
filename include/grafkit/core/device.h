@@ -10,50 +10,78 @@
 #include <vector>
 #include <vk_mem_alloc.h>
 
-namespace Grafkit::Core {
+namespace Grafkit::Core
+{
 	using DescriptorPoolPtr = std::unique_ptr<DescriptorPool>;
 
-	struct QueueFamilyIndices {
+	struct QueueFamilyIndices
+	{
 		std::optional<uint32_t> graphicsFamily;
 		std::optional<uint32_t> presentFamily;
 
-		bool IsComplete() const { return graphicsFamily.has_value() && presentFamily.has_value(); }
+		bool IsComplete() const
+		{
+			return graphicsFamily.has_value() && presentFamily.has_value();
+		}
 	};
 
-	struct SurfaceProperties {
+	struct SurfaceProperties
+	{
 		VkSurfaceCapabilitiesKHR capabilities;
 		std::vector<VkSurfaceFormatKHR> formats;
 		std::vector<VkPresentModeKHR> presentModes;
 	};
 
-	class GKAPI Device {
+	class GKAPI Device
+	{
 	public:
-		explicit Device(const Core::InstanceRef& instance);
+		explicit Device(const Core::InstanceRef &instance);
 		~Device();
 
 		void WaitIdle() const;
 		[[nodiscard]] VkCommandBuffer BeginSingleTimeCommands() const;
-		void EndSingleTimeCommands(const VkCommandBuffer& commandBuffer) const;
+		void EndSingleTimeCommands(const VkCommandBuffer &commandBuffer) const;
 
-		[[nodiscard]] const VkDevice& operator*() const { return m_device; }
+		[[nodiscard]] const VkDevice &operator*() const
+		{
+			return m_device;
+		}
 
-		[[nodiscard]] const VkDevice& GetVkDevice() const { return m_device; }
+		[[nodiscard]] const VkDevice &GetVkDevice() const
+		{
+			return m_device;
+		}
 
 		// TODO: This is not quite neccessary - Only used during rendering
-		[[nodiscard]] const VkPhysicalDevice& GetVkPhysicalDevice() const { return m_physicalDevice; }
+		[[nodiscard]] const VkPhysicalDevice &GetVkPhysicalDevice() const
+		{
+			return m_physicalDevice;
+		}
 
-		[[nodiscard]] const VkQueue& GetVkGraphicsQueue() const { return m_graphicsQueue; }
+		[[nodiscard]] const VkQueue &GetVkGraphicsQueue() const
+		{
+			return m_graphicsQueue;
+		}
 
-		[[nodiscard]] const VkQueue& GetVkPresentQueue() const { return m_presentQueue; }
+		[[nodiscard]] const VkQueue &GetVkPresentQueue() const
+		{
+			return m_presentQueue;
+		}
 
-		[[nodiscard]] const VkCommandPool& GetVkCommandPool() const { return m_commandPool; }
+		[[nodiscard]] const VkCommandPool &GetVkCommandPool() const
+		{
+			return m_commandPool;
+		}
 
-		[[nodiscard]] const VmaAllocator& GetVmaAllocator() const { return m_allocator; }
+		[[nodiscard]] const VmaAllocator &GetVmaAllocator() const
+		{
+			return m_allocator;
+		}
 
 		[[nodiscard]] DescriptorPoolRef GetDescriptorPool() const;
 
 		// TODO: This is not quite neccessary - Only used during initialization
-		[[nodiscard]] QueueFamilyIndices GetQueueFamilies() const; // TODO -> SwapChain
+		[[nodiscard]] QueueFamilyIndices GetQueueFamilies() const;	  // TODO -> SwapChain
 		[[nodiscard]] SurfaceProperties GetSurfaceProperties() const; // TODO -> SwapChain
 
 		[[nodiscard]] bool CheckDeviceExtensionSupport() const
@@ -62,9 +90,15 @@ namespace Grafkit::Core {
 			return CheckDeviceExtensionSupport(m_physicalDevice);
 		}
 
-		[[nodiscard]] const VkPhysicalDeviceProperties& GetDeviceProperties() { return m_deviceProperties; }
+		[[nodiscard]] const VkPhysicalDeviceProperties &GetDeviceProperties()
+		{
+			return m_deviceProperties;
+		}
 
-		[[nodiscard]] const VkPhysicalDeviceLimits& GetDeviceLimits() { return m_deviceProperties.limits; }
+		[[nodiscard]] const VkPhysicalDeviceLimits &GetDeviceLimits()
+		{
+			return m_deviceProperties.limits;
+		}
 
 		[[nodiscard]] uint32_t GetMaxConcurrentFrames() const;
 
@@ -76,13 +110,13 @@ namespace Grafkit::Core {
 		void CreateCommandPool();
 		void InitializeAllocator();
 
-		[[nodiscard]] QueueFamilyIndices FindQueueFamilies(const VkPhysicalDevice& physicalDevice) const;
+		[[nodiscard]] QueueFamilyIndices FindQueueFamilies(const VkPhysicalDevice &physicalDevice) const;
 
 		[[nodiscard]] SurfaceProperties QueryPhisicalDeviceSurfaceProperties(
-			const VkPhysicalDevice& physicalDevice) const; // TODO -> SwapChain
+			const VkPhysicalDevice &physicalDevice) const; // TODO -> SwapChain
 
-		[[nodiscard]] bool IsDeviceSuitable(const VkPhysicalDevice& m_device) const;
-		[[nodiscard]] bool CheckDeviceExtensionSupport(const VkPhysicalDevice& m_device) const;
+		[[nodiscard]] bool IsDeviceSuitable(const VkPhysicalDevice &m_device) const;
+		[[nodiscard]] bool CheckDeviceExtensionSupport(const VkPhysicalDevice &m_device) const;
 
 #ifdef _DEBUG
 		void PrintVulkanDeviceLimits() const;
@@ -107,7 +141,7 @@ namespace Grafkit::Core {
 		mutable std::optional<SurfaceProperties> m_surfaceProperties = std::nullopt;
 		mutable std::optional<uint32_t> m_framesInFligtCount = std::nullopt;
 
-		VkPhysicalDeviceProperties m_deviceProperties {};
+		VkPhysicalDeviceProperties m_deviceProperties{};
 	};
 
 } // namespace Grafkit::Core

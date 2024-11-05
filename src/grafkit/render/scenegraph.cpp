@@ -15,18 +15,22 @@
 
 void Grafkit::Node::UpdateLocalMatrix()
 {
-	matrix
-		= glm::translate(glm::mat4(1.0f), translation) * glm::mat4_cast(rotation) * glm::scale(glm::mat4(1.0f), scale);
+	matrix =
+		glm::translate(glm::mat4(1.0f), translation) * glm::mat4_cast(rotation) * glm::scale(glm::mat4(1.0f), scale);
 }
 
-Grafkit::NodePtr Grafkit::Scenegraph::CreateNode(const NodePtr& parent, const MeshPtr& mesh)
+Grafkit::NodePtr Grafkit::Scenegraph::CreateNode(const NodePtr &parent, const MeshPtr &mesh)
 {
 	NodePtr node = std::make_shared<Node>();
-	if (parent) {
+	if (parent)
+	{
 		node->parent = parent;
 		parent->children.push_back(node);
-	} else {
-		if (m_root) {
+	}
+	else
+	{
+		if (m_root)
+		{
 			throw std::runtime_error("Root node already exists");
 		}
 		m_root = node;
@@ -45,12 +49,24 @@ Grafkit::Scenegraph::~Scenegraph()
 	m_textures.clear();
 }
 
-void Grafkit::Scenegraph::AddMaterial(const MaterialPtr& material) { m_materials.push_back(material); }
-void Grafkit::Scenegraph::AddTexture(const TexturePtr& texture) { m_textures.push_back(texture); }
-void Grafkit::Scenegraph::AddMesh(const MeshPtr& mesh) { m_meshes.push_back(mesh); }
-void Grafkit::Scenegraph::AddAnimation(const Animation::AnimationPtr& animation) { m_animations.push_back(animation); }
+void Grafkit::Scenegraph::AddMaterial(const MaterialPtr &material)
+{
+	m_materials.push_back(material);
+}
+void Grafkit::Scenegraph::AddTexture(const TexturePtr &texture)
+{
+	m_textures.push_back(texture);
+}
+void Grafkit::Scenegraph::AddMesh(const MeshPtr &mesh)
+{
+	m_meshes.push_back(mesh);
+}
+void Grafkit::Scenegraph::AddAnimation(const Animation::AnimationPtr &animation)
+{
+	m_animations.push_back(animation);
+}
 
-void Grafkit::Scenegraph::Update(const Grafkit::TimeInfo& timeInfo)
+void Grafkit::Scenegraph::Update(const Grafkit::TimeInfo &timeInfo)
 {
 	std::stack<NodePtr> stack;
 	stack.push(m_root);
@@ -58,7 +74,8 @@ void Grafkit::Scenegraph::Update(const Grafkit::TimeInfo& timeInfo)
 	std::stack<glm::mat4> matrixStack;
 	matrixStack.emplace(1.0f);
 
-	while (!stack.empty()) {
+	while (!stack.empty())
+	{
 		NodePtr currentNode = stack.top();
 		stack.pop();
 
@@ -69,14 +86,15 @@ void Grafkit::Scenegraph::Update(const Grafkit::TimeInfo& timeInfo)
 		matrixStack.pop();
 
 		// Process children nodes
-		for (const auto& child : currentNode->children) {
+		for (const auto &child : currentNode->children)
+		{
 			matrixStack.push(currentNode->modelView);
 			stack.push(child);
 		}
 	}
 }
 
-void Grafkit::Scenegraph::Draw(const Grafkit::Core::CommandBufferRef& commandBuffer)
+void Grafkit::Scenegraph::Draw(const Grafkit::Core::CommandBufferRef &commandBuffer)
 {
 	std::stack<NodePtr> stack;
 	stack.push(m_root);
@@ -84,44 +102,54 @@ void Grafkit::Scenegraph::Draw(const Grafkit::Core::CommandBufferRef& commandBuf
 	std::stack<glm::mat4> matrixStack;
 	matrixStack.push(m_root->matrix);
 
-	while (!stack.empty()) {
+	while (!stack.empty())
+	{
 		NodePtr currentNode = stack.top();
 		stack.pop();
 
 		Core::PipelinePtr pipeline = nullptr;
 
 		const MeshPtr mesh = currentNode->mesh.lock();
-		if (!currentNode->isHidden && mesh != nullptr) {
-			for (const auto& primitive : mesh->m_primitives) {
+		if (!currentNode->isHidden && mesh != nullptr)
+		{
+			for (const auto &primitive : mesh->m_primitives)
+			{
 
 				//		// Bind material
-				if (primitive.material != nullptr) {
-					if (pipeline != primitive.material->pipeline) {
+				if (primitive.material != nullptr)
+				{
+					if (pipeline != primitive.material->pipeline)
+					{
 						pipeline = primitive.material->pipeline;
 						pipeline->Bind(**commandBuffer);
 					}
 
-					for (const auto& descriptorSet : primitive.material->descriptorSets) {
+					for (const auto &descriptorSet : primitive.material->descriptorSets)
+					{
 						descriptorSet->Bind(commandBuffer,
 							primitive.material->pipeline->GetPipelineLayout(),
 							commandBuffer->GetFrameIndex());
 					}
 				}
 
-				vkCmdPushConstants(**commandBuffer,
-					pipeline->GetPipelineLayout(),
-					VK_SHADER_STAGE_VERTEX_BIT,
-					0,
-					sizeof(ModelView),
-					&currentNode->modelView);
+				if (pipeline != nullptr)
+				{
+					vkCmdPushConstants(**commandBuffer,
+						pipeline->GetPipelineLayout(),
+						VK_SHADER_STAGE_VERTEX_BIT,
+						0,
+						sizeof(ModelView),
+						&currentNode->modelView);
 
-				mesh->Bind(commandBuffer, primitive.vertexOffset);
-				primitive.Draw(commandBuffer);
+					mesh->Bind(commandBuffer, primitive.vertexOffset);
+					primitive.Draw(commandBuffer);
+				}
 			}
 		}
 
 		// Process children nodes
-		for (const auto& child : currentNode->children) {
+		for (const auto &child : currentNode->children)
+		{
 			stack.push(child);
 		}
 	}

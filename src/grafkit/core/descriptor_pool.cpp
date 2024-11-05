@@ -6,10 +6,8 @@
 
 using namespace Grafkit::Core;
 
-DescriptorPool::DescriptorPool(const DeviceRef& device, const uint32_t maxSets, std::vector<PoolSet> poolSets)
-	: m_device(device)
-	, m_poolSets(std::move(poolSets))
-	, m_maxSets(maxSets)
+DescriptorPool::DescriptorPool(const DeviceRef &device, const uint32_t maxSets, std::vector<PoolSet> poolSets)
+	: m_device(device), m_poolSets(std::move(poolSets)), m_maxSets(maxSets)
 {
 	assert(m_maxSets > 0);
 	assert(!m_poolSets.empty());
@@ -18,16 +16,18 @@ DescriptorPool::DescriptorPool(const DeviceRef& device, const uint32_t maxSets, 
 
 DescriptorPool::~DescriptorPool()
 {
-	for (auto& pool : m_readyPools) {
+	for (auto &pool : m_readyPools)
+	{
 		vkDestroyDescriptorPool(**m_device, pool, nullptr);
 	}
 
-	for (auto& pool : m_fullPools) {
+	for (auto &pool : m_fullPools)
+	{
 		vkDestroyDescriptorPool(**m_device, pool, nullptr);
 	}
 }
 
-VkDescriptorSet DescriptorPool::AllocateDescriptorSet(const VkDescriptorSetLayout& layout)
+VkDescriptorSet DescriptorPool::AllocateDescriptorSet(const VkDescriptorSetLayout &layout)
 {
 	// get or create a pool to allocate from
 	VkDescriptorPool poolToUse = GetPool();
@@ -38,7 +38,8 @@ VkDescriptorSet DescriptorPool::AllocateDescriptorSet(const VkDescriptorSetLayou
 	VkResult result = vkAllocateDescriptorSets(**m_device, &allocInfo, &descriptorSet);
 
 	// allocation failed. Try again with another pool
-	if (result == VK_ERROR_OUT_OF_POOL_MEMORY || result == VK_ERROR_FRAGMENTED_POOL) {
+	if (result == VK_ERROR_OUT_OF_POOL_MEMORY || result == VK_ERROR_FRAGMENTED_POOL)
+	{
 		m_fullPools.push_back(poolToUse);
 
 		poolToUse = GetPool();
@@ -47,7 +48,8 @@ VkDescriptorSet DescriptorPool::AllocateDescriptorSet(const VkDescriptorSetLayou
 		result = vkAllocateDescriptorSets(**m_device, &allocInfo, &descriptorSet);
 	}
 
-	if (result != VK_SUCCESS) {
+	if (result != VK_SUCCESS)
+	{
 		throw std::runtime_error("Failed to allocate descriptor set");
 	}
 
@@ -58,11 +60,12 @@ VkDescriptorSet DescriptorPool::AllocateDescriptorSet(const VkDescriptorSetLayou
 }
 
 [[nodiscard]] std::vector<VkDescriptorSet> DescriptorPool::AllocateDescriptorSets(
-	const VkDescriptorSetLayout& layout, const uint32_t count)
+	const VkDescriptorSetLayout &layout, const uint32_t count)
 {
 	Log::Instance().Debug("Allocating %d descriptor sets", count);
 	std::vector<VkDescriptorSet> descriptorSets;
-	for (uint32_t i = 0; i < count; i++) {
+	for (uint32_t i = 0; i < count; i++)
+	{
 		descriptorSets.emplace_back(AllocateDescriptorSet(layout));
 	}
 	return descriptorSets;
@@ -72,7 +75,8 @@ VkDescriptorPool DescriptorPool::CreatePool()
 {
 	std::vector<VkDescriptorPoolSize> poolSizes;
 	poolSizes.reserve(m_poolSets.size());
-	for (const auto& poolSize : m_poolSets) {
+	for (const auto &poolSize : m_poolSets)
+	{
 		poolSizes.push_back(Initializers::DescriptorPoolSize(poolSize.type, static_cast<uint32_t>(poolSize.size)));
 	}
 
@@ -90,13 +94,17 @@ VkDescriptorPool DescriptorPool::GetPool()
 	// Get or create a pool [to allocate from]
 	VkDescriptorPool pool;
 	// check if we have a pool ready
-	if (!m_readyPools.empty()) {
+	if (!m_readyPools.empty())
+	{
 		pool = m_readyPools.back();
 		m_readyPools.pop_back();
-	} else {
+	}
+	else
+	{
 		// need to create a new pool
 		pool = CreatePool();
-		if (pool == nullptr) {
+		if (pool == nullptr)
+		{
 			throw std::runtime_error("Failed to create descriptor pool");
 		}
 	}

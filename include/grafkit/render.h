@@ -11,9 +11,11 @@
 #include <grafkit/core/pipeline.h>
 #include <grafkit/render/texture.h>
 
-namespace Grafkit {
+namespace Grafkit
+{
 
-	namespace Core {
+	namespace Core
+	{
 		using InstancePtr = std::unique_ptr<Instance>;
 		using DevicePtr = std::unique_ptr<Device>;
 		using SwapChainPtr = std::unique_ptr<SwapChain>;
@@ -22,25 +24,30 @@ namespace Grafkit {
 	} // namespace Core
 
 	// MARK: RenderContext Interface
-	class GKAPI IRenderContext {
+	class GKAPI IRenderContext
+	{
 	public:
 		virtual ~IRenderContext() = default;
 
 		[[nodiscard]] virtual const Core::DeviceRef GetDevice() const = 0;
 		[[nodiscard]] virtual const Core::RenderTargetRef GetFrameBuffer() const = 0;
 		[[nodiscard]] virtual Core::CommandBufferRef BeginCommandBuffer() = 0;
-		virtual void BeginFrame(const Core::CommandBufferRef& commandBuffer) = 0;
-		virtual void EndFrame(const Core::CommandBufferRef& commandBuffer) = 0;
+		virtual void BeginFrame(const Core::CommandBufferRef &commandBuffer) = 0;
+		virtual void EndFrame(const Core::CommandBufferRef &commandBuffer) = 0;
 		virtual void Flush() = 0;
 	};
 
 	// MARK: BaseRenderContext
-	class GKAPI BaseRenderContext : public IRenderContext {
+	class GKAPI BaseRenderContext : public IRenderContext
+	{
 	public:
-		explicit BaseRenderContext(const Core::WindowRef& window);
+		explicit BaseRenderContext(const Core::WindowRef &window);
 		~BaseRenderContext() override;
 
-		[[nodiscard]] const Core::DeviceRef GetDevice() const final { return MakeReference(*m_device); }
+		[[nodiscard]] const Core::DeviceRef GetDevice() const final
+		{
+			return MakeReference(*m_device);
+		}
 
 		[[nodiscard]] const Core::RenderTargetRef GetFrameBuffer() const final
 		{
@@ -48,15 +55,18 @@ namespace Grafkit {
 		}
 
 		[[nodiscard]] Core::CommandBufferRef BeginCommandBuffer() final;
-		void BeginFrame(const Core::CommandBufferRef& commandBuffer) final;
-		void EndFrame(const Core::CommandBufferRef& commandBuffer) final;
+		void BeginFrame(const Core::CommandBufferRef &commandBuffer) final;
+		void EndFrame(const Core::CommandBufferRef &commandBuffer) final;
 
 		void Flush() final;
 
 		[[nodiscard]] float GetAspectRatio() const;
 		[[nodiscard]] VkExtent2D GetExtent() const;
 
-		[[nodiscard]] uint32_t GetNextFrameIndex() const { return m_frameIndex; }
+		[[nodiscard]] uint32_t GetNextFrameIndex() const
+		{
+			return m_frameIndex;
+		}
 
 	private:
 		const Core::WindowRef m_window;
@@ -77,13 +87,14 @@ namespace Grafkit {
 
 	// MARK: Render context
 
-	class GKAPI RenderContext : public BaseRenderContext {
+	class GKAPI RenderContext : public BaseRenderContext
+	{
 	public:
-		explicit RenderContext(const Core::WindowRef& window);
+		explicit RenderContext(const Core::WindowRef &window);
 
 		[[nodiscard]] Core::DescriptorBuilder DescriptorBuilder() const;
 
-		void AddStaticPipelineDescriptor(const uint32_t slot, const Core::PipelineDescriptor& descriptors);
+		void AddStaticPipelineDescriptor(const uint32_t slot, const Core::PipelineDescriptor &descriptors);
 		[[nodiscard]] Core::GraphicsPipelineBuilder PipelineBuilder(uint32_t descriptorSlot) const;
 		[[nodiscard]] Core::GraphicsPipelineBuilder PipelineBuilder(
 			uint32_t descriptorSlot, const Core::RenderTargetRef renderPass) const;

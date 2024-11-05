@@ -18,8 +18,7 @@ using namespace Grafkit::Core;
 constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
 // MARK: BaseRenderContext
-BaseRenderContext::BaseRenderContext(const Core::WindowRef& window)
-	: m_window(window)
+BaseRenderContext::BaseRenderContext(const Core::WindowRef &window) : m_window(window)
 {
 	m_instance = std::make_unique<Core::Instance>(window);
 
@@ -48,14 +47,15 @@ BaseRenderContext::~BaseRenderContext()
 
 Core::CommandBufferRef BaseRenderContext::BeginCommandBuffer()
 {
-	if (!m_swapChain->AcquireNextFrame()) {
+	if (!m_swapChain->AcquireNextFrame())
+	{
 		// TOOD: Recreate swap chain
 		throw std::runtime_error("swap chain out of date!");
 	}
 
 	m_frameIndex = m_swapChain->GetCurrentFrameIndex();
 
-	Core::CommandBufferPtr& commandBuffer = m_commandBuffers[m_frameIndex];
+	Core::CommandBufferPtr &commandBuffer = m_commandBuffers[m_frameIndex];
 	commandBuffer->Reset();
 
 	VkCommandBufferBeginInfo beginInfo = Core::Initializers::CommandBufferBeginInfo();
@@ -64,12 +64,12 @@ Core::CommandBufferRef BaseRenderContext::BeginCommandBuffer()
 	return MakeReference(*commandBuffer);
 }
 
-void BaseRenderContext::BeginFrame(const Core::CommandBufferRef& commandBuffer)
+void BaseRenderContext::BeginFrame(const Core::CommandBufferRef &commandBuffer)
 {
 	m_renderTarget->BeginRenderPass(commandBuffer, m_frameIndex);
 }
 
-void BaseRenderContext::EndFrame(const Core::CommandBufferRef& commandBuffer)
+void BaseRenderContext::EndFrame(const Core::CommandBufferRef &commandBuffer)
 {
 	commandBuffer->End();
 
@@ -87,7 +87,8 @@ void BaseRenderContext::Flush()
 
 void BaseRenderContext::InitializeCommandBuffers()
 {
-	for (uint32_t frameIndex = 0; frameIndex < m_swapChain->GetImageCount(); frameIndex++) {
+	for (uint32_t frameIndex = 0; frameIndex < m_swapChain->GetImageCount(); frameIndex++)
+	{
 		m_commandBuffers.push_back(std::make_unique<Core::CommandBuffer>(MakeReference(*m_device), frameIndex));
 	}
 }
@@ -98,16 +99,18 @@ void BaseRenderContext::InitializeCommandBuffers()
 	return static_cast<float>(extent.width) / static_cast<float>(extent.height);
 }
 
-VkExtent2D Grafkit::BaseRenderContext::GetExtent() const { return m_swapChain->GetExtent(); }
+VkExtent2D Grafkit::BaseRenderContext::GetExtent() const
+{
+	return m_swapChain->GetExtent();
+}
 
 // ----------------------------------------------------------------------------
 // MARK: RenderContext
 
-Grafkit::RenderContext::RenderContext(const Core::WindowRef& window)
+Grafkit::RenderContext::RenderContext(const Core::WindowRef &window)
 
-	: BaseRenderContext(window)
-	, m_pipelineFactory(std::make_unique<Core::PipelineFactory>())
-	, m_descriptorFactory(std::make_unique<Core::DescriptorFactory>())
+	: BaseRenderContext(window), m_pipelineFactory(std::make_unique<Core::PipelineFactory>()),
+	  m_descriptorFactory(std::make_unique<Core::DescriptorFactory>())
 {
 }
 
@@ -117,7 +120,7 @@ Grafkit::Core::DescriptorBuilder Grafkit::RenderContext::DescriptorBuilder() con
 }
 
 void Grafkit::RenderContext::AddStaticPipelineDescriptor(
-	const uint32_t slot, const Core::PipelineDescriptor& descriptors)
+	const uint32_t slot, const Core::PipelineDescriptor &descriptors)
 {
 	m_pipelineFactory->AddStaticPipelineDescriptor(slot, descriptors);
 }

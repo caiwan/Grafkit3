@@ -6,23 +6,34 @@
 
 #include <optional>
 
-namespace Grafkit::Core {
+namespace Grafkit::Core
+{
 
-	class Image {
+	class Image
+	{
 	public:
-		explicit Image(const DeviceRef& device,
-			const VkImage& image,
-			const VkImageView& imageView,
+		explicit Image(const DeviceRef &device,
+			const VkImage &image,
+			const VkImageView &imageView,
 			const VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 			const std::optional<VmaAllocation> allocation = std::nullopt);
 
 		virtual ~Image();
 
-		[[nodiscard]] const VkImage& GetImage() const { return m_image; }
-		[[nodiscard]] const VkImageView& GetImageView() const { return m_imageView; }
-		[[nodiscard]] const VkImageLayout& GetLayout() const { return m_layout; }
+		[[nodiscard]] const VkImage &GetImage() const
+		{
+			return m_image;
+		}
+		[[nodiscard]] const VkImageView &GetImageView() const
+		{
+			return m_imageView;
+		}
+		[[nodiscard]] const VkImageLayout &GetLayout() const
+		{
+			return m_layout;
+		}
 
-		static ImagePtr CreateImage(const DeviceRef& device,
+		static ImagePtr CreateImage(const DeviceRef &device,
 			const VkExtent3D size,
 			const VkFormat format,
 			const VkImageType type,
@@ -30,8 +41,8 @@ namespace Grafkit::Core {
 			const VkImageUsageFlags usage = VK_IMAGE_USAGE_SAMPLED_BIT,
 			const VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-		static ImagePtr CreateImage(const DeviceRef& device,
-			const void* data,
+		static ImagePtr CreateImage(const DeviceRef &device,
+			const void *data,
 			const VkExtent3D size,
 			const uint32_t channels,
 			const VkFormat format,
@@ -51,7 +62,7 @@ namespace Grafkit::Core {
 		VkImageLayout m_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 
 		static void TransitionImageLayout(
-			VkCommandBuffer& command, const VkImage& image, VkImageLayout currentLayout, VkImageLayout newLayout);
+			VkCommandBuffer &command, const VkImage &image, VkImageLayout currentLayout, VkImageLayout newLayout);
 	};
 
 } // namespace Grafkit::Core

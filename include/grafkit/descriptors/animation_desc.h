@@ -17,6 +17,7 @@
 #include <vector>
 
 /* animation_desc */
-namespace Grafkit::Resource {
+namespace Grafkit::Resource
+{
 } // namespace Grafkit::Resource
 #endif // __ANIMATION_DESC_GENERATED_H__

@@ -29,37 +29,42 @@
 #include <grafkit/descriptors/scene_desc.h>
 
 /* animation_desc */
-namespace Grafkit::Resource {
+namespace Grafkit::Resource
+{
 
 } // namespace Grafkit::Resource
 
 /* image_desc */
-namespace Grafkit::Resource {
-	void to_json(nlohmann::json& j, const ImageDesc& obj);
-	void from_json(const nlohmann::json& j, ImageDesc& obj);
+namespace Grafkit::Resource
+{
+	void to_json(nlohmann::json &j, const ImageDesc &obj);
+	void from_json(const nlohmann::json &j, ImageDesc &obj);
 
-	void to_json(nlohmann::json& j, const SolidImageDesc& obj);
-	void from_json(const nlohmann::json& j, SolidImageDesc& obj);
+	void to_json(nlohmann::json &j, const SolidImageDesc &obj);
+	void from_json(const nlohmann::json &j, SolidImageDesc &obj);
 
-	void to_json(nlohmann::json& j, const CheckerImageDesc& obj);
-	void from_json(const nlohmann::json& j, CheckerImageDesc& obj);
+	void to_json(nlohmann::json &j, const CheckerImageDesc &obj);
+	void from_json(const nlohmann::json &j, CheckerImageDesc &obj);
 
 } // namespace Grafkit::Resource
 
 /* material_desc */
-namespace Grafkit::Resource {
-	void to_json(nlohmann::json& j, const MaterialDesc& obj);
-	void from_json(const nlohmann::json& j, MaterialDesc& obj);
+namespace Grafkit::Resource
+{
+	void to_json(nlohmann::json &j, const MaterialDesc &obj);
+	void from_json(const nlohmann::json &j, MaterialDesc &obj);
 
 } // namespace Grafkit::Resource
 
 /* mesh_desc */
-namespace Grafkit::Resource {
+namespace Grafkit::Resource
+{
 
 } // namespace Grafkit::Resource
 
 /* scene_desc */
-namespace Grafkit::Resource {
+namespace Grafkit::Resource
+{
 } // namespace Grafkit::Resource
 
 // NOLINTEND(readability-identifier-naming)
