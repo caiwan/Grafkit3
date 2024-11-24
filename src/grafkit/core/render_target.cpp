@@ -18,8 +18,12 @@ RenderTarget::RenderTarget(const DeviceRef &device,
 	std::vector<VkFramebuffer> frameBuffers,
 	const VkSampler sample,
 	std::vector<RenderTargetAttachment> attachments)
-	: m_device(device), m_renderPass(renderPass), m_extent(extent), m_frameBuffers(std::move(frameBuffers)),
-	  m_attachments(std::move(attachments)), m_sampler(sample)
+	: m_device(device)
+	, m_renderPass(renderPass)
+	, m_extent(extent)
+	, m_frameBuffers(std::move(frameBuffers))
+	, m_attachments(std::move(attachments))
+	, m_sampler(sample)
 {
 	SetupViewport();
 }
@@ -42,46 +46,46 @@ RenderTarget::~RenderTarget()
 	}
 }
 
-void RenderTarget::SetClearColor(const uint32_t index, const VkClearColorValue &color)
-{
-	assert(index < m_attachments.size());
-	m_attachments[index].clearValue.color = color;
-}
+// void RenderTarget::SetClearColor(const uint32_t index, const VkClearColorValue &color)
+// {
+// 	assert(index < m_attachments.size());
+// 	m_attachments[index].clearValue.color = color;
+// }
 
-void RenderTarget::SetClearDepth(const uint32_t index, const VkClearDepthStencilValue &depthStencil)
-{
-	assert(index < m_attachments.size());
-	m_attachments[index].clearValue.depthStencil = depthStencil;
-}
+// void RenderTarget::SetClearDepth(const uint32_t index, const VkClearDepthStencilValue &depthStencil)
+// {
+// 	assert(index < m_attachments.size());
+// 	m_attachments[index].clearValue.depthStencil = depthStencil;
+// }
 
-void RenderTarget::BeginRenderPass(const CommandBufferRef &commandBuffer, const uint32_t imageIndex) const
-{
-	VkRenderPassBeginInfo renderPassInfo = Core::Initializers::RenderPassBeginInfo();
-	renderPassInfo.pNext = nullptr;
-	renderPassInfo.renderPass = m_renderPass;
-	renderPassInfo.renderArea.offset = {0, 0};
-	renderPassInfo.renderArea.extent = m_extent;
-	renderPassInfo.framebuffer = m_frameBuffers[imageIndex];
+// void RenderTarget::BeginRenderPass(const CommandBufferRef &commandBuffer, const uint32_t imageIndex) const
+// {
+// 	VkRenderPassBeginInfo renderPassInfo = Core::Initializers::RenderPassBeginInfo();
+// 	renderPassInfo.pNext = nullptr;
+// 	renderPassInfo.renderPass = m_renderPass;
+// 	renderPassInfo.renderArea.offset = {0, 0};
+// 	renderPassInfo.renderArea.extent = m_extent;
+// 	renderPassInfo.framebuffer = m_frameBuffers[imageIndex];
 
-	std::vector<VkClearValue> clearValues;
-	clearValues.reserve(m_attachments.size());
-	for (const auto &attachment : m_attachments)
-	{
-		clearValues.push_back(attachment.clearValue);
-	}
+// 	std::vector<VkClearValue> clearValues;
+// 	clearValues.reserve(m_attachments.size());
+// 	for (const auto &attachment : m_attachments)
+// 	{
+// 		clearValues.push_back(attachment.clearValue);
+// 	}
 
-	renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-	renderPassInfo.pClearValues = clearValues.data();
+// 	renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+// 	renderPassInfo.pClearValues = clearValues.data();
 
-	vkCmdSetViewport(**commandBuffer, 0, 1, &m_viewport);
-	vkCmdSetScissor(**commandBuffer, 0, 1, &m_scissor);
-	vkCmdBeginRenderPass(**commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-}
+// 	vkCmdSetViewport(**commandBuffer, 0, 1, &m_viewport);
+// 	vkCmdSetScissor(**commandBuffer, 0, 1, &m_scissor);
+// 	vkCmdBeginRenderPass(**commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+// }
 
-void Grafkit::Core::RenderTarget::EndRenderPass(const CommandBufferRef &commandBuffer) const
-{
-	vkCmdEndRenderPass(**commandBuffer);
-}
+// void Grafkit::Core::RenderTarget::EndRenderPass(const CommandBufferRef &commandBuffer) const
+// {
+// 	vkCmdEndRenderPass(**commandBuffer);
+// }
 
 void Grafkit::Core::RenderTarget::SetupViewport()
 {
@@ -98,7 +102,8 @@ void Grafkit::Core::RenderTarget::SetupViewport()
 
 // MARK: RenderTargetBuilder
 
-RenderTargetBuilder::RenderTargetBuilder(const DeviceRef &device) : m_device(device)
+RenderTargetBuilder::RenderTargetBuilder(const DeviceRef &device)
+	: m_device(device)
 {
 }
 
@@ -133,8 +138,9 @@ RenderTargetBuilder &RenderTargetBuilder::AddAttachment(const RenderTargetAttach
 	return *this;
 }
 
-RenderTargetBuilder &Grafkit::Core::RenderTargetBuilder::AddAttachment(
-	const VkFormat format, const VkImageUsageFlags usage, const VkSampleCountFlagBits sampleCount)
+RenderTargetBuilder &Grafkit::Core::RenderTargetBuilder::AddAttachment(const VkFormat format,
+	const VkImageUsageFlags usage,
+	const VkSampleCountFlagBits sampleCount)
 {
 	m_attachments.push_back({nullptr, 1, format, usage, sampleCount});
 	return *this;
@@ -301,8 +307,12 @@ RenderTargetPtr RenderTargetBuilder::Build() const
 	}
 
 	// Create render target
-	return std::make_unique<RenderTarget>(
-		m_device, renderPass, m_extent, std::move(frameBuffers), sampler, std::move(renderTargetAttachments));
+	return std::make_unique<RenderTarget>(m_device,
+		renderPass,
+		m_extent,
+		std::move(frameBuffers),
+		sampler,
+		std::move(renderTargetAttachments));
 }
 
 RenderTargetAttachment RenderTargetBuilder::CreateAttachment(const RenderTargetAttachmentInfo &info) const
@@ -407,13 +417,13 @@ RenderTargetAttachment RenderTargetBuilder::CreateAttachment(const RenderTargetA
 	{
 		attachment.description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 		attachment.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-		attachment.clearValue.depthStencil = {1.0f, 0};
+		// attachment.clearValue.depthStencil = {1.0f, 0};
 	}
 	else
 	{
 		attachment.description.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		attachment.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		attachment.clearValue.color = {0.0f, 0.0f, 0.0f, 1.0f};
+		// attachment.clearValue.color = {0.0f, 0.0f, 0.0f, 1.0f};
 	}
 
 	return attachment;

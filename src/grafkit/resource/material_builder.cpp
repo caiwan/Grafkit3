@@ -12,24 +12,33 @@ using namespace Grafkit::Resource;
 using Grafkit::Texture;
 using Grafkit::TexturePtr;
 
-bool Grafkit::Resource::MaterialBuilder::ResolveDependencies(const RefWrapper<ResourceManager>& resources)
+bool Grafkit::Resource::MaterialBuilder::ResolveDependencies(const RefWrapper<ResourceManager> &resources)
 {
 	bool result = true;
-	if (m_pipeline == nullptr && !m_descriptor.pipeline.empty()) {
+	if (m_pipeline == nullptr && !m_descriptor.pipeline.empty())
+	{
 		const auto pipeline = resources->Get<Core::Pipeline>(m_descriptor.pipeline);
-		if (m_pipeline != nullptr) {
+		if (m_pipeline != nullptr)
+		{
 			m_pipeline = pipeline;
-		} else {
+		}
+		else
+		{
 			result = false;
 		}
 	}
 
-	if (m_images.empty() && !m_descriptor.textures.empty()) {
-		for (const auto& [bindId, textureName] : m_descriptor.textures) {
+	if (m_images.empty() && !m_descriptor.textures.empty())
+	{
+		for (const auto &[bindId, textureName] : m_descriptor.textures)
+		{
 			const auto image = resources->Get<Core::Image>(textureName);
-			if (image != nullptr) {
+			if (image != nullptr)
+			{
 				m_images[static_cast<uint32_t>(bindId)] = image;
-			} else {
+			}
+			else
+			{
 				result = false;
 			}
 		}
@@ -38,20 +47,23 @@ bool Grafkit::Resource::MaterialBuilder::ResolveDependencies(const RefWrapper<Re
 	return result;
 }
 
-void MaterialBuilder::Build(const Core::DeviceRef& device)
+void MaterialBuilder::Build(const Core::DeviceRef &device)
 {
-	if (m_descriptorSets.empty()) {
+	if (m_descriptorSets.empty())
+	{
 		throw std::runtime_error("Error: Descriptor set is null");
 	}
 
-	if (m_pipeline == nullptr) {
+	if (m_pipeline == nullptr)
+	{
 		throw std::runtime_error("Error: Pipeline is null");
 	}
 
 	std::map<uint32_t, TexturePtr> textures;
 
 	assert(m_descriptorSets[Grafkit::TEXTURE_SET] != nullptr);
-	for (const auto& [bindId, image] : m_images) {
+	for (const auto &[bindId, image] : m_images)
+	{
 		assert(image != nullptr);
 		const auto texture = CreateTexture(device, image);
 		m_descriptorSets[Grafkit::TEXTURE_SET]->Update(texture->GetImage(), texture->GetSampler(), bindId);
@@ -60,14 +72,16 @@ void MaterialBuilder::Build(const Core::DeviceRef& device)
 	m_resource = std::make_shared<Material>();
 
 	m_resource->descriptorSets.resize(m_descriptorSets.size());
-	for (const auto& [set, descriptorSet] : m_descriptorSets) {
+	for (const auto &[set, descriptorSet] : m_descriptorSets)
+	{
 		assert(set < m_descriptorSets.size());
 		assert(descriptorSet != nullptr);
 		m_resource->descriptorSets[set] = descriptorSet;
 	}
 
 	m_resource->textures.resize(m_images.size());
-	for (const auto& [bindId, texture] : textures) {
+	for (const auto &[bindId, texture] : textures)
+	{
 		assert(texture != nullptr);
 		m_resource->textures[bindId] = texture;
 	}
@@ -75,9 +89,10 @@ void MaterialBuilder::Build(const Core::DeviceRef& device)
 	m_resource->pipeline = m_pipeline;
 }
 
-const TexturePtr MaterialBuilder::CreateTexture(const Core::DeviceRef& device, const Core::ImagePtr& image) const
+const TexturePtr MaterialBuilder::CreateTexture(const Core::DeviceRef &device, const Core::ImagePtr &image) const
 {
-	if (image == nullptr) {
+	if (image == nullptr)
+	{
 		throw std::runtime_error("Error: Image is null");
 	}
 
@@ -93,8 +108,9 @@ const TexturePtr MaterialBuilder::CreateTexture(const Core::DeviceRef& device, c
 
 	// ---
 
-	VkSampler sampler {};
-	if (vkCreateSampler(**device, &samplerInfo, nullptr, &sampler) != VK_SUCCESS) {
+	VkSampler sampler{};
+	if (vkCreateSampler(**device, &samplerInfo, nullptr, &sampler) != VK_SUCCESS)
+	{
 		throw std::runtime_error("failed to create texture sampler!");
 	}
 

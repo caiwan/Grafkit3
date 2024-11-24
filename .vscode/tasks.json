@@ -19,9 +19,12 @@
       "targets": [
         "all"
       ],
-      "group": "build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
       "problemMatcher": [],
-      "detail": "CMake build task"
+      "detail": "CMake build task",
     }
   ]
 }

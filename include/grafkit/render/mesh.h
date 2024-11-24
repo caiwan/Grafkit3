@@ -30,43 +30,46 @@ namespace Grafkit
 		glm::vec3 normal = glm::vec3(0.0f);
 
 		// TODO: This will be generated
-		static inline Core::VertexDescription GetVertexDescription(
-			const uint32_t inputBinding = 0, const uint32_t vertexbinding = 0)
+		static inline Core::VertexDescription GetVertexDescription(const uint32_t inputBinding = 0,
+			const uint32_t vertexbinding = 0)
 		{
-			return {.bindings =
+			return {
+				.bindings =
+					{
 						{
-							{
-								inputBinding,
-								sizeof(Vertex),				// stride
-								VK_VERTEX_INPUT_RATE_VERTEX // inputRate
-							},
+							inputBinding,
+							sizeof(Vertex),				// stride
+							VK_VERTEX_INPUT_RATE_VERTEX // inputRate
 						},
-				.attributes = {
-					{
-						0, // position
-						vertexbinding,
-						VK_FORMAT_R32G32B32_SFLOAT, // format
-						offsetof(Vertex, position), // offset
 					},
+				.attributes =
 					{
-						1, // color
-						vertexbinding,
-						VK_FORMAT_R32G32B32_SFLOAT, // format
-						offsetof(Vertex, color),	// offset
+						{
+							0, // position
+							vertexbinding,
+							VK_FORMAT_R32G32B32_SFLOAT, // format
+							offsetof(Vertex, position), // offset
+						},
+						{
+							1, // color
+							vertexbinding,
+							VK_FORMAT_R32G32B32_SFLOAT, // format
+							offsetof(Vertex, color),	// offset
+						},
+						{
+							2, // uv
+							vertexbinding,
+							VK_FORMAT_R32G32_SFLOAT, // format
+							offsetof(Vertex, uv),	 // offset
+						},
+						{
+							3, // normal
+							vertexbinding,
+							VK_FORMAT_R32G32B32_SFLOAT, // format
+							offsetof(Vertex, normal),	// offset
+						},
 					},
-					{
-						2, // uv
-						vertexbinding,
-						VK_FORMAT_R32G32_SFLOAT, // format
-						offsetof(Vertex, uv),	 // offset
-					},
-					{
-						3, // normal
-						vertexbinding,
-						VK_FORMAT_R32G32B32_SFLOAT, // format
-						offsetof(Vertex, normal),	// offset
-					},
-				}};
+			};
 		}
 	};
 
@@ -121,8 +124,8 @@ namespace Grafkit
 		{
 			glm::vec3 position{};
 
-			static inline Core::VertexDescription GetVertexDescription(
-				const uint32_t inputBinding = 0, const uint32_t vertexbinding = 0)
+			static inline Core::VertexDescription GetVertexDescription(const uint32_t inputBinding = 0,
+				const uint32_t vertexbinding = 0)
 			{
 				return {.bindings =
 							{

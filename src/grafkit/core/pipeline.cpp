@@ -11,8 +11,11 @@ using namespace Grafkit::Core;
 Pipeline::Pipeline(DeviceRef const &m_device,
 	std::tuple<VkPipeline, VkPipelineLayout, std::vector<VkDescriptorSetLayout>> pipeline,
 	VkPipelineBindPoint pipelineBindPoint)
-	: m_device(m_device), m_pipelineBindPoint(pipelineBindPoint), m_pipeline(std::get<0>(pipeline)),
-	  m_pipelineLayout(std::get<1>(pipeline)), m_descriptorSetLayouts(std::get<2>(pipeline))
+	: m_device(m_device)
+	, m_pipelineBindPoint(pipelineBindPoint)
+	, m_pipeline(std::get<0>(pipeline))
+	, m_pipelineLayout(std::get<1>(pipeline))
+	, m_descriptorSetLayouts(std::get<2>(pipeline))
 {
 }
 
@@ -33,11 +36,10 @@ void Pipeline::Bind(VkCommandBuffer commandBuffer)
 
 // -----------------------------------------------------------------------------
 
-GraphicsPipelineBuilder::GraphicsPipelineBuilder(
-	const DeviceRef &device, const RenderTargetRef &renderTarget, const std::optional<PipelineDescriptor> &descriptors)
-	: m_device(device), m_renderTarget(renderTarget)
+GraphicsPipelineBuilder::GraphicsPipelineBuilder(const DeviceRef &device)
+	: m_device(device)
 {
-	// Setup defaults
+	// TOOD: Setup defaults [from struct]
 	SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_FALSE);
 	SetRasterizer(VK_POLYGON_MODE_FILL,
 		VK_CULL_MODE_BACK_BIT,
@@ -51,16 +53,12 @@ GraphicsPipelineBuilder::GraphicsPipelineBuilder(
 	SetColorBlending(mColorBlendAttachment);
 
 	SetDynamicState({VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR});
+}
 
-	if (descriptors.has_value())
-	{
-		SetVertexInputDescription(descriptors->vertexInputDescription);
-		AddDescriptorSets(descriptors->descriptorSetLayouts);
-		for (const auto &pushConstant : descriptors->pushConstants)
-		{
-			m_pushConstants.push_back(pushConstant);
-		}
-	}
+GraphicsPipelineBuilder &Grafkit::Core::GraphicsPipelineBuilder::SetRenderTarget(const Core::RenderTargetPtr &target)
+{
+	m_renderTarget = target;
+	return *this;
 }
 
 GraphicsPipelineBuilder &GraphicsPipelineBuilder::AddVertexShader(const uint8_t *code, size_t len)
@@ -70,7 +68,7 @@ GraphicsPipelineBuilder &GraphicsPipelineBuilder::AddVertexShader(const uint8_t 
 	return *this;
 }
 
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::AddVertexShader(const std::vector<char> &code)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::AddVertexShader(const std::string &code)
 {
 	VkShaderModule vertexShaderModule = CreateShaderModule(code);
 	AddShaderStage(vertexShaderModule, VK_SHADER_STAGE_VERTEX_BIT);
@@ -84,15 +82,15 @@ GraphicsPipelineBuilder &GraphicsPipelineBuilder::AddFragmentShader(const uint8_
 	return *this;
 }
 
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::AddFragmentShader(const std::vector<char> &code)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::AddFragmentShader(const std::string &code)
 {
 	VkShaderModule fragmentShaderModule = CreateShaderModule(code);
 	AddShaderStage(fragmentShaderModule, VK_SHADER_STAGE_FRAGMENT_BIT);
 	return *this;
 }
 
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::SetInputAssembly(
-	const VkPrimitiveTopology topology, const VkBool32 primitiveRestartEnable)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::SetInputAssembly(const VkPrimitiveTopology topology,
+	const VkBool32 primitiveRestartEnable)
 {
 	m_inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 	m_inputAssembly.topology = topology;
@@ -107,38 +105,46 @@ GraphicsPipelineBuilder &GraphicsPipelineBuilder::SetVertexInputDescription(cons
 	return *this;
 }
 
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::AddDescriptorSet(const uint32_t set,
+	const std::vector<DescriptorBinding> &bindings)
+{
+	m_descriptorSets[set] = {};
+	for (const auto &binding : bindings)
+	{
+		m_descriptorSets[set].push_back(
+			Initializers::DescriptorSetLayoutBinding(binding.descriptorType, binding.stageFlags, binding.binding));
+	}
+	return *this;
+}
+
 GraphicsPipelineBuilder &GraphicsPipelineBuilder::AddDescriptorSets(
-	const std::vector<DescriptorSetLayoutBinding> &descriptorSetLayoutBindings)
+	const DescriptorSetLayoutBindings &descriptorSetLayoutBindings)
 {
 	for (const auto &descriptor : descriptorSetLayoutBindings)
 	{
-		m_descriptorSets[descriptor.set] = {};
-		for (const auto &binding : descriptor.bindings)
-		{
-			m_descriptorSets[descriptor.set].push_back(
-				Initializers::DescriptorSetLayoutBinding(binding.descriptorType, binding.stageFlags, binding.binding));
-		}
+		AddDescriptorSet(descriptor.set, descriptor.bindings);
 	}
 
 	return *this;
 }
 
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::AddPushConstants(
-	const VkShaderStageFlags stage, const uint32_t size, const uint32_t offset)
+GraphicsPipelineBuilder &
+GraphicsPipelineBuilder::AddPushConstants(const VkShaderStageFlags stage, const uint32_t size, const uint32_t offset)
 {
 	m_pushConstants.push_back(Initializers::PushConstantRange(stage, size, offset));
 	return *this;
 };
 
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::SetRasterizer(
-	const VkPolygonMode polygonMode, const VkCullModeFlags cullMode, const VkFrontFace frontFace)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::SetRasterizer(const VkPolygonMode polygonMode,
+	const VkCullModeFlags cullMode,
+	const VkFrontFace frontFace)
 {
 	m_rasterizer = Initializers::PipelineRasterizationStateCreateInfo(polygonMode, cullMode, frontFace);
 	return *this;
 }
 
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::SetMultisampling(
-	VkSampleCountFlagBits rasterizationSamples, VkBool32 sampleShadingEnable)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::SetMultisampling(VkSampleCountFlagBits rasterizationSamples,
+	VkBool32 sampleShadingEnable)
 {
 	m_multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 	m_multisampling.sampleShadingEnable = sampleShadingEnable;
@@ -177,8 +183,8 @@ PipelinePtr GraphicsPipelineBuilder::Build()
 	}
 
 	// --- Create Pipeline Layout
-	VkPipelineLayoutCreateInfo pipelineLayoutInfo = Initializers::PipelineLayoutCreateInfo(
-		descriptorSetLayouts.data(), static_cast<uint32_t>(descriptorSetLayouts.size()));
+	VkPipelineLayoutCreateInfo pipelineLayoutInfo = Initializers::PipelineLayoutCreateInfo(descriptorSetLayouts.data(),
+		static_cast<uint32_t>(descriptorSetLayouts.size()));
 
 	pipelineLayoutInfo.flags = VK_PIPELINE_LAYOUT_CREATE_INDEPENDENT_SETS_BIT_EXT;
 
@@ -221,7 +227,7 @@ PipelinePtr GraphicsPipelineBuilder::Build()
 		Initializers::PipelineVertexInputStateCreateInfo(m_vertexBindingDescriptions, m_vertexInputAttrDescriptions);
 
 	VkGraphicsPipelineCreateInfo pipelineInfo = Initializers::PipelineCreateInfo();
-	pipelineInfo.renderPass = m_renderTarget->GetVkRenderPass();
+	pipelineInfo.renderPass = m_renderTarget->GetRenderPass();
 	pipelineInfo.layout = pipelineLayout;
 	pipelineInfo.subpass = 0;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
@@ -273,7 +279,7 @@ VkShaderModule GraphicsPipelineBuilder::CreateShaderModule(const uint8_t *code, 
 	return shaderModule;
 }
 
-VkShaderModule GraphicsPipelineBuilder::CreateShaderModule(const std::vector<char> &code) const
+VkShaderModule GraphicsPipelineBuilder::CreateShaderModule(const std::string &code) const
 {
 	VkShaderModuleCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

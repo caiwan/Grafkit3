@@ -6,17 +6,17 @@
 
 #include <grafkit/common.h>
 
-namespace Grafkit::Core {
+namespace Grafkit::Core
+{
 	class RenderTarget;
-	using RenderTargetPtr = std::unique_ptr<RenderTarget>;
 
-	struct RenderTargetAttachment {
+	struct RenderTargetAttachment
+	{
 		ImagePtr image;
 		VkFormat format = VK_FORMAT_UNDEFINED;
 		VkImageSubresourceRange subresourceRange = {};
 		VkAttachmentDescription description = {};
 		VkImageLayout layout = VK_IMAGE_LAYOUT_UNDEFINED;
-		VkClearValue clearValue = {};
 
 		inline bool HasDepth() const
 		{
@@ -42,10 +42,14 @@ namespace Grafkit::Core {
 			return std::ranges::find(formats, format) != std::end(formats);
 		}
 
-		inline bool IsDepthStencil() const { return (HasDepth() || HasStencil()); }
+		inline bool IsDepthStencil() const
+		{
+			return (HasDepth() || HasStencil());
+		}
 	};
 
-	struct RenderTargetAttachmentInfo {
+	struct RenderTargetAttachmentInfo
+	{
 		ImagePtr image;
 		uint32_t layerCount = 1;
 		VkFormat format = VK_FORMAT_UNDEFINED;
@@ -54,28 +58,82 @@ namespace Grafkit::Core {
 	};
 
 	// MARK: RenderTarget
-	class RenderTarget {
+	class RenderTarget
+	{
 	public:
-		explicit RenderTarget(const DeviceRef& device,
+		explicit RenderTarget(const DeviceRef &device,
 			const VkRenderPass renderPass,
 			const VkExtent2D extent,
 			std::vector<VkFramebuffer> frameBuffers,
 			const VkSampler sampler,
 			std::vector<RenderTargetAttachment> attachments);
 
-		RenderTarget(const RenderTarget& other) = delete;
-		RenderTarget& operator=(const RenderTarget& other) = delete;
+		RenderTarget(const RenderTarget &other) = delete;
+		RenderTarget &operator=(const RenderTarget &other) = delete;
 
 		virtual ~RenderTarget();
 
-		void SetClearColor(const uint32_t index, const VkClearColorValue& color);
-		void SetClearDepth(const uint32_t index, const VkClearDepthStencilValue& depthStencil);
+		// ???
 
-		void BeginRenderPass(const CommandBufferRef& commandBuffer, const uint32_t imageIndex = 0) const;
-		void EndRenderPass(const CommandBufferRef& commandBuffer) const;
+		// Getters
+		[[nodiscard]] inline const VkRenderPass &GetRenderPass() const
+		{
+			return m_renderPass;
+		}
 
-		[[nodiscard]] const VkRenderPass& GetVkRenderPass() const { return m_renderPass; }
-		[[nodiscard]] size_t GetFrameBufferCount() const { return m_frameBuffers.size(); }
+		[[nodiscard]] inline size_t GetFrameBufferCount() const
+		{
+			return m_frameBuffers.size();
+		}
+
+		[[nodiscard]] inline const VkFramebuffer GetFrameBuffer(const uint32_t index) const
+		{
+			assert(index < m_frameBuffers.size());
+			return m_frameBuffers[index];
+		}
+
+		[[nodiscard]] inline size_t GetAttachmentCount() const
+		{
+			return m_attachments.size();
+		}
+
+		[[nodiscard]] inline VkFormat GetAttachmentFormat(const uint32_t index) const
+		{
+			assert(index < m_attachments.size());
+			return m_attachments[index].format;
+		}
+
+		[[nodiscard]] inline VkFormat GetAttachmentFormat(const uint32_t index) const
+		{
+			assert(index < m_attachments.size());
+			return m_attachments[index].format;
+		}
+
+		[[nodiscard]] inline bool GetAttachemntIsDepthStencil(const uint32_t index) const
+		{
+			assert(index < m_attachments.size());
+			return m_attachments[index].IsDepthStencil();
+		}
+
+		[[nodiscard]] inline VkExtent2D GetExtent() const
+		{
+			return m_extent;
+		}
+
+		[[nodiscard]] inline VkViewport GetViewport() const
+		{
+			return m_viewport;
+		}
+
+		[[nodiscard]] inline VkRect2D GetScissor() const
+		{
+			return m_scissor;
+		}
+
+		[[nodiscard]] inline VkSampler GetSampler() const
+		{
+			return m_sampler;
+		}
 
 	private:
 		const DeviceRef m_device;
@@ -83,8 +141,8 @@ namespace Grafkit::Core {
 		VkRenderPass m_renderPass = VK_NULL_HANDLE;
 
 		VkExtent2D m_extent = {};
-		VkViewport m_viewport {};
-		VkRect2D m_scissor {};
+		VkViewport m_viewport{};
+		VkRect2D m_scissor{};
 
 		std::vector<VkFramebuffer> m_frameBuffers;
 		std::vector<RenderTargetAttachment> m_attachments;
@@ -93,17 +151,18 @@ namespace Grafkit::Core {
 	};
 
 	// MARK: RenderTargetBuilder
-	class RenderTargetBuilder {
+	class RenderTargetBuilder
+	{
 	public:
-		explicit RenderTargetBuilder(const DeviceRef& device);
+		explicit RenderTargetBuilder(const DeviceRef &device);
 
-		RenderTargetBuilder& CreateAttachments(const SwapChainRef& swapChain);
-		RenderTargetBuilder& AddAttachments(const std::vector<RenderTargetAttachmentInfo>& attachments);
-		RenderTargetBuilder& AddAttachment(const RenderTargetAttachmentInfo& attachment);
-		RenderTargetBuilder& AddAttachment(const VkFormat format,
+		RenderTargetBuilder &CreateAttachments(const SwapChainRef &swapChain);
+		RenderTargetBuilder &AddAttachments(const std::vector<RenderTargetAttachmentInfo> &attachments);
+		RenderTargetBuilder &AddAttachment(const RenderTargetAttachmentInfo &attachment);
+		RenderTargetBuilder &AddAttachment(const VkFormat format,
 			const VkImageUsageFlags usage,
 			const VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT);
-		RenderTargetBuilder& SetSize(const VkExtent2D& size);
+		RenderTargetBuilder &SetSize(const VkExtent2D &size);
 
 		RenderTargetPtr Build() const;
 
@@ -115,7 +174,7 @@ namespace Grafkit::Core {
 		std::vector<RenderTargetAttachmentInfo> m_swapChainAttachments;
 		std::vector<RenderTargetAttachmentInfo> m_attachments;
 
-		RenderTargetAttachment CreateAttachment(const RenderTargetAttachmentInfo& info) const;
+		RenderTargetAttachment CreateAttachment(const RenderTargetAttachmentInfo &info) const;
 	};
 
 } // namespace Grafkit::Core

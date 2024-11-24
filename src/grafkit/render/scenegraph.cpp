@@ -99,9 +99,6 @@ void Grafkit::Scenegraph::Draw(const Grafkit::Core::CommandBufferRef &commandBuf
 	std::stack<NodePtr> stack;
 	stack.push(m_root);
 
-	std::stack<glm::mat4> matrixStack;
-	matrixStack.push(m_root->matrix);
-
 	while (!stack.empty())
 	{
 		NodePtr currentNode = stack.top();
@@ -114,7 +111,6 @@ void Grafkit::Scenegraph::Draw(const Grafkit::Core::CommandBufferRef &commandBuf
 		{
 			for (const auto &primitive : mesh->m_primitives)
 			{
-
 				//		// Bind material
 				if (primitive.material != nullptr)
 				{
