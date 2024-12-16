@@ -4,7 +4,7 @@
  *
  * This file has been automatically generated and should not be modified.
  *
- * Generated at: 2024-09-24 13:10:26
+ * Generated at: 2024-12-07 16:44:54
  * Source files:
  *   - animation_desc.gen.yaml
  *   - image_desc.gen.yaml
@@ -27,12 +27,12 @@
 
 // NOLINTBEGIN(readability-identifier-naming) The naming has to match with nlohmann_json
 
-/* animation_desc */
+// MARK: animation_desc
 namespace Grafkit::Resource
 {
 } // namespace Grafkit::Resource
 
-/* image_desc */
+// MARK: image_desc
 namespace Grafkit::Resource
 {
 	void to_json(nlohmann::json &j, const ImageDesc &obj)
@@ -82,14 +82,14 @@ namespace Grafkit::Resource
 	}
 } // namespace Grafkit::Resource
 
-/* material_desc */
+// MARK: material_desc
 namespace Grafkit::Resource
 {
 	void to_json(nlohmann::json &j, const MaterialDesc &obj)
 	{
 		j["name"] = obj.name;
 		j["type"] = obj.type;
-		j["pipeline"] = obj.pipeline;
+		j["stage"] = obj.stage;
 		j["textures"] = obj.textures;
 	}
 
@@ -97,17 +97,100 @@ namespace Grafkit::Resource
 	{
 		obj.name = j["name"].get<std::string>();
 		obj.type = j["type"].get<uint32_t>();
-		obj.pipeline = j["pipeline"].get<std::string>();
+		obj.stage = j["stage"].get<std::string>();
 		obj.textures = j["textures"].get<std::map<TextureType, std::string>>();
 	}
 } // namespace Grafkit::Resource
 
-/* mesh_desc */
+// MARK: mesh_desc
 namespace Grafkit::Resource
 {
+	void to_json(nlohmann::json &j, const PrimitiveDesc &obj)
+	{
+		j["positions"] = obj.positions;
+		j["normals"] = obj.normals;
+		j["tangents"] = obj.tangents;
+		j["bitangents"] = obj.bitangents;
+		j["texCoords"] = obj.texCoords;
+		j["indices"] = obj.indices;
+		j["materialIndex"] = obj.materialIndex;
+	}
+
+	void from_json(const nlohmann::json &j, PrimitiveDesc &obj)
+	{
+		obj.positions = j["positions"].get<std::vector<glm::vec3>>();
+		obj.normals = j["normals"].get<std::vector<glm::vec3>>();
+		obj.tangents = j["tangents"].get<std::vector<glm::vec3>>();
+		obj.bitangents = j["bitangents"].get<std::vector<glm::vec3>>();
+		obj.texCoords = j["texCoords"].get<std::vector<glm::vec2>>();
+		obj.indices = j["indices"].get<std::vector<uint32_t>>();
+		obj.materialIndex = j["materialIndex"].get<uint32_t>();
+	}
+
+	void to_json(nlohmann::json &j, const MeshDesc &obj)
+	{
+		j["name"] = obj.name;
+		j["primitives"] = obj.primitives;
+		j["materials"] = obj.materials;
+		j["type"] = obj.type;
+	}
+
+	void from_json(const nlohmann::json &j, MeshDesc &obj)
+	{
+		obj.name = j["name"].get<std::string>();
+		obj.primitives = j["primitives"].get<std::vector<PrimitiveDesc>>();
+		obj.materials = j["materials"].get<std::map<std::string, uint32_t>>();
+		obj.type = j["type"].get<MeshType>();
+	}
+
+	void to_json(nlohmann::json &j, const PrimitiveDescV2 &obj)
+	{
+		j["indexOffset"] = obj.indexOffset;
+		j["indexCount"] = obj.indexCount;
+		j["vertexOffset"] = obj.vertexOffset;
+		j["vertexCount"] = obj.vertexCount;
+		j["materialIndex"] = obj.materialIndex;
+	}
+
+	void from_json(const nlohmann::json &j, PrimitiveDescV2 &obj)
+	{
+		obj.indexOffset = j["indexOffset"].get<uint32_t>();
+		obj.indexCount = j["indexCount"].get<uint32_t>();
+		obj.vertexOffset = j["vertexOffset"].get<uint32_t>();
+		obj.vertexCount = j["vertexCount"].get<uint32_t>();
+		obj.materialIndex = j["materialIndex"].get<uint32_t>();
+	}
+
+	void to_json(nlohmann::json &j, const MeshDescV2 &obj)
+	{
+		j["name"] = obj.name;
+		j["positions"] = obj.positions;
+		j["normals"] = obj.normals;
+		j["tangents"] = obj.tangents;
+		j["bitangents"] = obj.bitangents;
+		j["texCoords"] = obj.texCoords;
+		j["indices"] = obj.indices;
+		j["primitives"] = obj.primitives;
+		j["materials"] = obj.materials;
+		j["type"] = obj.type;
+	}
+
+	void from_json(const nlohmann::json &j, MeshDescV2 &obj)
+	{
+		obj.name = j["name"].get<std::string>();
+		obj.positions = j["positions"].get<std::vector<glm::vec3>>();
+		obj.normals = j["normals"].get<std::vector<glm::vec3>>();
+		obj.tangents = j["tangents"].get<std::vector<glm::vec3>>();
+		obj.bitangents = j["bitangents"].get<std::vector<glm::vec3>>();
+		obj.texCoords = j["texCoords"].get<std::vector<glm::vec2>>();
+		obj.indices = j["indices"].get<std::vector<uint32_t>>();
+		obj.primitives = j["primitives"].get<std::vector<PrimitiveDescV2>>();
+		obj.materials = j["materials"].get<std::map<std::string, uint32_t>>();
+		obj.type = j["type"].get<MeshType>();
+	}
 } // namespace Grafkit::Resource
 
-/* scene_desc */
+// MARK: scene_desc
 namespace Grafkit::Resource
 {
 } // namespace Grafkit::Resource

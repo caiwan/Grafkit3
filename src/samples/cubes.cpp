@@ -11,6 +11,7 @@
 #include <grafkit/render.h>
 #include <grafkit/render/material.h>
 #include <grafkit/render/mesh.h>
+#include <grafkit/render/render_graph.h>
 #include <grafkit/render/scenegraph.h>
 #include <grafkit/render/texture.h>
 
@@ -34,15 +35,9 @@
 constexpr int WIDTH = 1024;
 constexpr int HEIGHT = 768;
 
-constexpr uint32_t DEFAULT_PIPELINE_DESCRIPTOR = 0;
-
 class HelloApplication : public Grafkit::Application
 {
 private:
-	Grafkit::Core::DescriptorSetPtr m_materialDescriptor;
-	Grafkit::Core::DescriptorSetPtr m_modelviewDescriptor;
-	Grafkit::Core::PipelinePtr m_forwardRender;
-
 	Grafkit::Asset::AssetLoaderPtr m_assetLoader;
 	Grafkit::Resource::ResourceManagerPtr m_resources;
 
@@ -63,7 +58,8 @@ private:
 	Grafkit::Core::UniformBuffer<Grafkit::CameraView> m_ubo;
 
 public:
-	HelloApplication() : Grafkit::Application(WIDTH, HEIGHT, "Test application")
+	HelloApplication()
+		: Grafkit::Application(WIDTH, HEIGHT, "Test application")
 	{
 		m_assetLoader = std::make_unique<Grafkit::Asset::JsonAssetLoader>();
 		m_resources = std::make_unique<Grafkit::Resource::ResourceManager>(
@@ -77,51 +73,43 @@ public:
 		const auto &device = m_renderContext->GetDevice();
 		const auto resources = Grafkit::MakeReference(*m_resources);
 
-		m_materialDescriptor = m_renderContext->DescriptorBuilder()
-								   .AddLayoutBindings(Grafkit::Material::GetLayoutBindings()[Grafkit::TEXTURE_SET])
-								   .Build();
+		Grafkit::RenderStagePtr stage =
+			Grafkit::RenderStageBuilder(m_renderContext->GetDevice())
+				.SetRenderTarget(m_renderContext->GetRenderTarget())
+				.SetVertexInputDescription(Grafkit::Vertex::GetVertexDescription())
+				.AddDescriptorSetLayoutBindings(Grafkit::Material::GetLayoutBindings())
+				.AddPushConstantRange({VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Grafkit::ModelView)})
+				.SetVertexShader(triangle_vert, triangle_vert_len)
+				.SetFragmentShader(triangle_frag, triangle_frag_len)
+				.Build();
 
-		m_modelviewDescriptor = m_renderContext->DescriptorBuilder()
-									.AddLayoutBindings(Grafkit::Material::GetLayoutBindings()[Grafkit::CAMERA_VIEW_SET])
-									.Build();
+		// + Add render stage to the render context
 
-		m_renderContext->AddStaticPipelineDescriptor(DEFAULT_PIPELINE_DESCRIPTOR,
-			Grafkit::Core::PipelineDescriptor{
-				Grafkit::Vertex::GetVertexDescription(),
-				Grafkit::Material::GetLayoutBindings(),
-				{{VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Grafkit::ModelView)}},
-			});
+		Grafkit::Resource::CheckerImageDesc checkerImageDesc = {
+			{256, 256, 1},
+			{16, 16},
+			{65, 105, 225, 255},
+			{255, 165, 79, 255},
+		};
 
-		m_forwardRender = m_renderContext->PipelineBuilder(DEFAULT_PIPELINE_DESCRIPTOR)
-							  .AddVertexShader(triangle_vert, triangle_vert_len)
-							  .AddFragmentShader(triangle_frag, triangle_frag_len)
-							  .Build();
+		Grafkit::Core::ImagePtr image =
+			Grafkit::Resource::CheckerImageBuilder(checkerImageDesc).BuildResource(device, resources);
 
-		Grafkit::Core::ImagePtr image = Grafkit::Resource::CheckerImageBuilder({
-																				   {256, 256, 1},
-																				   {16, 16},
-																				   {65, 105, 225, 255},
-																				   {255, 165, 79, 255},
-																			   })
-											.BuildResource(device, resources);
+		Grafkit::MaterialPtr material = //
+			Grafkit::Resource::MaterialBuilder()
+				.SetRenderStage(stage)
+				.AddTextureImage(Grafkit::DIFFUSE_TEXTURE_BINDING, image)
+				.BuildResource(device, resources);
 
-		Grafkit::MaterialPtr material = Grafkit::Resource::MaterialBuilder({})
-											.SetPipeline(m_forwardRender)
-											.AddDescriptorSet(m_materialDescriptor, Grafkit::TEXTURE_SET)
-											.AddDescriptorSet(m_modelviewDescriptor, Grafkit::CAMERA_VIEW_SET)
-											.AddTextureImage(Grafkit::DIFFUSE_TEXTURE_BINDING, image)
-											.BuildResource(device, resources);
 		m_ubo = Grafkit::Core::UniformBuffer<Grafkit::CameraView>::CreateBuffer(device);
-		m_modelviewDescriptor->Update(m_ubo.buffer, Grafkit::MODEL_VIEW_BINDING);
+		// m_modelviewDescriptor->Update(m_ubo.buffer, Grafkit::MODEL_VIEW_BINDING);
 
-		Grafkit::MeshPtr mesh = Grafkit::Resource::MeshBuilder()
-									.AddPrimitive(TestApplication::vertices, TestApplication::indices, 0)
-									.AddMaterial(0, material)
-									.BuildResource(device, resources);
+		Grafkit::MeshPtr mesh = //
+			Grafkit::Resource::MeshBuilder()
+				.AddPrimitive(TestApplication::vertices, TestApplication::indices, material)
+				.BuildResource(device, resources);
 
 		m_sceneGraph = std::make_shared<Grafkit::Scenegraph>();
-		m_sceneGraph->AddMesh(mesh);
-		m_sceneGraph->AddMaterial(material);
 
 		// Nodes
 		m_nodes.rootNode = m_sceneGraph->CreateNode();
@@ -183,10 +171,12 @@ public:
 
 	void Render() override
 	{
-		const auto commandBuffer = m_renderContext->BeginCommandBuffer();
-		m_renderContext->BeginFrame(commandBuffer);
-		m_sceneGraph->Draw(commandBuffer);
-		m_renderContext->EndFrame(commandBuffer);
+		// const auto commandBuffer = m_renderContext->BeginCommandBuffer();
+		// // m_renderContext->BeginFrame(commandBuffer);
+		// // m_sceneGraph->Draw(commandBuffer);
+		// m_renderContext->EndFrame(commandBuffer);
+
+		throw std::runtime_error("Not implemented");
 	}
 
 	void Shutdown() override

@@ -13,13 +13,11 @@
 
 namespace Grafkit
 {
-
 	namespace Core
 	{
 		using InstancePtr = std::unique_ptr<Instance>;
 		using DevicePtr = std::unique_ptr<Device>;
 		using SwapChainPtr = std::unique_ptr<SwapChain>;
-		using RenderTargetPtr = std::unique_ptr<RenderTarget>;
 		using CommandBufferPtr = std::unique_ptr<CommandBuffer>;
 	} // namespace Core
 
@@ -30,9 +28,8 @@ namespace Grafkit
 		virtual ~IRenderContext() = default;
 
 		[[nodiscard]] virtual const Core::DeviceRef GetDevice() const = 0;
-		[[nodiscard]] virtual const Core::RenderTargetRef GetFrameBuffer() const = 0;
+		[[nodiscard]] virtual const Core::RenderTargetPtr GetRenderTarget() const = 0;
 		[[nodiscard]] virtual Core::CommandBufferRef BeginCommandBuffer() = 0;
-		virtual void BeginFrame(const Core::CommandBufferRef &commandBuffer) = 0;
 		virtual void EndFrame(const Core::CommandBufferRef &commandBuffer) = 0;
 		virtual void Flush() = 0;
 	};
@@ -49,13 +46,13 @@ namespace Grafkit
 			return MakeReference(*m_device);
 		}
 
-		[[nodiscard]] const Core::RenderTargetRef GetFrameBuffer() const final
+		[[nodiscard]] const Core::RenderTargetPtr GetRenderTarget() const final
 		{
-			return MakeReference(*m_renderTarget);
+			return m_renderTarget;
 		}
 
 		[[nodiscard]] Core::CommandBufferRef BeginCommandBuffer() final;
-		void BeginFrame(const Core::CommandBufferRef &commandBuffer) final;
+
 		void EndFrame(const Core::CommandBufferRef &commandBuffer) final;
 
 		void Flush() final;
@@ -79,7 +76,6 @@ namespace Grafkit
 
 		std::vector<Core::CommandBufferPtr> m_commandBuffers;
 
-		// uint32_t m_currentImageIndex = 0;
 		uint32_t m_frameIndex = 0;
 
 		void InitializeCommandBuffers();
@@ -91,17 +87,9 @@ namespace Grafkit
 	{
 	public:
 		explicit RenderContext(const Core::WindowRef &window);
-
-		[[nodiscard]] Core::DescriptorBuilder DescriptorBuilder() const;
-
-		void AddStaticPipelineDescriptor(const uint32_t slot, const Core::PipelineDescriptor &descriptors);
-		[[nodiscard]] Core::GraphicsPipelineBuilder PipelineBuilder(uint32_t descriptorSlot) const;
-		[[nodiscard]] Core::GraphicsPipelineBuilder PipelineBuilder(
-			uint32_t descriptorSlot, const Core::RenderTargetRef renderPass) const;
+		~RenderContext() override = default;
 
 	private:
-		std::unique_ptr<Core::PipelineFactory> m_pipelineFactory;
-		std::unique_ptr<Core::DescriptorFactory> m_descriptorFactory;
 	};
 
 } // namespace Grafkit

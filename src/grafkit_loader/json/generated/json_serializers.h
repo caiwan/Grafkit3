@@ -4,7 +4,7 @@
  *
  * This file has been automatically generated and should not be modified.
  *
- * Generated at: 2024-09-24 13:10:26
+ * Generated at: 2024-12-07 16:44:54
  * Source files:
  *   - animation_desc.gen.yaml
  *   - image_desc.gen.yaml
@@ -28,13 +28,13 @@
 #include <grafkit/descriptors/mesh_desc.h>
 #include <grafkit/descriptors/scene_desc.h>
 
-/* animation_desc */
+// MARK: animation_desc
 namespace Grafkit::Resource
 {
 
 } // namespace Grafkit::Resource
 
-/* image_desc */
+// MARK: image_desc
 namespace Grafkit::Resource
 {
 	void to_json(nlohmann::json &j, const ImageDesc &obj);
@@ -48,7 +48,7 @@ namespace Grafkit::Resource
 
 } // namespace Grafkit::Resource
 
-/* material_desc */
+// MARK: material_desc
 namespace Grafkit::Resource
 {
 	void to_json(nlohmann::json &j, const MaterialDesc &obj);
@@ -56,13 +56,24 @@ namespace Grafkit::Resource
 
 } // namespace Grafkit::Resource
 
-/* mesh_desc */
+// MARK: mesh_desc
 namespace Grafkit::Resource
 {
+	void to_json(nlohmann::json &j, const PrimitiveDesc &obj);
+	void from_json(const nlohmann::json &j, PrimitiveDesc &obj);
+
+	void to_json(nlohmann::json &j, const MeshDesc &obj);
+	void from_json(const nlohmann::json &j, MeshDesc &obj);
+
+	void to_json(nlohmann::json &j, const PrimitiveDescV2 &obj);
+	void from_json(const nlohmann::json &j, PrimitiveDescV2 &obj);
+
+	void to_json(nlohmann::json &j, const MeshDescV2 &obj);
+	void from_json(const nlohmann::json &j, MeshDescV2 &obj);
 
 } // namespace Grafkit::Resource
 
-/* scene_desc */
+// MARK: scene_desc
 namespace Grafkit::Resource
 {
 } // namespace Grafkit::Resource

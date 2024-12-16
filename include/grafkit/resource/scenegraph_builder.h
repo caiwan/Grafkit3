@@ -8,61 +8,62 @@
 #include <grafkit/render/material.h>
 #include <grafkit/render/mesh.h>
 
-namespace Grafkit::Resource {
+namespace Grafkit::Resource
+{
 
-	struct PrimitiveDesc {
+	struct PrimitiveDesc
+	{
 		std::vector<Vertex> vertices;
 		std::vector<uint32_t> indices;
 		uint32_t materialIndex;
 	};
 
-	struct MeshDesc {
+	struct MeshDesc
+	{
 		std::vector<PrimitiveDesc> primitives;
 		std::unordered_map<uint32_t, std::string> materials;
 	};
 
-	class MeshBuilder : public ResourceBuilder<MeshDesc, Grafkit::Mesh> {
+	class MeshBuilder : public ResourceBuilder<MeshDesc, Grafkit::Mesh>
+	{
 	public:
-		explicit MeshBuilder(const MeshDesc& desc = {})
+		explicit MeshBuilder(const MeshDesc &desc = {})
 			: ResourceBuilder(desc)
 		{
 		}
 
-		MeshBuilder& AddPrimitive(const PrimitiveDesc& primitive)
+		MeshBuilder &AddPrimitive(const PrimitiveDesc &primitive)
 		{
 			m_descriptor.primitives.push_back(primitive);
 			return *this;
 		}
 
-		MeshBuilder& AddPrimitive(
-			const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, uint32_t materialIndex)
-		{
-			m_descriptor.primitives.push_back({ vertices, indices, materialIndex });
-			return *this;
-		}
+		MeshBuilder &AddPrimitive(const std::vector<Vertex> &vertices,
+			const std::vector<uint32_t> &indices,
+			const uint32_t materialIndex);
 
-		MeshBuilder& AddMaterial(const uint32_t index, const MaterialPtr& material)
-		{
-			m_materials[index] = material;
-			return *this;
-		}
+		MeshBuilder &AddPrimitive(const std::vector<Vertex> &vertices,
+			const std::vector<uint32_t> &indices,
+			const MaterialPtr &material);
 
-		// TODO: Combine primitives to a single mesh - vertices + indice, then index range + material
+		MeshBuilder &AddMaterial(const uint32_t index, const MaterialPtr &material);
 
-		[[nodiscard]] bool ResolveDependencies(const RefWrapper<ResourceManager>& resources) final;
-		void Build(const Core::DeviceRef& device) final;
+		[[nodiscard]] bool ResolveDependencies(const RefWrapper<ResourceManager> &resources) final;
+		void Build(const Core::DeviceRef &device) final;
 
 	private:
 		std::unordered_map<uint32_t, MaterialPtr> m_materials;
 	};
 
-	struct NodeDesc {
+	struct NodeDesc
+	{
 		std::string name;
 		std::vector<uint32_t> meshIndices;
 		std::vector<NodeDesc> children;
 	};
 
-	struct SceneGraphDesc {
+	struct SceneGraphDesc
+	{
 		std::vector<NodeDesc> nodes;
 	};
 

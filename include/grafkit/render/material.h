@@ -3,10 +3,11 @@
 
 #include <grafkit/common.h>
 
+#include <unordered_map>
+
 namespace Grafkit
 {
 
-	// TOOD: Add extra options for binds here for other paprms such as vertex params [camera], skin, etc.
 	struct MaterialData
 	{
 		float alphaCutoff = 1.0f;
@@ -26,11 +27,17 @@ namespace Grafkit
 
 	constexpr uint32_t MODEL_VIEW_BINDING = 0;
 
+	// MARK: Material
+	// This is not quite a material, but a collection of textures and descriptor sets for the entire rendering stage
+	// Grtaphics stage?
 	struct GKAPI Material
 	{
-		Core::PipelinePtr pipeline;
-		std::vector<Core::DescriptorSetPtr> descriptorSets;
-		std::vector<TexturePtr> textures;
+		std::string name;
+
+		RenderStagePtr stage;
+
+		std::unordered_map<uint32_t, Core::DescriptorSetPtr> descriptorSets;
+		std::unordered_map<uint32_t, TexturePtr> textures;
 
 		static std::vector<Core::DescriptorSetLayoutBinding> GetLayoutBindings()
 		{
@@ -82,6 +89,8 @@ namespace Grafkit
 				},
 			};
 		}
+
+		// TODO: Add update fns
 	};
 
 } // namespace Grafkit

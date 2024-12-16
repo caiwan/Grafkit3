@@ -16,7 +16,7 @@ constexpr std::string_view DEFAULT_TITLE("Grafkit Application");
 // render context, input handler, loading assets, etc. This would allow to create a more modular application class
 Application::Application()
 {
-	m_window = std::make_unique<Core::GLFWWindow>(Core::WindowSize({ DEFAULT_WIDTH, DEFAULT_HEIGHT }),
+	m_window = std::make_unique<Core::GLFWWindow>(Core::WindowSize({DEFAULT_WIDTH, DEFAULT_HEIGHT}),
 		DEFAULT_TITLE.data(),
 		Core::WindowMode::Windowed,
 		Core::WindowVsync::On,
@@ -24,9 +24,9 @@ Application::Application()
 	m_renderContext = std::make_unique<RenderContext>(MakeReference(*m_window.get()));
 }
 
-Application::Application(const int width, const int height, const std::string& windowTitle)
+Application::Application(const int width, const int height, const std::string &windowTitle)
 {
-	m_window = std::make_unique<Core::GLFWWindow>(Core::WindowSize({ width, height }),
+	m_window = std::make_unique<Core::GLFWWindow>(Core::WindowSize({width, height}),
 		windowTitle,
 		Core::WindowMode::Windowed,
 		Core::WindowVsync::On,
@@ -40,19 +40,21 @@ void Grafkit::Application::Run()
 	m_window->Show(true);
 	m_window->Focus();
 
-	TimeInfo timeInfo {};
+	TimeInfo timeInfo{};
 
 	double lastFrameTime = 0.0;
 	double fpsTimer = 0.0;
 	int frameCount = 0;
 
-	while (!m_window->IsClosing()) {
+	while (!m_window->IsClosing())
+	{
 
 		const auto startTime = std::chrono::steady_clock::now();
 
 		m_window->PollEvents();
 
-		if (!m_window->IsClosing()) {
+		if (!m_window->IsClosing())
+		{
 			Update(timeInfo);
 			Render();
 		}
@@ -68,12 +70,16 @@ void Grafkit::Application::Run()
 		fpsTimer += lastFrameTime;
 		frameCount++;
 
-		if (fpsTimer >= 1.0) {
+		if (fpsTimer >= 1.0)
+		{
 			Core::Log::Instance().Info("FPS: %d", frameCount);
 			fpsTimer = 0.0;
 			frameCount = 0;
 		}
 	}
+
+	Core::Log::Instance().Info("Application loop ended, shutting down");
+
 	m_renderContext->Flush();
 	Shutdown();
 }

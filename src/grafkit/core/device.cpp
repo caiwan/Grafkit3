@@ -13,7 +13,8 @@ using namespace Grafkit::Core;
 constexpr uint32_t INITIAL_DESCRIPTOR_SET_SIZE = 128;
 constexpr uint32_t INITIAL_DESCRIPTOR_MAX_SETS = 8;
 
-Device::Device(const Core::InstanceRef &instance) : m_instance(instance)
+Device::Device(const Core::InstanceRef &instance)
+	: m_instance(instance)
 
 {
 	PickPhysicalDevice();
@@ -286,19 +287,25 @@ SurfaceProperties Device::QueryPhisicalDeviceSurfaceProperties(const VkPhysicalD
 	if (formatCount != 0)
 	{
 		details.formats.resize(formatCount);
-		VK_CHECK_RESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(
-			physicalDevice, m_instance->GetVkSurface(), &formatCount, details.formats.data()));
+		VK_CHECK_RESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice,
+			m_instance->GetVkSurface(),
+			&formatCount,
+			details.formats.data()));
 	}
 
 	uint32_t presentModeCount = 0;
-	VK_CHECK_RESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(
-		physicalDevice, m_instance->GetVkSurface(), &presentModeCount, nullptr));
+	VK_CHECK_RESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice,
+		m_instance->GetVkSurface(),
+		&presentModeCount,
+		nullptr));
 
 	if (presentModeCount != 0)
 	{
 		details.presentModes.resize(presentModeCount);
-		VK_CHECK_RESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(
-			physicalDevice, m_instance->GetVkSurface(), &presentModeCount, details.presentModes.data()));
+		VK_CHECK_RESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice,
+			m_instance->GetVkSurface(),
+			&presentModeCount,
+			details.presentModes.data()));
 	}
 
 	return details;
