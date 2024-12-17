@@ -98,7 +98,7 @@ public:
 		Grafkit::MaterialPtr material = //
 			Grafkit::Resource::MaterialBuilder()
 				.SetRenderStage(stage)
-				.AddTextureImage(Grafkit::DIFFUSE_TEXTURE_BINDING, image)
+				// .AddTextureImage(Grafkit::DIFFUSE_TEXTURE_BINDING, image)
 				.BuildResource(device, resources);
 
 		m_ubo = Grafkit::Core::UniformBuffer<Grafkit::CameraView>::CreateBuffer(device);

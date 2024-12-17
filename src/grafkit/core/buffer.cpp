@@ -10,8 +10,10 @@ void Buffer::Destroy(const DeviceRef &device)
 	vmaDestroyBuffer(device->GetVmaAllocator(), buffer, allocation);
 }
 
-Buffer Buffer::CreateBuffer(
-	const DeviceRef &device, const size_t size, const VkBufferUsageFlags usage, const VmaMemoryUsage memoryUsage)
+Buffer Buffer::CreateBuffer(const DeviceRef &device,
+	const size_t size,
+	const VkBufferUsageFlags usage,
+	const VmaMemoryUsage memoryUsage)
 {
 	VkBufferCreateInfo bufferInfo = Initializers::BufferCreateInfo(usage, size);
 
@@ -61,8 +63,10 @@ void Grafkit::Core::RingBuffer::Destroy(const DeviceRef &device)
 	buffers.clear();
 }
 
-RingBuffer RingBuffer::CreateBuffer(
-	const DeviceRef &device, const size_t size, const VkBufferUsageFlags usage, const VmaMemoryUsage memoryUsage)
+RingBuffer RingBuffer::CreateBuffer(const DeviceRef &device,
+	const size_t size,
+	const VkBufferUsageFlags usage,
+	const VmaMemoryUsage memoryUsage)
 {
 	RingBuffer ringBuffer = {};
 
@@ -94,8 +98,10 @@ RingBuffer RingBuffer::CreateBuffer(
 	return ringBuffer;
 }
 
-void Grafkit::Core::RingBuffer::Update(
-	[[maybe_unused]] const DeviceRef &device, const void *data, const size_t size, const uint32_t frameIndex)
+void Grafkit::Core::RingBuffer::Update([[maybe_unused]] const DeviceRef &device,
+	const void *data,
+	const size_t size,
+	const uint32_t frameIndex)
 {
 	assert(frameIndex < buffers.size());
 	memcpy(mappedData[frameIndex], data, size);

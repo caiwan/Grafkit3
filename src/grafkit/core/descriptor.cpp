@@ -81,20 +81,39 @@ void DescriptorSet::Update(const VkDescriptorBufferInfo &bufferInfo,
 {
 	if (frame.has_value())
 	{
-		VkWriteDescriptorSet descriptorWrite = Initializers::WriteDescriptorSet(m_descriptorSets[frame.value()],
-			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+		auto &descriptorSet = m_descriptorSets[frame.value()];
+
+		VkWriteDescriptorSet descriptorWrite =
+			Initializers::WriteDescriptorSet(descriptorSet, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, binding, &bufferInfo);
+
+		Log::Instance().Trace(
+			"Updating descriptor set for buffer; Binding=%d Object=%p Frame=%d Buffer=%p Offset=%d Range=%d",
 			binding,
-			&bufferInfo);
+			descriptorSet,
+			frame.value(),
+			bufferInfo.buffer,
+			bufferInfo.offset,
+			bufferInfo.range);
+
 		vkUpdateDescriptorSets(**m_device, 1, &descriptorWrite, 0, nullptr);
 	}
 	else
 	{
-		for (auto &mDescriptorSet : m_descriptorSets)
+		for (auto &descriptorSet : m_descriptorSets)
 		{
-			VkWriteDescriptorSet descriptorWrite = Initializers::WriteDescriptorSet(mDescriptorSet,
+			VkWriteDescriptorSet descriptorWrite = Initializers::WriteDescriptorSet(descriptorSet,
 				VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 				binding,
 				&bufferInfo);
+
+			Log::Instance().Trace(
+				"Updating descriptor set for buffer; Binding=%d Object=%p Buffer=%p Offset=%d Range=%d",
+				binding,
+				descriptorSet,
+				bufferInfo.buffer,
+				bufferInfo.offset,
+				bufferInfo.range);
+
 			vkUpdateDescriptorSets(**m_device, 1, &descriptorWrite, 0, nullptr);
 		}
 	}

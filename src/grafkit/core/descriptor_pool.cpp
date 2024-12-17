@@ -7,7 +7,9 @@
 using namespace Grafkit::Core;
 
 DescriptorPool::DescriptorPool(const DeviceRef &device, const uint32_t maxSets, std::vector<PoolSet> poolSets)
-	: m_device(device), m_poolSets(std::move(poolSets)), m_maxSets(maxSets)
+	: m_device(device)
+	, m_poolSets(std::move(poolSets))
+	, m_maxSets(maxSets)
 {
 	assert(m_maxSets > 0);
 	assert(!m_poolSets.empty());
@@ -59,8 +61,8 @@ VkDescriptorSet DescriptorPool::AllocateDescriptorSet(const VkDescriptorSetLayou
 	return descriptorSet;
 }
 
-[[nodiscard]] std::vector<VkDescriptorSet> DescriptorPool::AllocateDescriptorSets(
-	const VkDescriptorSetLayout &layout, const uint32_t count)
+[[nodiscard]] std::vector<VkDescriptorSet> DescriptorPool::AllocateDescriptorSets(const VkDescriptorSetLayout &layout,
+	const uint32_t count)
 {
 	Log::Instance().Debug("Allocating %d descriptor sets", count);
 	std::vector<VkDescriptorSet> descriptorSets;

@@ -70,7 +70,7 @@ void MaterialBuilder::Build(const Core::DeviceRef &device)
 	{
 		assert(image != nullptr);
 		TexturePtr texture = CreateTexture(device, image);
-		// textureSetDescriptor->Update(texture->GetImage(), texture->GetSampler(), bindId);
+		textureSetDescriptor->Update(texture->GetImage(), texture->GetSampler(), bindId);
 		m_resource->textures.emplace(bindId, std::move(texture));
 	}
 }
