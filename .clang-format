@@ -10,7 +10,8 @@ TabWidth: 4
 
 AccessModifierOffset: -4
 AlignAfterOpenBracket: DontAlign
-AllowAllArgumentsOnNextLine: true
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
 AlignOperands: AlignAfterOperator
 AllowShortBlocksOnASingleLine: Never
 AllowShortCaseLabelsOnASingleLine: false
@@ -21,6 +22,8 @@ AlwaysBreakTemplateDeclarations: Yes
 NamespaceIndentation: All
 BinPackArguments: false
 BinPackParameters: false
+PackConstructorInitializers: Never
+BreakConstructorInitializers: BeforeComma
 FixNamespaceComments: true
 ContinuationIndentWidth: 4
 IncludeBlocks: Preserve
@@ -40,7 +43,7 @@ BraceWrapping:
   BeforeCatch:     true
   BeforeElse:      true
   BeforeLambdaBody: true
-  BeforeWhile:     false
+  BeforeWhile:     true
   IndentBraces:    false
   SplitEmptyFunction: true
   SplitEmptyRecord: true

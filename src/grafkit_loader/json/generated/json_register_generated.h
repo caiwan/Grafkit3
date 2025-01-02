@@ -4,7 +4,7 @@
  *
  * This file has been automatically generated and should not be modified.
  *
- * Generated at: 2024-09-25 14:36:15
+ * Generated at: 2024-12-07 16:44:54
  * Source files:
  *   - animation_desc.gen.yaml
  *   - image_desc.gen.yaml
@@ -20,7 +20,7 @@
 namespace Grafkit::Serialization
 {
 
-	void RegisterJsonDeserializers(JsonSerializerRegistry &registry)
+	inline void RegisterJsonDeserializers(JsonSerializerRegistry &registry)
 	{
 		// MARK: animation_desc
 
@@ -41,6 +41,18 @@ namespace Grafkit::Serialization
 			[](const nlohmann::json &json, std::any &object) { object = json.get<Grafkit::Resource::MaterialDesc>(); });
 
 		// MARK: mesh_desc
+
+		registry.Register<Grafkit::Resource::PrimitiveDesc>([](const nlohmann::json &json, std::any &object)
+			{ object = json.get<Grafkit::Resource::PrimitiveDesc>(); });
+
+		registry.Register<Grafkit::Resource::MeshDesc>(
+			[](const nlohmann::json &json, std::any &object) { object = json.get<Grafkit::Resource::MeshDesc>(); });
+
+		registry.Register<Grafkit::Resource::PrimitiveDescV2>([](const nlohmann::json &json, std::any &object)
+			{ object = json.get<Grafkit::Resource::PrimitiveDescV2>(); });
+
+		registry.Register<Grafkit::Resource::MeshDescV2>(
+			[](const nlohmann::json &json, std::any &object) { object = json.get<Grafkit::Resource::MeshDescV2>(); });
 
 		// MARK: scene_desc
 	}

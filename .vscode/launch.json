@@ -65,5 +65,37 @@
       ],
       "preLaunchTask": "CMake: build all"
     },
+    {
+      "name": "(gdb) Launch Sample Bloom",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "",
+      "windows": {
+        "program": "${workspaceFolder}/build/src/samples/Sample-02_Bloom.exe"
+      },
+      "linux": {
+        "program": "${workspaceFolder}/build/src/samples/Sample-02_Bloom",
+        "MIMode": "gdb",
+        "miDebuggerPath": "/usr/bin/gdb"
+      },
+      "cwd": "${workspaceFolder}/build/src/samples/",
+      "args": [],
+      "stopAtEntry": false,
+      "environment": [],
+      "externalConsole": false,
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        },
+        {
+          "description": "Set Disassembly Flavor to Intel",
+          "text": "-gdb-set disassembly-flavor intel",
+          "ignoreFailures": true
+        }
+      ],
+      "preLaunchTask": "CMake: build all"
+    },
   ]
 }

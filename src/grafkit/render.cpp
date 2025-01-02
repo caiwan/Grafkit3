@@ -18,17 +18,19 @@ using namespace Grafkit::Core;
 constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
 // MARK: BaseRenderContext
-BaseRenderContext::BaseRenderContext(const Core::WindowRef &window) : m_window(window)
+BaseRenderContext::BaseRenderContext(const Core::WindowRef &window)
+	: m_window(window)
 {
 	m_instance = std::make_unique<Core::Instance>(window);
 
 	m_device = std::make_unique<Core::Device>(MakeReference(*m_instance));
 	m_swapChain = std::make_unique<Core::SwapChain>(window, MakeReference(*m_instance), MakeReference((*m_device)));
 
-	m_renderTarget = RenderTargetBuilder(MakeReference(*m_device))
-						 .CreateAttachments(MakeReference(*m_swapChain))
-						 .AddAttachment(VK_FORMAT_D32_SFLOAT, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
-						 .Build();
+	m_renderTarget = //
+		RenderTargetBuilder(MakeReference(*m_device))
+			.CreateAttachments(MakeReference(*m_swapChain))
+			.AddAttachment(VK_FORMAT_D32_SFLOAT, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
+			.Build();
 
 	InitializeCommandBuffers();
 }
@@ -62,11 +64,6 @@ Core::CommandBufferRef BaseRenderContext::BeginCommandBuffer()
 	VK_CHECK_RESULT(vkBeginCommandBuffer(**commandBuffer, &beginInfo));
 
 	return MakeReference(*commandBuffer);
-}
-
-void BaseRenderContext::BeginFrame(const Core::CommandBufferRef &commandBuffer)
-{
-	m_renderTarget->BeginRenderPass(commandBuffer, m_frameIndex);
 }
 
 void BaseRenderContext::EndFrame(const Core::CommandBufferRef &commandBuffer)
@@ -109,29 +106,6 @@ VkExtent2D Grafkit::BaseRenderContext::GetExtent() const
 
 Grafkit::RenderContext::RenderContext(const Core::WindowRef &window)
 
-	: BaseRenderContext(window), m_pipelineFactory(std::make_unique<Core::PipelineFactory>()),
-	  m_descriptorFactory(std::make_unique<Core::DescriptorFactory>())
+	: BaseRenderContext(window)
 {
-}
-
-Grafkit::Core::DescriptorBuilder Grafkit::RenderContext::DescriptorBuilder() const
-{
-	return m_descriptorFactory->CreateDescriptorBuilder(this->GetDevice());
-}
-
-void Grafkit::RenderContext::AddStaticPipelineDescriptor(
-	const uint32_t slot, const Core::PipelineDescriptor &descriptors)
-{
-	m_pipelineFactory->AddStaticPipelineDescriptor(slot, descriptors);
-}
-
-Grafkit::Core::GraphicsPipelineBuilder Grafkit::RenderContext::PipelineBuilder(uint32_t descriptorSlot) const
-{
-	return m_pipelineFactory->CreateGraphicsPipelineBuilder(this->GetDevice(), this->GetFrameBuffer(), descriptorSlot);
-}
-
-Grafkit::Core::GraphicsPipelineBuilder Grafkit::RenderContext::PipelineBuilder(
-	uint32_t descriptorSlot, const RenderTargetRef renderPass) const
-{
-	return m_pipelineFactory->CreateGraphicsPipelineBuilder(this->GetDevice(), renderPass, descriptorSlot);
 }

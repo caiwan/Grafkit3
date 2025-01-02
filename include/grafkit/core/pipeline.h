@@ -7,23 +7,35 @@
 //
 #include <grafkit/common.h>
 
-namespace Grafkit::Core {
-
+namespace Grafkit::Core
+{
 	// MARK: Pipeline
-	class GKAPI Pipeline {
+	class GKAPI Pipeline
+	{
 	public:
-		explicit Pipeline(const DeviceRef& device,
+		explicit Pipeline(const DeviceRef &device,
 			std::tuple<VkPipeline, VkPipelineLayout, std::vector<VkDescriptorSetLayout>>
 				pipeline, // TODO: Replace with struct
 			VkPipelineBindPoint pipelineBindPoint);
 		virtual ~Pipeline();
 
-		void Bind(VkCommandBuffer commandBuffer);
+		void Bind(const CommandBufferRef &commandBuffer);
 
-		[[nodiscard]] const VkPipeline& GetPipeline() const { return m_pipeline; }
-		[[nodiscard]] const VkPipelineLayout& GetPipelineLayout() const { return m_pipelineLayout; }
+		[[nodiscard]] inline VkPipeline GetPipeline() const noexcept
+		{
+			return m_pipeline;
+		}
 
-		// TOOD: Get descriptor set layout
+		[[nodiscard]] inline VkPipelineLayout GetPipelineLayout() const noexcept
+		{
+			return m_pipelineLayout;
+		}
+
+		[[nodiscard]] inline VkDescriptorSetLayout GetDescriptorSetLayout(uint32_t index) noexcept
+		{
+			assert(index < m_descriptorSetLayouts.size());
+			return m_descriptorSetLayouts[index];
+		}
 
 	private:
 		const DeviceRef m_device;
@@ -34,95 +46,71 @@ namespace Grafkit::Core {
 		std::vector<VkDescriptorSetLayout> m_descriptorSetLayouts;
 	};
 
-	struct PipelineDescriptor {
-		VertexDescription vertexInputDescription;
-		std::vector<DescriptorSetLayoutBinding> descriptorSetLayouts;
-		std::vector<VkPushConstantRange> pushConstants;
-	};
-
 	// MARK: GraphicsPipelineBuilder
-	class GKAPI GraphicsPipelineBuilder {
+	class GKAPI GraphicsPipelineBuilder
+	{
 	public:
-		explicit GraphicsPipelineBuilder(const DeviceRef& device,
-			const RenderTargetRef& renderTarget,
-			const std::optional<PipelineDescriptor>& descriptors = std::nullopt);
+		explicit GraphicsPipelineBuilder(const DeviceRef &device);
 
 		~GraphicsPipelineBuilder() = default;
 
-		GraphicsPipelineBuilder& AddVertexShader(const uint8_t* code, size_t len);
-		GraphicsPipelineBuilder& AddVertexShader(const std::vector<char>& code);
-		GraphicsPipelineBuilder& AddFragmentShader(const uint8_t* code, size_t len);
-		GraphicsPipelineBuilder& AddFragmentShader(const std::vector<char>& code);
+		GraphicsPipelineBuilder &SetRenderTarget(const Core::RenderTargetPtr &target);
 
-		GraphicsPipelineBuilder& SetVertexInputDescription(const VertexDescription& desc);
+		GraphicsPipelineBuilder &AddVertexShader(const uint8_t *code, size_t len);
+		GraphicsPipelineBuilder &AddVertexShader(const std::string &code);
+		GraphicsPipelineBuilder &AddFragmentShader(const uint8_t *code, size_t len);
+		GraphicsPipelineBuilder &AddFragmentShader(const std::string &code);
 
-		GraphicsPipelineBuilder& AddDescriptorSets(const std::vector<DescriptorSetLayoutBinding>& bindings);
-		GraphicsPipelineBuilder& AddPushConstants(
-			const VkShaderStageFlags stage, const uint32_t size, const uint32_t offset = 0);
+		GraphicsPipelineBuilder &SetVertexInputDescription(const VertexDescription &desc);
 
-		GraphicsPipelineBuilder& SetInputAssembly(
-			const VkPrimitiveTopology topology, const VkBool32 primitiveRestartEnable = VK_FALSE);
-		GraphicsPipelineBuilder& SetRasterizer(
-			const VkPolygonMode polygonMode, const VkCullModeFlags cullMode, const VkFrontFace frontFace);
-		GraphicsPipelineBuilder& SetMultisampling(
-			const VkSampleCountFlagBits rasterizationSamples, const VkBool32 sampleShadingEnable = VK_FALSE);
-		GraphicsPipelineBuilder& SetColorBlending(const VkPipelineColorBlendAttachmentState& m_colorBlendAttachment);
-		GraphicsPipelineBuilder& SetDynamicState(const std::vector<VkDynamicState>& m_dynamicStates);
+		GraphicsPipelineBuilder &AddDescriptorSet(const uint32_t set,
+			const std::vector<Core::DescriptorBinding> &bindings);
+		GraphicsPipelineBuilder &AddDescriptorSets(const DescriptorSetLayoutBindings &bindings);
+		GraphicsPipelineBuilder &
+		AddPushConstants(const VkShaderStageFlags stage, const uint32_t size, const uint32_t offset = 0);
+
+		// Additional pipeline settings
+		GraphicsPipelineBuilder &SetInputAssembly(const VkPrimitiveTopology topology,
+			const VkBool32 primitiveRestartEnable = VK_FALSE);
+		GraphicsPipelineBuilder &
+		SetRasterizer(const VkPolygonMode polygonMode, const VkCullModeFlags cullMode, const VkFrontFace frontFace);
+		GraphicsPipelineBuilder &SetMultisampling(const VkSampleCountFlagBits rasterizationSamples,
+			const VkBool32 sampleShadingEnable = VK_FALSE);
+		GraphicsPipelineBuilder &SetColorBlending(const VkPipelineColorBlendAttachmentState &m_colorBlendAttachment);
+		GraphicsPipelineBuilder &SetDynamicState(const std::vector<VkDynamicState> &m_dynamicStates);
 
 		PipelinePtr Build();
 
 	private:
 		const DeviceRef m_device;
-		const RenderTargetRef m_renderTarget; // REPLACE !!!!
+		RenderTargetPtr m_renderTarget;
 
 		std::vector<VkPipelineShaderStageCreateInfo> m_shaderStages;
-		VkPipelineInputAssemblyStateCreateInfo m_inputAssembly {};
+		VkPipelineInputAssemblyStateCreateInfo m_inputAssembly{};
 
 		std::vector<VkVertexInputBindingDescription> m_vertexBindingDescriptions;
 		std::vector<VkVertexInputAttributeDescription> m_vertexInputAttrDescriptions;
 
-		std::unordered_map<uint32_t, std::vector<VkDescriptorSetLayoutBinding>> m_descriptorSets;
+		std::unordered_map<uint32_t, std::vector<VkDescriptorSetLayoutBinding>> m_descriptorSetBindings;
 
 		std::vector<VkPushConstantRange> m_pushConstants;
 
-		VkPipelineViewportStateCreateInfo m_viewportState {};
-		VkPipelineRasterizationStateCreateInfo m_rasterizer {};
-		VkPipelineMultisampleStateCreateInfo m_multisampling {};
+		VkPipelineViewportStateCreateInfo m_viewportState{};
+		VkPipelineRasterizationStateCreateInfo m_rasterizer{};
+		VkPipelineMultisampleStateCreateInfo m_multisampling{};
 		std::vector<VkDynamicState> m_dynamicStates;
-		VkPipelineColorBlendAttachmentState m_colorBlendAttachment {};
+		VkPipelineColorBlendAttachmentState m_colorBlendAttachment{};
 
-		VkShaderModule CreateShaderModule(const uint8_t* code, size_t len) const;
-		VkShaderModule CreateShaderModule(const std::vector<char>& code) const;
+		VkShaderModule CreateShaderModule(const uint8_t *code, size_t len) const;
+		VkShaderModule CreateShaderModule(const std::string &code) const;
 
 		void AddShaderStage(VkShaderModule shaderModule, VkShaderStageFlagBits stage);
 	};
 
 	// MARK: ComputePipelineBuilder
-	class GKAPI ComputePipelineBuilder {
+	class GKAPI ComputePipelineBuilder
+	{
 		// TODO: ...
-	};
-
-	// MARK: PipelineFactory
-	class GKAPI PipelineFactory {
-	public:
-		explicit PipelineFactory() = default;
-		~PipelineFactory() = default;
-
-		void AddStaticPipelineDescriptor(const uint32_t slot, const PipelineDescriptor& descriptors)
-		{
-			m_descriptors[slot] = descriptors;
-		}
-
-		[[nodiscard]] GraphicsPipelineBuilder CreateGraphicsPipelineBuilder(
-			const DeviceRef& device, const RenderTargetRef& renderPass, const uint32_t slot) const
-		{
-			const PipelineDescriptor descriptors = m_descriptors.at(slot);
-			return GraphicsPipelineBuilder(device, renderPass, descriptors);
-		}
-		// [[nodiscard]] ComputePipelineBuilder ComputePipelineBuilder(); // TODO: ...
-
-	private:
-		std::unordered_map<uint32_t, PipelineDescriptor> m_descriptors;
 	};
 
 } // namespace Grafkit::Core

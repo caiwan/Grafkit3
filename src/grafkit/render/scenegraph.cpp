@@ -1,5 +1,6 @@
 #include "stdafx.h"
-#include <stack>
+
+#include <unordered_set>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/matrix_transform.hpp>
@@ -11,18 +12,21 @@
 #include "grafkit/render/animation.h"
 #include "grafkit/render/material.h"
 #include "grafkit/render/mesh.h"
+#include "grafkit/render/render_graph.h"
 #include "grafkit/render/scenegraph.h"
 
-void Grafkit::Node::UpdateLocalMatrix()
+using namespace Grafkit;
+
+void Node::UpdateLocalMatrix()
 {
 	matrix =
 		glm::translate(glm::mat4(1.0f), translation) * glm::mat4_cast(rotation) * glm::scale(glm::mat4(1.0f), scale);
 }
 
-Grafkit::NodePtr Grafkit::Scenegraph::CreateNode(const NodePtr &parent, const MeshPtr &mesh)
+NodePtr Scenegraph::CreateNode(const NodePtr &parent)
 {
 	NodePtr node = std::make_shared<Node>();
-	if (parent)
+	if (parent != nullptr)
 	{
 		node->parent = parent;
 		parent->children.push_back(node);
@@ -36,38 +40,39 @@ Grafkit::NodePtr Grafkit::Scenegraph::CreateNode(const NodePtr &parent, const Me
 		m_root = node;
 	}
 
-	node->mesh = mesh;
+	node->id = m_nodes.size();
+	m_nodes.push_back(node);
+
+	m_isDirty = true;
 
 	return node;
 }
 
-Grafkit::Scenegraph::~Scenegraph()
+NodePtr Scenegraph::CreateNode(const MeshPtr &mesh, const NodePtr &parent)
 {
-	m_animations.clear();
-	m_materials.clear();
-	m_meshes.clear();
-	m_textures.clear();
+	NodePtr node = CreateNode(parent);
+
+	if (mesh != nullptr)
+	{
+		m_meshesToNodes.emplace_back(mesh, node); // TODO: Move?
+	}
+
+	return node;
 }
 
-void Grafkit::Scenegraph::AddMaterial(const MaterialPtr &material)
+void Grafkit::Scenegraph::AddDescriptorSet(const uint32_t set, const Core::DescriptorSetPtr &descriptorSet)
 {
-	m_materials.push_back(material);
-}
-void Grafkit::Scenegraph::AddTexture(const TexturePtr &texture)
-{
-	m_textures.push_back(texture);
-}
-void Grafkit::Scenegraph::AddMesh(const MeshPtr &mesh)
-{
-	m_meshes.push_back(mesh);
-}
-void Grafkit::Scenegraph::AddAnimation(const Animation::AnimationPtr &animation)
-{
-	m_animations.push_back(animation);
+	m_descriptorSets.emplace(set, descriptorSet);
+	m_isDirty = true;
 }
 
-void Grafkit::Scenegraph::Update(const Grafkit::TimeInfo &timeInfo)
+void Scenegraph::Update(const TimeInfo &timeInfo)
 {
+	if (m_isDirty)
+	{
+		UpdateRenderGraph();
+	}
+
 	std::stack<NodePtr> stack;
 	stack.push(m_root);
 
@@ -94,63 +99,143 @@ void Grafkit::Scenegraph::Update(const Grafkit::TimeInfo &timeInfo)
 	}
 }
 
-void Grafkit::Scenegraph::Draw(const Grafkit::Core::CommandBufferRef &commandBuffer)
+void Scenegraph::Draw(const Core::CommandBufferRef &commandBuffer,
+	const uint32_t frameIndex,
+	const uint32_t stageIndex) const
 {
-	std::stack<NodePtr> stack;
-	stack.push(m_root);
+	VkBuffer lastVertexBuffer = VK_NULL_HANDLE;
+	VkBuffer lastIndexBuffer = VK_NULL_HANDLE;
+	const auto &renderStage = m_commandList[stageIndex].first;
 
-	std::stack<glm::mat4> matrixStack;
-	matrixStack.push(m_root->matrix);
-
-	while (!stack.empty())
+	// Dind common descriptor sets
+	for (const auto &descriptorSet : m_descriptorSets)
 	{
-		NodePtr currentNode = stack.top();
-		stack.pop();
+		descriptorSet.second->Bind(commandBuffer, renderStage->GetPipelineLayout(), frameIndex);
+	}
 
-		Core::PipelinePtr pipeline = nullptr;
-
-		const MeshPtr mesh = currentNode->mesh.lock();
-		if (!currentNode->isHidden && mesh != nullptr)
+	// Execute draw commands
+	for (const auto &command : m_commandList[stageIndex].second)
+	{
+		if (command.node->isHidden)
 		{
-			for (const auto &primitive : mesh->m_primitives)
-			{
-
-				//		// Bind material
-				if (primitive.material != nullptr)
-				{
-					if (pipeline != primitive.material->pipeline)
-					{
-						pipeline = primitive.material->pipeline;
-						pipeline->Bind(**commandBuffer);
-					}
-
-					for (const auto &descriptorSet : primitive.material->descriptorSets)
-					{
-						descriptorSet->Bind(commandBuffer,
-							primitive.material->pipeline->GetPipelineLayout(),
-							commandBuffer->GetFrameIndex());
-					}
-				}
-
-				if (pipeline != nullptr)
-				{
-					vkCmdPushConstants(**commandBuffer,
-						pipeline->GetPipelineLayout(),
-						VK_SHADER_STAGE_VERTEX_BIT,
-						0,
-						sizeof(ModelView),
-						&currentNode->modelView);
-
-					mesh->Bind(commandBuffer, primitive.vertexOffset);
-					primitive.Draw(commandBuffer);
-				}
-			}
+			continue;
 		}
 
-		// Process children nodes
-		for (const auto &child : currentNode->children)
+		if (command.vertexBuffer != lastVertexBuffer)
 		{
-			stack.push(child);
+			std::array<VkDeviceSize, 1> offsets = {0};
+			vkCmdBindVertexBuffers(**commandBuffer, 0, 1, &command.vertexBuffer, offsets.data());
+			lastVertexBuffer = command.vertexBuffer;
+		}
+
+		if (command.indexBuffer != lastIndexBuffer)
+		{
+			vkCmdBindIndexBuffer(**commandBuffer, command.indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+			lastIndexBuffer = command.indexBuffer;
+		}
+
+		// Bind descriptor sets
+		// TOOO: This list should be passed to the render stage
+		for (const auto &descriptorSet : command.descriptorSets)
+		{
+			descriptorSet->Bind(commandBuffer, renderStage->GetPipelineLayout(), frameIndex);
+		}
+
+		// Push constants
+		// TODO: Render stage should be able to bind push constants
+		vkCmdPushConstants(**commandBuffer,
+			m_commandList[stageIndex].first->GetPipelineLayout(),
+			VK_SHADER_STAGE_VERTEX_BIT,
+			0,
+			sizeof(glm::mat4),
+			&command.node->modelView);
+
+		vkCmdDrawIndexed(**commandBuffer,
+			command.indexCount,
+			command.instanceCount,
+			command.firstIndex,
+			command.vertexOffset,
+			0);
+	}
+}
+
+void Scenegraph::UpdateRenderGraph()
+{
+	// TOOD Update list in an optimal way that is does not need to be rebuild every change
+	// Minimise memory allocations and copies as much as possible
+	// Check for mesh ids respectively.
+	m_commandList.clear();
+
+	for (const auto &meshToNode : m_meshesToNodes)
+	{
+		const MeshPtr &mesh = meshToNode.first;
+		const Core::Buffer &vertexBuffer = mesh->GetVertexBuffer();
+		const Core::Buffer &indexBuffer = mesh->GetIndexBuffer();
+
+		for (const auto &primitive : mesh->GetPrimitives())
+		{
+			const MaterialPtr material = mesh->GetMaterial(primitive.materialId);
+
+			if (material == nullptr)
+			{
+				continue;
+			}
+
+			const RenderStagePtr stage = material->stage;
+
+			// Find the corresponding stage in the command list
+			auto listIt = std::find_if(m_commandList.begin(),
+				m_commandList.end(),
+				[&stage](const std::pair<RenderStagePtr, std::vector<DrawCommand>> &item)
+				{
+					return item.first == stage; //
+				});
+
+			// Create new stage in command list if not found
+			if (listIt == m_commandList.end())
+			{
+				const uint32_t stageIndex = static_cast<uint32_t>(m_commandList.size());
+
+				stage->SetOnbRecordCallback(
+					[this, stageIndex](const Core::CommandBufferRef &commandBuffer, const uint32_t frameIndex)
+					{ Draw(commandBuffer, frameIndex, stageIndex); });
+
+				m_commandList.emplace_back(stage, std::vector<DrawCommand>{});
+				listIt = m_commandList.end() - 1;
+			}
+
+			std::vector<Core::DescriptorSetPtr> descriptorSets;
+			descriptorSets.reserve(material->descriptorSets.size());
+
+			for (const auto &[set, descriptorSet] : material->descriptorSets)
+			{
+				descriptorSets.push_back(descriptorSet);
+			}
+
+			// Add draw command to the stage
+			listIt->second.push_back(DrawCommand{
+				.descriptorSets = std::move(descriptorSets),
+				.vertexBuffer = vertexBuffer.buffer,
+				.indexBuffer = indexBuffer.buffer,
+				.firstIndex = primitive.firstIndex,
+				.indexCount = primitive.indexCount,
+				.vertexOffset = primitive.vertexOffset,
+				.instanceCount = 1,
+				.node = meshToNode.second,
+			});
 		}
 	}
+
+	// Order by vertex and index buffer [pointers] to ensure the least amount of buffer switches
+	for (auto &stage : m_commandList)
+	{
+		std::sort(stage.second.begin(),
+			stage.second.end(),
+			[](const DrawCommand &a, const DrawCommand &b) {
+				return a.vertexBuffer < b.vertexBuffer ||
+					   (a.vertexBuffer == b.vertexBuffer && a.indexBuffer < b.indexBuffer);
+			});
+	}
+
+	m_isDirty = false;
 }

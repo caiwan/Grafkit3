@@ -1,11 +1,13 @@
 #include "stdafx.h"
 
-#include <grafkit/common.h>
-#include <grafkit/core/command_buffer.h>
-#include <grafkit/core/descriptor.h>
-#include <grafkit/core/descriptor_pool.h>
-#include <grafkit/core/device.h>
-#include <grafkit/core/image.h>
+#include "grafkit/common.h"
+#include "grafkit/core/command_buffer.h"
+#include "grafkit/core/descriptor.h"
+#include "grafkit/core/descriptor_pool.h"
+#include "grafkit/core/device.h"
+#include "grafkit/core/image.h"
+#include "grafkit/core/initializers.h"
+#include "grafkit/core/vulkan_utils.h"
 
 using namespace Grafkit::Core;
 
@@ -13,13 +15,20 @@ DescriptorSet::DescriptorSet(const DeviceRef &device,
 	const VkDescriptorSetLayout layout,
 	std::vector<VkDescriptorSet> descriptors,
 	const uint32_t bindOffset)
-	: m_device(device), m_layout(layout), m_descriptorSets(std::move(descriptors)), m_descriptorOffset(bindOffset)
+	: m_device(device)
+	, m_layout(layout)
+	, m_descriptorSets(std::move(descriptors))
+	, m_descriptorOffset(bindOffset)
 {
 }
 
 DescriptorSet::~DescriptorSet()
 {
-	vkDestroyDescriptorSetLayout(**m_device, m_layout, nullptr);
+	for (auto &descriptorSet : m_descriptorSets)
+	{
+		Log::Instance().Trace("Deallocating descriptor. Object=%p", descriptorSet);
+		m_device->GetDescriptorPool()->DeallocateDescriptorSet(descriptorSet);
+	}
 }
 
 void DescriptorSet::Bind(const Core::CommandBufferRef &commandBuffer,
@@ -39,16 +48,25 @@ void DescriptorSet::Bind(const Core::CommandBufferRef &commandBuffer,
 
 void DescriptorSet::Update(const Buffer &buffer, const uint32_t binding, const std::optional<uint32_t> frame) noexcept
 {
-	Update(VkDescriptorBufferInfo{buffer.buffer, 0, buffer.allocationInfo.size}, binding, frame);
+	const VkDescriptorBufferInfo bufferInfo{
+		buffer.buffer,
+		0,
+		buffer.allocationInfo.size,
+	};
+	Update(bufferInfo, binding, frame);
 }
 void DescriptorSet::Update(const RingBuffer &ringBuffer, const uint32_t binding) noexcept
 {
 
 	for (uint32_t i = 0; i < ringBuffer.buffers.size(); ++i)
 	{
-		Update(VkDescriptorBufferInfo{ringBuffer.buffers[i].buffer, 0, ringBuffer.buffers[i].allocationInfo.size},
-			binding,
-			i);
+		const VkDescriptorBufferInfo bufferInfo{
+			ringBuffer.buffers[i].buffer,
+			0,
+			ringBuffer.buffers[i].allocationInfo.size,
+		};
+
+		Update(bufferInfo, binding, i);
 	}
 }
 void DescriptorSet::Update(const ImagePtr &image,
@@ -61,79 +79,122 @@ void DescriptorSet::Update(const ImagePtr &image,
 	Update(imageInfo, binding, frame);
 }
 
-void DescriptorSet::Update(
-	const VkDescriptorBufferInfo &bufferInfo, const uint32_t binding, const std::optional<uint32_t> frame) noexcept
+void DescriptorSet::Update(const VkDescriptorBufferInfo &bufferInfo,
+	const uint32_t binding,
+	const std::optional<uint32_t> frame) noexcept
 {
 	if (frame.has_value())
 	{
+		auto &descriptorSet = m_descriptorSets[frame.value()];
 
-		VkWriteDescriptorSet descriptorWrite = Initializers::WriteDescriptorSet(
-			m_descriptorSets[frame.value()], VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, binding, &bufferInfo);
+		VkWriteDescriptorSet descriptorWrite =
+			Initializers::WriteDescriptorSet(descriptorSet, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, binding, &bufferInfo);
+
+		Log::Instance().Trace(
+			"Updating descriptor set for buffer; Binding=%d Object=%p Frame=%d Buffer=%p Offset=%d Range=%d",
+			binding,
+			descriptorSet,
+			frame.value(),
+			bufferInfo.buffer,
+			bufferInfo.offset,
+			bufferInfo.range);
+
 		vkUpdateDescriptorSets(**m_device, 1, &descriptorWrite, 0, nullptr);
 	}
 	else
 	{
-		for (auto &mDescriptorSet : m_descriptorSets)
+		for (auto &descriptorSet : m_descriptorSets)
 		{
-			VkWriteDescriptorSet descriptorWrite = Initializers::WriteDescriptorSet(
-				mDescriptorSet, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, binding, &bufferInfo);
+			VkWriteDescriptorSet descriptorWrite = Initializers::WriteDescriptorSet(descriptorSet,
+				VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+				binding,
+				&bufferInfo);
+
+			Log::Instance().Trace(
+				"Updating descriptor set for buffer; Binding=%d Object=%p Buffer=%p Offset=%d Range=%d",
+				binding,
+				descriptorSet,
+				bufferInfo.buffer,
+				bufferInfo.offset,
+				bufferInfo.range);
+
 			vkUpdateDescriptorSets(**m_device, 1, &descriptorWrite, 0, nullptr);
 		}
 	}
 }
 
-void DescriptorSet::Update(
-	const VkDescriptorImageInfo &imageInfo, const uint32_t binding, const std::optional<uint32_t> frame) noexcept
+void DescriptorSet::Update(const VkDescriptorImageInfo &imageInfo,
+	const uint32_t binding,
+	const std::optional<uint32_t> frame) noexcept
 {
 	if (frame.has_value())
 	{
-		VkWriteDescriptorSet descriptorWrite = Initializers::WriteDescriptorSet(
-			m_descriptorSets[frame.value()], VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, binding, &imageInfo);
+		auto &descriptorSet = m_descriptorSets[frame.value()];
+		VkWriteDescriptorSet descriptorWrite = Initializers::WriteDescriptorSet(descriptorSet,
+			VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+			binding,
+			&imageInfo);
+
+		Log::Instance().Trace(
+			"Updating descriptor set for image; Binding=%d Object=%p Frame=%d Sampler=%p Image=%p Layout=%d",
+			binding,
+			descriptorSet,
+			frame.value(),
+			imageInfo.sampler,
+			imageInfo.imageView,
+			imageInfo.imageLayout);
+
 		vkUpdateDescriptorSets(**m_device, 1, &descriptorWrite, 0, nullptr);
 	}
 	else
 	{
-		for (auto &mDescriptorSet : m_descriptorSets)
+		for (auto &descriptorSet : m_descriptorSets)
 		{
-			VkWriteDescriptorSet descriptorWrite = Initializers::WriteDescriptorSet(
-				mDescriptorSet, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, binding, &imageInfo);
+			VkWriteDescriptorSet descriptorWrite = Initializers::WriteDescriptorSet(descriptorSet,
+				VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+				binding,
+				&imageInfo);
+
+			Log::Instance().Trace(
+				"Updating descriptor set for image; Binding=%d Object=%p Sampler=%p Image=%p Layout=%d",
+				binding,
+				descriptorSet,
+				imageInfo.sampler,
+				imageInfo.imageView,
+				imageInfo.imageLayout);
+
 			vkUpdateDescriptorSets(**m_device, 1, &descriptorWrite, 0, nullptr);
 		}
 	}
 }
 
-const VkDescriptorSet &DescriptorSet::GetVkDescriptorSet(const uint32_t currentFrame) const noexcept
+DescriptorSetPtr DescriptorSet::Create(const DeviceRef &device,
+	const VkDescriptorSetLayout descriptorSetLayout,
+	const uint32_t set,
+	const std::vector<VkDescriptorSetLayoutBinding> &bindings)
 {
-	return m_descriptorSets[currentFrame];
-}
-
-DescriptorBuilder::DescriptorBuilder(const DeviceRef &device) : m_device(device)
-{
-}
-
-DescriptorBuilder &DescriptorBuilder::AddLayoutBindings(const Core::DescriptorSetLayoutBinding &descriptor)
-{
-	m_descriptorSet = descriptor.set;
-	for (const auto &binding : descriptor.bindings)
-	{
-		m_bindings.emplace_back(
-			Initializers::DescriptorSetLayoutBinding(binding.descriptorType, binding.stageFlags, binding.binding));
-	}
-
-	return *this;
-}
-
-DescriptorSetPtr DescriptorBuilder::Build()
-{
-	VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
-	VkDescriptorSetLayoutCreateInfo layoutInfo = Initializers::DescriptorSetLayoutCreateInfo(m_bindings);
-	if (vkCreateDescriptorSetLayout(**m_device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
-	{
-		throw std::runtime_error("Failed to create descriptor set layout!");
-	}
-
 	std::vector<VkDescriptorSet> descriptorSets =
-		m_device->GetDescriptorPool()->AllocateDescriptorSets(descriptorSetLayout, m_device->GetMaxConcurrentFrames());
+		device->GetDescriptorPool()->AllocateDescriptorSets(descriptorSetLayout, device->GetMaxConcurrentFrames());
 
-	return std::make_shared<DescriptorSet>(m_device, descriptorSetLayout, std::move(descriptorSets), m_descriptorSet);
+	return std::make_shared<DescriptorSet>(device, descriptorSetLayout, std::move(descriptorSets), set);
+}
+
+DescriptorSetPtr DescriptorSet::Create(const DeviceRef &device,
+	const VkDescriptorSetLayout descriptorSetLayout,
+	const uint32_t set,
+	const std::vector<Core::DescriptorBinding> &bindings)
+{
+	// TOOD: This should usde a different descriptorset layout binding than the one from the pipeline
+	std::vector<VkDescriptorSetLayoutBinding> vkBindings;
+	vkBindings.reserve(bindings.size());
+	std::transform(bindings.begin(),
+		bindings.end(),
+		std::back_inserter(vkBindings),
+		[](const Core::DescriptorBinding &binding)
+		{
+			return Core::Initializers::DescriptorSetLayoutBinding(binding.descriptorType,
+				binding.stageFlags,
+				binding.binding);
+		});
+	return Create(device, descriptorSetLayout, set, vkBindings);
 }

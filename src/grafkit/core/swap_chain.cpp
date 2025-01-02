@@ -20,7 +20,8 @@ constexpr std::array<VkFormat, 4> DEPTH_FORMATS = {
 // ----------------------------------------------------------------------------
 
 SwapChain::SwapChain(const WindowRef &window, const InstanceRef &instance, const DeviceRef &device)
-	: m_device(device), m_extent(ChooseSwapExtent(window, device))
+	: m_device(device)
+	, m_extent(ChooseSwapExtent(window, device))
 {
 	m_format = ChooseSwapSurfaceFormat().format;
 	m_framesInFlight = m_device->GetMaxConcurrentFrames();

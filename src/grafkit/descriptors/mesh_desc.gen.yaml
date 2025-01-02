@@ -3,9 +3,8 @@ name: mesh_desc
 includes:
   - string
   - vector
-  - span
+  - map
   - grafkit/common.h
-
 
 namespace: Grafkit::Resource
 
@@ -14,3 +13,46 @@ enums:
     elems:
       - { name: Static, value: 1 }
       - { name: Skinned, value: 2 }
+
+types:
+  - name: PrimitiveDesc
+    comment: ""
+    fields:
+      - { type: "std::vector<glm::vec3>", name: "positions" }
+      - { type: "std::vector<glm::vec3>", name: "normals" }
+      - { type: "std::vector<glm::vec3>", name: "tangents" }
+      - { type: "std::vector<glm::vec3>", name: "bitangents" }
+      - { type: "std::vector<glm::vec2>", name: "texCoords" }
+      - { type: "std::vector<uint32_t>", name: "indices" }
+      - { type: "uint32_t", name: "materialIndex" }
+
+  - name: MeshDesc
+    comment: ""
+    fields:
+      - { type: "std::string", name: "name" }
+      - { type: "std::vector<PrimitiveDesc>", name: "primitives" }
+      - { type: "std::map<std::string, uint32_t>", name: "materials" }
+      - { type: "MeshType", name: "type" }
+
+  - name: PrimitiveDescV2
+    comment: ""
+    fields:
+      - { type: "uint32_t", name: "indexOffset" }
+      - { type: "uint32_t", name: "indexCount" }
+      - { type: "uint32_t", name: "vertexOffset" }
+      - { type: "uint32_t", name: "vertexCount" }
+      - { type: "uint32_t", name: "materialIndex" }
+
+  - name: MeshDescV2
+    comment: ""
+    fields:
+      - { type: "std::string", name: "name" }
+      - { type: "std::vector<glm::vec3>", name: "positions" }
+      - { type: "std::vector<glm::vec3>", name: "normals" }
+      - { type: "std::vector<glm::vec3>", name: "tangents" }
+      - { type: "std::vector<glm::vec3>", name: "bitangents" }
+      - { type: "std::vector<glm::vec2>", name: "texCoords" }
+      - { type: "std::vector<uint32_t>", name: "indices" }
+      - { type: "std::vector<PrimitiveDescV2>", name: "primitives" }
+      - { type: "std::map<std::string, uint32_t>", name: "materials" }
+      - { type: "MeshType", name: "type" }

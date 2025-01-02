@@ -7,7 +7,9 @@
 using namespace Grafkit::Core;
 
 DescriptorPool::DescriptorPool(const DeviceRef &device, const uint32_t maxSets, std::vector<PoolSet> poolSets)
-	: m_device(device), m_poolSets(std::move(poolSets)), m_maxSets(maxSets)
+	: m_device(device)
+	, m_poolSets(std::move(poolSets))
+	, m_maxSets(maxSets)
 {
 	assert(m_maxSets > 0);
 	assert(!m_poolSets.empty());
@@ -16,12 +18,33 @@ DescriptorPool::DescriptorPool(const DeviceRef &device, const uint32_t maxSets, 
 
 DescriptorPool::~DescriptorPool()
 {
-	for (auto &pool : m_readyPools)
+	if (m_readyPools.empty() && m_fullPools.empty())
+	{
+		return;
+	}
+
+	if (!m_descriptorPoolMap.empty())
+	{
+		Log::Instance().Error("Descriptor pool destroyed with %d descriptor sets still allocated",
+			m_descriptorPoolMap.size());
+		for (const auto &pair : m_descriptorPoolMap)
+		{
+			Log::Instance().Trace("Freeing descriptor set %p from pool %p", pair.first, pair.second);
+			vkFreeDescriptorSets(**m_device, pair.second, 1, &pair.first);
+		}
+	}
+	else
+	{
+		Log::Instance().Trace("Descriptor pool destroyed with no descriptor sets left allocated");
+	}
+
+	// clean up all pools
+	for (const auto &pool : m_readyPools)
 	{
 		vkDestroyDescriptorPool(**m_device, pool, nullptr);
 	}
 
-	for (auto &pool : m_fullPools)
+	for (const auto &pool : m_fullPools)
 	{
 		vkDestroyDescriptorPool(**m_device, pool, nullptr);
 	}
@@ -56,11 +79,14 @@ VkDescriptorSet DescriptorPool::AllocateDescriptorSet(const VkDescriptorSetLayou
 	Log::Instance().Trace("Allocating descriptor. Object=%p", descriptorSet);
 
 	m_readyPools.push_back(poolToUse);
+
+	m_descriptorPoolMap.emplace(descriptorSet, poolToUse);
+
 	return descriptorSet;
 }
 
-[[nodiscard]] std::vector<VkDescriptorSet> DescriptorPool::AllocateDescriptorSets(
-	const VkDescriptorSetLayout &layout, const uint32_t count)
+[[nodiscard]] std::vector<VkDescriptorSet> DescriptorPool::AllocateDescriptorSets(const VkDescriptorSetLayout &layout,
+	const uint32_t count)
 {
 	Log::Instance().Debug("Allocating %d descriptor sets", count);
 	std::vector<VkDescriptorSet> descriptorSets;
@@ -69,6 +95,17 @@ VkDescriptorSet DescriptorPool::AllocateDescriptorSet(const VkDescriptorSetLayou
 		descriptorSets.emplace_back(AllocateDescriptorSet(layout));
 	}
 	return descriptorSets;
+}
+
+void Grafkit::Core::DescriptorPool::DeallocateDescriptorSet(VkDescriptorSet descriptorSet)
+{
+	auto poolIt = m_descriptorPoolMap.find(descriptorSet);
+	assert(poolIt != m_descriptorPoolMap.end());
+
+	Log::Instance().Trace("Freeing descriptor set %p from pool %p", poolIt->first, poolIt->second);
+
+	vkFreeDescriptorSets(**m_device, poolIt->second, 1, &descriptorSet);
+	m_descriptorPoolMap.erase(descriptorSet);
 }
 
 VkDescriptorPool DescriptorPool::CreatePool()
@@ -82,31 +119,37 @@ VkDescriptorPool DescriptorPool::CreatePool()
 
 	Log::Instance().Trace("Creating descriptor pool with %d sets", m_maxSets);
 
-	VkDescriptorPoolCreateInfo info = Initializers::DescriptorPoolCreateInfo(poolSizes, m_maxSets);
 	VkDescriptorPool pool = VK_NULL_HANDLE;
+	VkDescriptorPoolCreateInfo info = Initializers::DescriptorPoolCreateInfo(poolSizes, m_maxSets);
+	info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 	vkCreateDescriptorPool(**m_device, &info, nullptr, &pool);
+
+	// If the pool was a full pool, move it back to ready pools to reuse it
+	auto it = std::find(m_fullPools.begin(), m_fullPools.end(), pool);
+	if (it != m_fullPools.end())
+	{
+		m_fullPools.erase(it);
+		m_readyPools.push_back(pool);
+	}
 
 	return pool;
 }
 
 VkDescriptorPool DescriptorPool::GetPool()
 {
-	// Get or create a pool [to allocate from]
-	VkDescriptorPool pool;
 	// check if we have a pool ready
 	if (!m_readyPools.empty())
 	{
-		pool = m_readyPools.back();
+		VkDescriptorPool pool = m_readyPools.back();
 		m_readyPools.pop_back();
+		return pool;
 	}
-	else
+
+	// need to create a new pool
+	VkDescriptorPool pool = CreatePool();
+	if (pool == nullptr)
 	{
-		// need to create a new pool
-		pool = CreatePool();
-		if (pool == nullptr)
-		{
-			throw std::runtime_error("Failed to create descriptor pool");
-		}
+		throw std::runtime_error("Failed to create descriptor pool");
 	}
 	return pool;
 }

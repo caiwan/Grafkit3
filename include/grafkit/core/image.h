@@ -20,19 +20,22 @@ namespace Grafkit::Core
 
 		virtual ~Image();
 
-		[[nodiscard]] const VkImage &GetImage() const
+		[[nodiscard]] inline const VkImage &GetImage() const
 		{
 			return m_image;
 		}
-		[[nodiscard]] const VkImageView &GetImageView() const
+
+		[[nodiscard]] inline const VkImageView &GetImageView() const
 		{
 			return m_imageView;
 		}
-		[[nodiscard]] const VkImageLayout &GetLayout() const
+
+		[[nodiscard]] inline const VkImageLayout &GetLayout() const
 		{
 			return m_layout;
 		}
 
+		// MARLK: Factory methods
 		static ImagePtr CreateImage(const DeviceRef &device,
 			const VkExtent3D size,
 			const VkFormat format,
@@ -61,8 +64,10 @@ namespace Grafkit::Core
 		VkImageView m_imageView = VK_NULL_HANDLE;
 		VkImageLayout m_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-		static void TransitionImageLayout(
-			VkCommandBuffer &command, const VkImage &image, VkImageLayout currentLayout, VkImageLayout newLayout);
+		static void TransitionImageLayout(VkCommandBuffer &command,
+			const VkImage &image,
+			VkImageLayout currentLayout,
+			VkImageLayout newLayout);
 	};
 
 } // namespace Grafkit::Core

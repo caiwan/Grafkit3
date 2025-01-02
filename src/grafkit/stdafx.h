@@ -17,9 +17,11 @@
 #include <set>
 #include <span>
 #include <sstream>
+#include <stack>
 #include <stdexcept>
 #include <tuple>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include <glm/glm.hpp>

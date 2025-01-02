@@ -35,7 +35,8 @@
 constexpr int WIDTH = 1024;
 constexpr int HEIGHT = 768;
 
-class HelloApplication : public Grafkit::Application {
+class HelloApplication : public Grafkit::Application
+{
 private:
 	Grafkit::Asset::AssetLoaderPtr m_assetLoader;
 	Grafkit::Resource::ResourceManagerPtr m_resources;
@@ -51,26 +52,32 @@ public:
 
 	~HelloApplication() = default;
 
-	void Init() override { }
+	void Init() override
+	{
+	}
 
-	void Update([[maybe_unused]] const Grafkit::TimeInfo& timeInfo) override { }
+	void Update([[maybe_unused]] const Grafkit::TimeInfo &timeInfo) override
+	{
+	}
 
 	void Render() override
 	{
-		const auto commandBuffer = m_renderContext->BeginCommandBuffer();
-		m_renderContext->BeginFrame(commandBuffer);
-		m_renderContext->EndFrame(commandBuffer);
 	}
 
-	void Shutdown() override { }
+	void Shutdown() override
+	{
+	}
 };
 
 int main()
 {
 	HelloApplication app;
-	try {
+	try
+	{
 		app.Run();
-	} catch (const std::exception& e) {
+	}
+	catch (const std::exception &e)
+	{
 		Grafkit::Core::Log::Instance().Error("Exception: %s", e.what());
 		return EXIT_FAILURE;
 	}

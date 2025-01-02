@@ -1,21 +1,24 @@
 #ifndef GRAFKIT_SCENEGRAPH_H
 #define GRAFKIT_SCENEGRAPH_H
 
+#include <tuple>
+#include <vector>
+
 #include <glm/gtc/quaternion.hpp>
 #include <grafkit/common.h>
 
-namespace Grafkit {
+namespace Grafkit
 
+{
 	struct Node;
 	using NodePtr = std::shared_ptr<Node>;
 	using NodeRef = std::weak_ptr<Node>;
 
-	struct Node {
+	struct Node
+	{
 		uint32_t id = 0;
 		NodePtr parent;
 		std::vector<NodePtr> children;
-
-		std::weak_ptr<Mesh> mesh;
 
 		glm::mat4 matrix = glm::mat4(1.0f);
 		glm::mat4 modelView = glm::mat4(1.0f);
@@ -30,32 +33,46 @@ namespace Grafkit {
 		void UpdateLocalMatrix();
 	};
 
-	// TODO: IResource + GRAFKIT_RESOURCE_KIND("Scenegraph")
-	class Scenegraph {
+	// MARK: Scenegraph
+	class Scenegraph
+	{
 	public:
 		Scenegraph() = default;
-		virtual ~Scenegraph();
+		virtual ~Scenegraph() = default;
 
-		NodePtr CreateNode(const NodePtr& parent = nullptr, const MeshPtr& mesh = nullptr);
+		NodePtr CreateNode(const NodePtr &parent = nullptr);
+		NodePtr CreateNode(const MeshPtr &mesh, const NodePtr &parent = nullptr); // TODO: Add bone
 
-		void AddMaterial(const MaterialPtr& material);
-		void AddTexture(const TexturePtr& texture);
-		void AddMesh(const MeshPtr& mesh);
-		void AddAnimation(const Animation::AnimationPtr& animation);
+		void AddDescriptorSet(const uint32_t set, const Core::DescriptorSetPtr &descriptorSet);
 
-		void Update(const Grafkit::TimeInfo& deltaTime);
-		void Draw(const Grafkit::Core::CommandBufferRef& commandBuffer);
+		void Update(const Grafkit::TimeInfo &deltaTime);
+		void
+		Draw(const Core::CommandBufferRef &commandBuffer, const uint32_t frameIndex, const uint32_t stageIndex) const;
 
 	private:
+		struct DrawCommand
+		{
+			std::vector<Core::DescriptorSetPtr> descriptorSets{};
+			VkBuffer vertexBuffer = VK_NULL_HANDLE;
+			VkBuffer indexBuffer = VK_NULL_HANDLE;
+			uint32_t firstIndex = 0;
+			uint32_t indexCount = 0;
+			uint32_t vertexOffset = 0;
+			uint32_t instanceCount = 0;
+			NodePtr node = nullptr;
+		};
+
+		void UpdateRenderGraph();
+
 		NodePtr m_root;
-		std::vector<MaterialPtr> m_materials;
-		std::vector<TexturePtr> m_textures;
-		std::vector<MeshPtr> m_meshes;
-		std::vector<Animation::AnimationPtr> m_animations;
+		std::vector<NodePtr> m_nodes;
+		std::vector<std::pair<MeshPtr, NodePtr>> m_meshesToNodes;
+		// + bones to nodes
+		std::vector<std::pair<RenderStagePtr, std::vector<DrawCommand>>> m_commandList;
 
-		// + Camera node?
+		std::map<uint32_t, Core::DescriptorSetPtr> m_descriptorSets;
 
-		// + Camera view
+		bool m_isDirty = true;
 	};
 
 } // namespace Grafkit

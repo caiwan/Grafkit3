@@ -1,13 +1,15 @@
 #ifndef GRAFKIT_CORE_DEVICE_H
 #define GRAFKIT_CORE_DEVICE_H
 
+#include <memory>
+#include <optional>
+#include <vector>
+
 #include <grafkit/common.h>
 #include <grafkit/core/descriptor_pool.h>
 #include <grafkit/core/instance.h>
 #include <grafkit/core/window.h>
-#include <memory>
-#include <optional>
-#include <vector>
+
 #include <vk_mem_alloc.h>
 
 namespace Grafkit::Core

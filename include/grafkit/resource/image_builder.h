@@ -9,51 +9,70 @@
 #include <grafkit/descriptors/image_desc.h>
 #include <grafkit/interface/resource.h>
 
-namespace Grafkit::Resource {
+namespace Grafkit::Resource
+{
 
-	class ImageBuilder : public ResourceBuilder<ImageDesc, Core::Image> {
+	class ImageBuilder : public ResourceBuilder<ImageDesc, Core::Image>
+	{
 	public:
-		explicit ImageBuilder(const ImageDesc& desc)
+		explicit ImageBuilder(const ImageDesc &desc)
 			: ResourceBuilder<ImageDesc, Core::Image>(desc)
 		{
 		}
 
-		[[nodiscard]] bool ResolveDependencies([[maybe_unused]] const RefWrapper<ResourceManager>& resources) final
+		ImageBuilder(const ImageBuilder &) = delete;
+		ImageBuilder &operator=(const ImageBuilder &) = delete;
+		ImageBuilder(ImageBuilder &&) = delete;
+		ImageBuilder &operator=(ImageBuilder &&) = delete;
+
+		[[nodiscard]] bool ResolveDependencies([[maybe_unused]] const RefWrapper<ResourceManager> &resources) final
 		{
 			return true;
 		}
 
-		void Build(const Core::DeviceRef& device) override;
+		void Build(const Core::DeviceRef &device) override;
 	};
 
-	class SolidImageBuilder : public ResourceBuilder<SolidImageDesc, Core::Image> {
+	class SolidImageBuilder : public ResourceBuilder<SolidImageDesc, Core::Image>
+	{
 	public:
-		explicit SolidImageBuilder(const SolidImageDesc& desc)
+		explicit SolidImageBuilder(const SolidImageDesc &desc)
 			: ResourceBuilder<SolidImageDesc, Core::Image>(desc)
 		{
 		}
 
-		[[nodiscard]] bool ResolveDependencies([[maybe_unused]] const RefWrapper<ResourceManager>& resources) final
+		SolidImageBuilder(const SolidImageBuilder &) = delete;
+		SolidImageBuilder &operator=(const SolidImageBuilder &) = delete;
+		SolidImageBuilder(SolidImageBuilder &&) = delete;
+		SolidImageBuilder &operator=(SolidImageBuilder &&) = delete;
+
+		[[nodiscard]] bool ResolveDependencies([[maybe_unused]] const RefWrapper<ResourceManager> &resources) final
 		{
 			return true;
 		}
 
-		void Build(const Core::DeviceRef& device) override;
+		void Build(const Core::DeviceRef &device) override;
 	};
 
-	class CheckerImageBuilder : public ResourceBuilder<CheckerImageDesc, Core::Image> {
+	class CheckerImageBuilder : public ResourceBuilder<CheckerImageDesc, Core::Image>
+	{
 	public:
-		explicit CheckerImageBuilder(const DescriptorType& desc)
+		explicit CheckerImageBuilder(const DescriptorType &desc)
 			: ResourceBuilder<CheckerImageDesc, Core::Image>(desc)
 		{
 		}
 
-		[[nodiscard]] bool ResolveDependencies([[maybe_unused]] const RefWrapper<ResourceManager>& resources) final
+		CheckerImageBuilder(const CheckerImageBuilder &) = delete;
+		CheckerImageBuilder &operator=(const CheckerImageBuilder &) = delete;
+		CheckerImageBuilder(CheckerImageBuilder &&) = delete;
+		CheckerImageBuilder &operator=(CheckerImageBuilder &&) = delete;
+
+		[[nodiscard]] bool ResolveDependencies([[maybe_unused]] const RefWrapper<ResourceManager> &resources) final
 		{
 			return true;
 		}
 
-		void Build(const Core::DeviceRef& device) override;
+		void Build(const Core::DeviceRef &device) override;
 	};
 
 } // namespace Grafkit::Resource

@@ -13,7 +13,6 @@
 
 namespace Grafkit::Core
 {
-
 	class Logger
 	{
 	public:
@@ -94,7 +93,7 @@ namespace Grafkit::Core
 		static Logger &Instance()
 		{
 			std::lock_guard<std::mutex> lock(GMutex);
-			if (!GLogger)
+			if (GLogger == nullptr)
 			{
 				GLogger = std::make_unique<DefaultLogger>();
 			}
