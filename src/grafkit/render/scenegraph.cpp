@@ -17,6 +17,8 @@
 
 using namespace Grafkit;
 
+constexpr bool USE_BUFFER_BINDING_OPTIMALIZATION = false;
+
 void Node::UpdateLocalMatrix()
 {
 	matrix =
@@ -121,21 +123,34 @@ void Scenegraph::Draw(const Core::CommandBufferRef &commandBuffer,
 			continue;
 		}
 
-		if (command.vertexBuffer != lastVertexBuffer)
+		// TODO: Add instance support
+		if constexpr (USE_BUFFER_BINDING_OPTIMALIZATION)
+		{
+			if (command.vertexBuffer != lastVertexBuffer)
+			{
+				std::array<VkDeviceSize, 1> offsets = {0};
+				vkCmdBindVertexBuffers(**commandBuffer, 0, 1, &command.vertexBuffer, offsets.data());
+				lastVertexBuffer = command.vertexBuffer;
+			}
+
+			if (command.indexBuffer != lastIndexBuffer)
+			{
+				vkCmdBindIndexBuffer(**commandBuffer, command.indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+				lastIndexBuffer = command.indexBuffer;
+			}
+		}
+		else
 		{
 			std::array<VkDeviceSize, 1> offsets = {0};
 			vkCmdBindVertexBuffers(**commandBuffer, 0, 1, &command.vertexBuffer, offsets.data());
-			lastVertexBuffer = command.vertexBuffer;
-		}
-
-		if (command.indexBuffer != lastIndexBuffer)
-		{
 			vkCmdBindIndexBuffer(**commandBuffer, command.indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-			lastIndexBuffer = command.indexBuffer;
 		}
 
 		// Bind descriptor sets
 		// TOOO: This list should be passed to the render stage
+
+		// THIS IS FAULTY !!!!!!!!
+
 		for (const auto &descriptorSet : command.descriptorSets)
 		{
 			descriptorSet->Bind(commandBuffer, renderStage->GetPipelineLayout(), frameIndex);
@@ -161,9 +176,14 @@ void Scenegraph::Draw(const Core::CommandBufferRef &commandBuffer,
 
 void Scenegraph::UpdateRenderGraph()
 {
-	// TOOD Update list in an optimal way that is does not need to be rebuild every change
-	// Minimise memory allocations and copies as much as possible
-	// Check for mesh ids respectively.
+	/**
+	 * TODO:
+	 * - Update list in an optimal way that is does not need to be rebuild every change
+	 * - Minimise memory allocations and copies as much as possible
+	 * - Check for mesh ids respectively.
+	 * - This is a naive implementation
+	 * - Use mutex once if multithreading is implemented
+	 */
 	m_commandList.clear();
 
 	for (const auto &meshToNode : m_meshesToNodes)
@@ -227,14 +247,17 @@ void Scenegraph::UpdateRenderGraph()
 	}
 
 	// Order by vertex and index buffer [pointers] to ensure the least amount of buffer switches
-	for (auto &stage : m_commandList)
+	if constexpr (USE_BUFFER_BINDING_OPTIMALIZATION)
 	{
-		std::sort(stage.second.begin(),
-			stage.second.end(),
-			[](const DrawCommand &a, const DrawCommand &b) {
-				return a.vertexBuffer < b.vertexBuffer ||
-					   (a.vertexBuffer == b.vertexBuffer && a.indexBuffer < b.indexBuffer);
-			});
+		for (auto &stage : m_commandList)
+		{
+			std::sort(stage.second.begin(),
+				stage.second.end(),
+				[](const DrawCommand &a, const DrawCommand &b) {
+					return a.vertexBuffer < b.vertexBuffer ||
+						   (a.vertexBuffer == b.vertexBuffer && a.indexBuffer < b.indexBuffer);
+				});
+		}
 	}
 
 	m_isDirty = false;
