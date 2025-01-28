@@ -44,11 +44,11 @@ macro(add_sample name sources)
 	install(TARGETS ${PROJECT_NAME}-${name} DESTINATION ${CMAKE_INSTALL_BINDIR})
 endmacro()
 
-add_sample(01_Cubes
+add_sample(cubes
 	${CMAKE_CURRENT_SOURCE_DIR}/cubes.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/cube_mesh.h
 )
 
-add_sample(02_Bloom
+add_sample(bloom
 	${CMAKE_CURRENT_SOURCE_DIR}/bloom.cpp
 )
