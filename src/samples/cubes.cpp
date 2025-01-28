@@ -106,6 +106,11 @@ public:
 			Grafkit::Resource::MaterialBuilder()
 				.SetRenderStage(stage)
 				.AddTextureImage(Grafkit::DIFFUSE_TEXTURE_BINDING, image)
+				.AddTextureImage(Grafkit::NORMAL_TEXTURE_BINDING, image)
+				.AddTextureImage(Grafkit::ROUGHNESS_TEXTURE_BINDING, image)
+				.AddTextureImage(Grafkit::METALLIC_TEXTURE_BINDING, image)
+				.AddTextureImage(Grafkit::AMBIENT_OCCLUSION_TEXTURE_BINDING, image)
+				.AddTextureImage(Grafkit::EMISSIVE_TEXTURE_BINDING, image)
 				.BuildResource(device, resources);
 
 		m_ubo = Grafkit::Core::UniformBuffer<Grafkit::CameraView>::CreateBuffer(device);
@@ -183,9 +188,7 @@ public:
 	{
 		const auto &commandBuffer = m_renderContext->BeginCommandBuffer();
 		const auto &frameIndex = m_renderContext->GetNextFrameIndex();
-
 		m_renderGraph->Record(commandBuffer, frameIndex);
-
 		m_renderContext->EndFrame(commandBuffer);
 	}
 

@@ -68,14 +68,30 @@ void MaterialBuilder::Build(const Core::DeviceRef &device)
 	// TOOD: This will be handled automatiaclly by generated code
 	const auto textureSetDescriptorIt = m_resource->descriptorSets.find(Grafkit::TEXTURE_SET);
 	const auto &textureSetDescriptor = textureSetDescriptorIt->second;
-	assert(textureSetDescriptorIt != m_resource->descriptorSets.end());
 
-	for (const auto &[bindId, image] : m_images)
+	if (textureSetDescriptorIt == m_resource->descriptorSets.end())
 	{
-		assert(image != nullptr);
-		TexturePtr texture = CreateTexture(device, image);
-		textureSetDescriptor->Update(texture->GetImage(), texture->GetSampler(), bindId);
-		m_resource->textures.emplace(bindId, std::move(texture));
+		throw std::runtime_error("Error: Texture descriptor set not found");
+	}
+
+	// TOOD: Add null object for missing textures
+
+	// Mandate all texture slots to be filled
+	for (const auto &binding : materialBindings.at(Grafkit::TEXTURE_SET).bindings)
+	{
+		const auto image = m_images.find(binding.binding);
+		if (image != m_images.end())
+		{
+			TexturePtr texture = CreateTexture(device, image->second);
+			textureSetDescriptor->Update(texture->GetImage(), texture->GetSampler(), binding.binding);
+			m_resource->textures.emplace(binding.binding, std::move(texture));
+		}
+		else
+		{
+			// TODO: Generate textures if not provided or decide to check for all textures dynamically
+			std::string msg = "Error: Texture slot not filled: " + std::to_string(binding.binding);
+			throw std::runtime_error(msg);
+		}
 	}
 }
 
