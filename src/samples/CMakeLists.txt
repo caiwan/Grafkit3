@@ -5,7 +5,9 @@ include(GKSourceTools)
 
 find_package(Vulkan REQUIRED)
 
-# Mark: Shaders
+option(GRAFKIT_ENABLE_STRIP_DEBUG_SYMBOLS "Strip debug symbols from executables" OFF)
+
+# MARK: Shaders
 
 file(GLOB_RECURSE GLSL_SOURCE_FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.vert
@@ -22,26 +24,44 @@ spirv_compile_shaders(
 	SHADER_INCLUDE_DIR ${SHADER_INCLUDE_DIR}/shaders
 	GENERATED_FILES_ARG SPIRV_EMBED_SOURCE_FILES
 )
+set(SHADER_LIBRARY_NAME ${PROJECT_NAME}_Shaders)
 
-add_library(${PROJECT_NAME}-Shaders STATIC ${GLSL_SOURCE_FILES} ${SPIRV_EMBED_SOURCE_FILES})
-target_include_directories(${PROJECT_NAME}-Shaders PUBLIC ${SHADER_INCLUDE_DIR})
-set_target_properties(${PROJECT_NAME}-Shaders PROPERTIES FOLDER "Samples")
-set_target_properties(${PROJECT_NAME}-Shaders PROPERTIES LINKER_LANGUAGE C)
+add_library(${SHADER_LIBRARY_NAME} STATIC ${GLSL_SOURCE_FILES} ${SPIRV_EMBED_SOURCE_FILES})
+target_include_directories(${SHADER_LIBRARY_NAME} PUBLIC ${SHADER_INCLUDE_DIR})
+
+set_target_properties(${SHADER_LIBRARY_NAME} PROPERTIES FOLDER "Samples")
+set_target_properties(${SHADER_LIBRARY_NAME} PROPERTIES LINKER_LANGUAGE C)
 
 include(GNUInstallDirs)
 
+# MARK: Samples
+
 macro(add_sample name sources)
-	add_executable(${PROJECT_NAME}-${name} ${sources})
-	set_project_warnings(${PROJECT_NAME}-${name})
-	set_project_clang_format(${PROJECT_NAME}-${name})
-	set_project_clang_tidy(${PROJECT_NAME}-${name})
-	target_link_libraries(${PROJECT_NAME}-${name}
-		${PROJECT_NAME}-Shaders
+	set(EXECUTABLE_NAME ${PROJECT_NAME}_${name})
+	add_executable(${EXECUTABLE_NAME} ${sources})
+
+	set_project_warnings(${EXECUTABLE_NAME})
+	set_project_clang_format(${EXECUTABLE_NAME})
+	set_project_clang_tidy(${EXECUTABLE_NAME})
+	target_link_libraries(${EXECUTABLE_NAME}
+		${SHADER_LIBRARY_NAME}
 		Grafkit::Grafkit
 		Grafkit::GrafkitLoader
 	)
-	set_target_properties(${PROJECT_NAME}-${name} PROPERTIES FOLDER "Samples")
-	install(TARGETS ${PROJECT_NAME}-${name} DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+	if(GRAFKIT_ENABLE_STRIP_DEBUG_SYMBOLS AND UNIX AND NOT APPLE)
+		add_custom_target(${EXECUTABLE_NAME}_strip_debug_symbols ALL
+			COMMAND ${CMAKE_STRIP} --only-keep-debug $<TARGET_FILE:${EXECUTABLE_NAME}> -o $<TARGET_FILE:${EXECUTABLE_NAME}>.debug
+			COMMAND ${CMAKE_STRIP} --strip-debug --strip-unneeded $<TARGET_FILE:${EXECUTABLE_NAME}>
+			COMMAND ${CMAKE_OBJCOPY} --add-gnu-debuglink=$<TARGET_FILE:${EXECUTABLE_NAME}>.debug $<TARGET_FILE:${EXECUTABLE_NAME}>
+			DEPENDS ${EXECUTABLE_NAME}
+		)
+		set_target_properties(${EXECUTABLE_NAME}_strip_debug_symbols  PROPERTIES FOLDER "Utilities")
+		add_dependencies(${EXECUTABLE_NAME}_strip_debug_symbols ${EXECUTABLE_NAME})
+	endif()
+
+	set_target_properties(${EXECUTABLE_NAME} PROPERTIES FOLDER "Samples")
+	install(TARGETS ${EXECUTABLE_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
 endmacro()
 
 add_sample(cubes
