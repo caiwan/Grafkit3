@@ -157,13 +157,23 @@ void Device::CreateLogicalDevice()
 
 	VkPhysicalDeviceFeatures deviceFeatures{};
 
+	VkPhysicalDeviceVulkan13Features vulkan13Features{};
+	vulkan13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+	vulkan13Features.synchronization2 = VK_TRUE;
+
+	VkPhysicalDeviceFeatures2 deviceFeatures2{};
+	deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+	deviceFeatures2.pNext = &vulkan13Features;
+	deviceFeatures2.features = deviceFeatures;
+
 	VkDeviceCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 
 	createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
 	createInfo.pQueueCreateInfos = queueCreateInfos.data();
 
-	createInfo.pEnabledFeatures = &deviceFeatures;
+	createInfo.pEnabledFeatures = nullptr;
+	createInfo.pNext = &deviceFeatures2;
 
 	createInfo.enabledExtensionCount = static_cast<uint32_t>(Instance::DEVICE_EXTENSIONS.size());
 	createInfo.ppEnabledExtensionNames = Instance::DEVICE_EXTENSIONS.data();
