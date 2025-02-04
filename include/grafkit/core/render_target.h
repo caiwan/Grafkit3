@@ -63,6 +63,7 @@ namespace Grafkit::Core
 			const VkRenderPass renderPass,
 			const VkExtent2D extent,
 			std::vector<VkFramebuffer> frameBuffers,
+			bool isOffscreen,
 			const VkSampler sampler,
 			std::vector<RenderTargetAttachment> attachments);
 
@@ -111,6 +112,8 @@ namespace Grafkit::Core
 		VkViewport m_viewport{};
 		VkRect2D m_scissor{};
 
+		bool m_isOffscreen = false;
+
 		std::vector<VkFramebuffer> m_frameBuffers;
 		std::vector<RenderTargetAttachment> m_attachments;
 
@@ -123,7 +126,8 @@ namespace Grafkit::Core
 	public:
 		explicit RenderTargetBuilder(const DeviceRef &device);
 
-		RenderTargetBuilder &CreateAttachments(const SwapChainRef &swapChain);
+		RenderTargetBuilder &UseSwapChain(const SwapChainRef &swapChain);
+		RenderTargetBuilder &CreateFromSwapChain(const SwapChainRef &swapChain);
 		RenderTargetBuilder &AddAttachments(const std::vector<RenderTargetAttachmentInfo> &attachments);
 		RenderTargetBuilder &AddAttachment(const RenderTargetAttachmentInfo &attachment);
 		RenderTargetBuilder &AddAttachment(const VkFormat format,

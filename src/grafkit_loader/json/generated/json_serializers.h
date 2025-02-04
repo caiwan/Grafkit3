@@ -4,7 +4,7 @@
  *
  * This file has been automatically generated and should not be modified.
  *
- * Generated at: 2024-12-07 16:44:54
+ * Generated at: 2025-03-26 12:50:25
  * Source files:
  *   - animation_desc.gen.yaml
  *   - image_desc.gen.yaml

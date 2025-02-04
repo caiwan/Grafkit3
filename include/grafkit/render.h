@@ -51,6 +51,11 @@ namespace Grafkit
 			return m_renderTarget;
 		}
 
+		[[nodiscard]] const Core::SwapChainRef GetSwapChain() const
+		{
+			return MakeReference(*m_swapChain);
+		}
+
 		[[nodiscard]] Core::CommandBufferRef BeginCommandBuffer() final;
 
 		void EndFrame(const Core::CommandBufferRef &commandBuffer) final;

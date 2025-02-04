@@ -152,6 +152,8 @@ namespace Grafkit::Core
 		VkShaderStageFlags stageFlags;
 	};
 
+	using DescriptorBindings = std::vector<DescriptorBinding>;
+
 	struct DescriptorSetLayoutBinding
 	{
 		uint32_t set;

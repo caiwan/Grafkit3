@@ -79,7 +79,7 @@ namespace Grafkit::Core
 		GraphicsPipelineBuilder &SetColorBlending(const VkPipelineColorBlendAttachmentState &m_colorBlendAttachment);
 		GraphicsPipelineBuilder &SetDynamicState(const std::vector<VkDynamicState> &m_dynamicStates);
 
-		PipelinePtr Build();
+		PipelinePtr Build() const;
 
 	private:
 		const DeviceRef m_device;

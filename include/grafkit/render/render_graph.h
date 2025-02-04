@@ -2,6 +2,7 @@
 #define GRAFKIT_RENDER_RENDER_GRAPH_H
 
 #include <functional>
+#include <span>
 #include <unordered_map>
 #include <vector>
 
@@ -18,6 +19,15 @@ namespace Grafkit
 		class Pipeline;
 	} // namespace Core
 
+	enum class StageDescriptorType
+	{
+		None,
+		Material,
+		RenderStage,
+	};
+
+	using StageDescriptorMap = std::unordered_map<StageDescriptorType, Core::DescriptorSetLayoutBindingMap>;
+
 	using OnRecordRenderStageCallbackFn =
 		std::function<void(const Core::CommandBufferRef &commandBuffer, const uint32_t frameIndex)>;
 
@@ -28,8 +38,10 @@ namespace Grafkit
 		RenderStage(const Core::DeviceRef &device,
 			Core::PipelinePtr pipeline,
 			Core::RenderTargetPtr renderTarget,
-			Core::DescriptorSetLayoutBindingMap descriptorSetBindings = {},
-			std::vector<VkPushConstantRange> pushConstants = {});
+			StageDescriptorMap descriptorSetBindings = {},
+			std::vector<VkPushConstantRange> pushConstants = {},
+			Core::RenderTargetPtr renderSource = nullptr,
+			std::vector<VkClearValue> clearValues = {});
 
 		virtual ~RenderStage();
 
@@ -46,17 +58,29 @@ namespace Grafkit
 
 		void SetOnbRecordCallback(const OnRecordRenderStageCallbackFn &callback);
 
+		[[nodiscard]] Core::DescriptorSetLayoutBindingMap GetDescriptorSetLayoutBindings(
+			const StageDescriptorType type) const noexcept;
+
 		[[nodiscard]] Core::DescriptorSetPtr CreateDescriptorSet(const uint32_t set) const;
 
 		[[nodiscard]] VkPipelineLayout GetPipelineLayout() const noexcept;
 		[[nodiscard]] VkDescriptorSetLayout DescriptorSetLayout(uint32_t index) const noexcept;
 
+		[[nodiscard]] Core::RenderTargetPtr GetRendderTarget() const noexcept;
+		[[nodiscard]] Core::RenderTargetPtr GetRenderSource() const noexcept;
+
+		[[nodiscard]] inline bool IsClear() const noexcept
+		{
+			return m_isClear;
+		}
+
 	private:
 		const Core::DeviceRef m_device;
 
-		Core::DescriptorSetLayoutBindingMap m_descriptorSetBindings;
+		StageDescriptorMap m_descriptorMap;
 		std::vector<VkPushConstantRange> m_pushConstants;
 
+		Core::RenderTargetPtr m_renderSource;
 		Core::RenderTargetPtr m_renderTarget;
 		Core::PipelinePtr m_pipeline;
 
@@ -67,17 +91,28 @@ namespace Grafkit
 	};
 
 	// MARK: RenderGraph
+
 	GKAPI class RenderGraph
 	{
 	public:
 		RenderGraph() = default;
 		virtual ~RenderGraph() = default;
 
-		void BuildFromStages(std::vector<RenderStagePtr> stages);
+		void BuildFromStages(std::vector<RenderStagePtr> inStages);
 
 		void Record(const Core::CommandBufferRef &commandBuffer, const uint32_t frameIndex);
 
+		// Internal representation of a render node with dependencies
+		struct RenderNode
+		{
+			RenderStagePtr stage;
+			std::vector<RenderStagePtr> dependencies;
+		};
+
 	private:
+		[[nodiscard]]
+		static std::vector<RenderStagePtr> TopologicalSort(std::span<RenderNode> inStages);
+
 		std::vector<RenderStagePtr> m_stages;
 	};
 
@@ -96,27 +131,39 @@ namespace Grafkit
 
 		// MARK: Builder methods
 		RenderStageBuilder &SetRenderTarget(const Core::RenderTargetPtr &target);
+		RenderStageBuilder &SetRenderSource(const Core::RenderTargetPtr &target);
 
 		RenderStageBuilder &AddDescriptorSetLayoutBinding(const uint32_t set,
 			const std::vector<Core::DescriptorBinding> &bindings);
 		RenderStageBuilder &AddDescriptorSetLayoutBindings(const Core::DescriptorSetLayoutBindings &descriptors);
 
+		RenderStageBuilder &AddMaterialDescriptorBinding(const uint32_t set,
+			const std::vector<Core::DescriptorBinding> &bindings);
+		RenderStageBuilder &AddMaterialDescriptorBindings(const Core::DescriptorSetLayoutBindings &descriptors);
+		RenderStageBuilder &AddRenderStageDescriptorBinding(const uint32_t set,
+			const std::vector<Core::DescriptorBinding> &bindings);
+		RenderStageBuilder &AddRenderStageDescriptorBindings(const Core::DescriptorSetLayoutBindings &descriptors);
+
 		RenderStageBuilder &SetVertexInputDescription(const Core::VertexDescription &vertexDescription);
 		RenderStageBuilder &AddPushConstantRange(const VkPushConstantRange &range);
-
 		RenderStageBuilder &SetVertexShader(const std::string &shader);
 		RenderStageBuilder &SetVertexShader(const uint8_t *code, size_t len);
 		RenderStageBuilder &SetFragmentShader(const std::string &shader);
 		RenderStageBuilder &SetFragmentShader(const uint8_t *code, size_t len);
 
-		RenderStagePtr Build();
+		RenderStagePtr Build() const;
 
 	private:
+		void AddDescriptorSetLayoutBinding(const StageDescriptorType type,
+			const uint32_t set,
+			const Core::DescriptorBindings &bindings);
+
 		const Core::DeviceRef m_device;
 		Core::GraphicsPipelineBuilderPtr m_pipelineBuilder;
 		Core::RenderTargetPtr m_renderTarget;
+		Core::RenderTargetPtr m_renderSource;
 
-		Core::DescriptorSetLayoutBindingMap m_descriptorSetBindings;
+		std::unordered_map<StageDescriptorType, Core::DescriptorSetLayoutBindingMap> m_descriptorMap;
 
 		std::vector<VkPushConstantRange> m_pushConstants;
 	};

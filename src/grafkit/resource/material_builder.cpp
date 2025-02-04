@@ -50,8 +50,8 @@ void MaterialBuilder::Build(const Core::DeviceRef &device)
 	m_resource = std::make_shared<Grafkit::Material>();
 	m_resource->stage = m_renderStage;
 
-	const std::vector<Core::DescriptorSetLayoutBinding> materialBindings = Grafkit::Material::GetLayoutBindings();
-
+	const Core::DescriptorSetLayoutBindingMap materialBindings =
+		m_renderStage->GetDescriptorSetLayoutBindings(Grafkit::StageDescriptorType::Material);
 	m_resource->descriptorSets.reserve(materialBindings.size());
 
 	std::vector<uint32_t> layoutSlots = {
@@ -67,8 +67,6 @@ void MaterialBuilder::Build(const Core::DeviceRef &device)
 
 	// TOOD: This will be handled automatiaclly by generated code
 	const auto textureSetDescriptorIt = m_resource->descriptorSets.find(Grafkit::TEXTURE_SET);
-	const auto &textureSetDescriptor = textureSetDescriptorIt->second;
-
 	if (textureSetDescriptorIt == m_resource->descriptorSets.end())
 	{
 		throw std::runtime_error("Error: Texture descriptor set not found");
@@ -77,7 +75,15 @@ void MaterialBuilder::Build(const Core::DeviceRef &device)
 	// TOOD: Add null object for missing textures
 
 	// Mandate all texture slots to be filled
-	for (const auto &binding : materialBindings.at(Grafkit::TEXTURE_SET).bindings)
+	const auto &textureSetDescriptor = textureSetDescriptorIt->second;
+	const auto &textureBindingsIt = materialBindings.find(Grafkit::TEXTURE_SET);
+	if (textureBindingsIt == materialBindings.end())
+	{
+		throw std::runtime_error(
+			"Error: Texture descriptor set not found in the pipeline descriptor set layout bindings.");
+	}
+
+	for (const auto &binding : textureBindingsIt->second)
 	{
 		const auto image = m_images.find(binding.binding);
 		if (image != m_images.end())

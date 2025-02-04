@@ -4,6 +4,7 @@
 #include "grafkit/core/image.h"
 #include "grafkit/core/initializers.h"
 #include "grafkit/core/instance.h"
+#include "grafkit/core/log.h"
 #include "grafkit/core/swap_chain.h"
 #include "grafkit/core/vulkan_utils.h"
 #include "grafkit/core/window.h"
@@ -117,7 +118,13 @@ void SwapChain::Present()
 
 void Grafkit::Core::SwapChain::WaitForFences() noexcept
 {
-	vkWaitForFences(m_device->GetVkDevice(), 1, &m_inFlightFences[m_currentFrame], VK_TRUE, UINT64_MAX);
+	VkResult result =
+		vkWaitForFences(m_device->GetVkDevice(), 1, &m_inFlightFences[m_currentFrame], VK_TRUE, UINT64_MAX);
+	if (result != VK_SUCCESS)
+	{
+		// This should not happen
+		Log::Instance().Warning("WaitForFences: Timeout");
+	}
 }
 
 // ----------------------------------------------------------------------------

@@ -4,15 +4,19 @@
 #include <grafkit/common.h>
 #include <string>
 
-namespace Grafkit::Core {
+namespace Grafkit::Core
+{
 
-#define VK_ENUM_AS_STR(r) \
-	case VK_##r:          \
+#ifdef _DEBUG
+
+#define VK_ENUM_AS_STR(r)                                                                                              \
+	case VK_##r:                                                                                                       \
 		return #r
 
 	inline std::string VkResultAsString(VkResult errorCode)
 	{
-		switch (errorCode) {
+		switch (errorCode)
+		{
 			VK_ENUM_AS_STR(NOT_READY);
 			VK_ENUM_AS_STR(TIMEOUT);
 			VK_ENUM_AS_STR(EVENT_SET);
@@ -37,36 +41,41 @@ namespace Grafkit::Core {
 			VK_ENUM_AS_STR(ERROR_VALIDATION_FAILED_EXT);
 			VK_ENUM_AS_STR(ERROR_INVALID_SHADER_NV);
 			VK_ENUM_AS_STR(ERROR_INCOMPATIBLE_SHADER_BINARY_EXT);
+			// TODO: Add more
 		default:
-			return "UNKNOWN_ERROR";
+			return "UNKNOWN_ERROR " + std::to_string(errorCode);
 		}
 	}
 
 #undef VK_ENUM_AS_STR
 
+#endif // _DEBUG
+
 } // namespace Grafkit::Core
 
 // MARK: Macros
 #ifdef _DEBUG
-#define VK_CHECK_RESULT(f)                                                                                         \
-	{                                                                                                              \
-		VkResult result = (f);                                                                                     \
-		if (result != VK_SUCCESS) {                                                                                \
-			std::stringstream errorMessage;                                                                        \
-			errorMessage << "Fatal: VkResult is " << Grafkit::Core::VkResultAsString(result) << " in " << __FILE__ \
-						 << " at line " << std::to_string(__LINE__);                                               \
-			throw std::runtime_error(errorMessage.str());                                                          \
-		}                                                                                                          \
+#define VK_CHECK_RESULT(f)                                                                                             \
+	{                                                                                                                  \
+		VkResult result = (f);                                                                                         \
+		if (result != VK_SUCCESS)                                                                                      \
+		{                                                                                                              \
+			std::stringstream errorMessage;                                                                            \
+			errorMessage << "Fatal: VkResult is " << Grafkit::Core::VkResultAsString(result) << " in " << __FILE__     \
+						 << " at line " << std::to_string(__LINE__);                                                   \
+			throw std::runtime_error(errorMessage.str());                                                              \
+		}                                                                                                              \
 	}
 #else
-#define VK_CHECK_RESULT(f)                                                                     \
-	{                                                                                          \
-		VkResult result = (f);                                                                 \
-		if (result != VK_SUCCESS) {                                                            \
-			std::stringstream errorMessage;                                                    \
-			errorMessage << "Fatal: VkResult is " << Grafkit::Core::VkResultAsString(result)); \
-			throw std::runtime_error(errorMessage.str());                                      \
-		}                                                                                      \
+#define VK_CHECK_RESULT(f)                                                                                             \
+	{                                                                                                                  \
+		VkResult result = (f);                                                                                         \
+		if (result != VK_SUCCESS)                                                                                      \
+		{                                                                                                              \
+			std::stringstream errorMessage;                                                                            \
+			errorMessage << "Fatal: VkResult code is "                                                                 \
+						 << std::to_string(result) throw std::runtime_error(errorMessage.str());                       \
+		}                                                                                                              \
 	}
 #endif // _DEBUG
 

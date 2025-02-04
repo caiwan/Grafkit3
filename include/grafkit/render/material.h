@@ -7,13 +7,6 @@
 
 namespace Grafkit
 {
-
-	struct MaterialData
-	{
-		float alphaCutoff = 1.0f;
-		float metallicFactor = 1.0f;
-	};
-
 	constexpr uint32_t TEXTURE_SET = 0;
 	constexpr uint32_t CAMERA_VIEW_SET = 1;
 	constexpr uint32_t MODEL_VIEW_SET = 2;
@@ -36,8 +29,16 @@ namespace Grafkit
 
 		RenderStagePtr stage;
 
+		struct MaterialData
+		{
+			float alphaCutoff = 1.0f;
+			float metallicFactor = 1.0f;
+		};
+
 		std::unordered_map<uint32_t, Core::DescriptorSetPtr> descriptorSets;
 		std::unordered_map<uint32_t, TexturePtr> textures;
+
+		MaterialData data;
 
 		static std::vector<Core::DescriptorSetLayoutBinding> GetLayoutBindings()
 		{

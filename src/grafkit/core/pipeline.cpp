@@ -175,23 +175,23 @@ GraphicsPipelineBuilder &GraphicsPipelineBuilder::SetDynamicState(const std::vec
 	return *this;
 }
 
-PipelinePtr GraphicsPipelineBuilder::Build()
+PipelinePtr GraphicsPipelineBuilder::Build() const
 {
 	// --- Create Descriptor Set Layouts from individual binding sets
-
 	// Check if all descriptor sets are allocated and continuous
+	// TOOD: Can we have pipeline without descriptor sets?
 	if (m_descriptorSetBindings.empty())
 	{
 		throw std::runtime_error("No descriptor set is allocated!");
 	}
 
+	// TOOD: This check is not neccesary if the descriptor set layout is created properly at the first place
 	const uint32_t maxDescriptorSlotId = //
-		(std::max_element(m_descriptorSetBindings.begin(),
-			m_descriptorSetBindings.end(),
-			[](const auto &lhs, const auto &rhs) {
-				return lhs.first < rhs.first;
-			})->first) +
-		1;
+		1 + (std::max_element(m_descriptorSetBindings.begin(),
+				m_descriptorSetBindings.end(),
+				[](const auto &lhs, const auto &rhs) {
+					return lhs.first < rhs.first;
+				})->first);
 
 	if (maxDescriptorSlotId != m_descriptorSetBindings.size())
 	{

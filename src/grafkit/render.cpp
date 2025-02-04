@@ -28,7 +28,7 @@ BaseRenderContext::BaseRenderContext(const Core::WindowRef &window)
 
 	m_renderTarget = //
 		RenderTargetBuilder(MakeReference(*m_device))
-			.CreateAttachments(MakeReference(*m_swapChain))
+			.UseSwapChain(MakeReference(*m_swapChain))
 			.AddAttachment(VK_FORMAT_D32_SFLOAT, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
 			.Build();
 
